@@ -10,8 +10,8 @@ def api_test(request):
 
 
 urlpatterns = [
-    # path('zzircon/<str:entity>/<str:code>/<str:description>/', zz_production_function),
-    # path('calidad/<str:action>/<str:entity>/<str:code>/<str:description>/', calidad_default_controller),
+    path('zzircon/<str:entity>/<str:code>/<str:description>/', zz_production_function),
+    path('calidad/<str:action>/<str:entity>/<str:code>/<str:description>/', calidad_default_controller),
 
     path('api_test/', api_test),
 ]
