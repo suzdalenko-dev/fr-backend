@@ -14,7 +14,7 @@ def calidad_default_controller(request, action, entity, code, description):
 
     switch_query = {
         'ofs_list_calendar': lambda: get_list_ofs_calendar_func(request),  # http://127.0.0.1:8000/calidad/get/of/calendar/ofs_list_calendar/?from=2025-01-01&to=2025-03-01
-        'of_trazabilidad': lambda: of_trazabilidad_function(request, code)       # http://127.0.0.1:8000/calidad/get/of/381/of_trazabilidad/
+        'of_trazabilidad': lambda: of_trazabilidad_function(request, code) # http://127.0.0.1:8000/calidad/get/of/381/of_trazabilidad/
     }
 
     try:
