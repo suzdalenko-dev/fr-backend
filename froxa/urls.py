@@ -1,18 +1,17 @@
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path
+from calidad.cal_controllers.calidad_controller import calidad_default_controller
+from zzircon.zz_contollers.zz_controller import zz_production_function
 
 def api_test(request):
-    return JsonResponse({"mensaje": "Django OK 2"})
+    return JsonResponse({"mensaje": "Django false"})
 
-def zzircon_fun(request, actionx, code, description):
-    return JsonResponse({
-        "action": actionx,
-        "code": code,
-        "description": description
-    })
+
 
 urlpatterns = [
-    path('zzircon/<str:actionx>/<str:code>/<str:description>/', zzircon_fun),
-    path('test2/', api_test),
+    path('zzircon/<str:entity>/<str:code>/<str:description>/', zz_production_function),
+    path('calidad/<str:action>/<str:entity>/<str:code>/<str:description>/', calidad_default_controller),
+
+    path('api_test/', api_test),
 ]
