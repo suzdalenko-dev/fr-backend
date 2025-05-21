@@ -5,7 +5,7 @@ from calidad.cal_controllers.calidad_controller import calidad_default_controlle
 from zzircon.zz_contollers.zz_controller import zz_production_function
 
 def api_test(request):
-    return JsonResponse({"mensaje": "Django false"})
+    return JsonResponse({"mensaje": "Django pero que pasa aqui"})
 
 
 
