@@ -2,6 +2,7 @@
 from froxa.utils.connectors.libra_connector import OracleConnector
 
 # info recipiente desde sql de la pagina vista 360 pestaña Stock
+# la informacion coicide con el informe Radiofrecuencia > "Info. Recipiente"
 # sql sacada por la conclusion propia ya que en la vista 360 no hay consulta
 
 
