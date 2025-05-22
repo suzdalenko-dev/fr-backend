@@ -1,6 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
 from zzircon.zz_repository.info_recipiente_file import info_recipiente_function
+from zzircon.zz_repository.of_activas_file import of_activas_function
 from zzircon.zz_repository.of_de_palet_file import of_de_palet_function
 from zzircon.zz_repository.of_detalle_file import of_detalle_function
 from zzircon.zz_repository.of_en_uso_file import of_en_uso_function
@@ -15,6 +16,7 @@ def zz_production_function(request, entity, code, description):
     description = str(description).strip().lower()
 
     switch_query = {
+        'ofs_activas': lambda: of_activas_function(),               # http://127.0.0.1:8000/zzircon/of/0/ofs_activas/
         'ofs_en_uso': lambda: of_en_uso_function(),                 # http://127.0.0.1:8000/zzircon/of/0/ofs_en_uso/
         'of_detalle': lambda: of_detalle_function(code),            # http://127.0.0.1:8000/zzircon/of/381/of_detalle/
         'of_de_palet': lambda: of_de_palet_function(code),          # http://127.0.0.1:8000/zzircon/palet/000000096/of_de_palet/
