@@ -1,5 +1,6 @@
 from froxa.utils.connectors.libra_connector import OracleConnector
 
+# los detalles de una orden de fabricacion
 
 def of_detalle_function(of_id):
     res = [{}]

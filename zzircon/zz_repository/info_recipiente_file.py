@@ -1,9 +1,11 @@
 
 from froxa.utils.connectors.libra_connector import OracleConnector
 
+# info recipiente desde sql de la pagina vista 360 pestaña Stock
+# sql sacada por la conclusion propia ya que en la vista 360 no hay consulta
+
 
 def info_recipiente_function(pal_code):
-    # -- info recipiente desde sql de la pagina vista 360 > Stock
     sql = """select CODIGO_ALMACEN,
                D_CODIGO_ALMACEN,
                tipo_situacion AS TIPO_SITUACION,

@@ -37,14 +37,14 @@ class OracleConnector:
                 dsn=dsn
             )
             self.cursor = self.connection.cursor()
-            SuzdalLogger.log("✅ Conexión a Oracle establecida.")
+            # SuzdalLogger.log("✅ Conexión a Oracle establecida.")
         except oracledb.Error as e:
             SuzdalLogger.log(f"❌ Error al establecer la conexión: {e}")
             self.connection = None
 
     def consult(self, query, params=None):
         result = []
-        SuzdalLogger.log(str(query))
+        # SuzdalLogger.log(str(query))
         SuzdalLogger.log(str(params))
 
         if not self.connection or not self.cursor:
@@ -75,10 +75,10 @@ class OracleConnector:
         try:
             if self.connection:
                 self.connection.close()
-                SuzdalLogger.log("✅ Conexión a Oracle cerrada.")
+                # SuzdalLogger.log("✅ Conexión a Oracle cerrada.")
         except Exception as e:
             SuzdalLogger.log(f"❌ Error cerrando conexión: {e}")
 
         self.cursor = None
         self.connection = None
-        SuzdalLogger.log("🔚 Sesión Oracle finalizada.\n")
+        SuzdalLogger.log("\n")

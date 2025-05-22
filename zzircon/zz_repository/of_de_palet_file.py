@@ -1,5 +1,9 @@
 from froxa.utils.connectors.libra_connector import OracleConnector
 
+# entiendo que no dice que tal paleta se ha llevado(usado) para tal orden de fabricacion
+# lo mismo que el informe "OF de PALET" en modulo web
+# 0731L ENVIO M.PRIMA>PRODUCCION 07 TRASPASOS ENTRE ALMACENES
+# almacen salida 00 CARTES (10 CAMARA PALET) => almacen entrada 90 PRODUCCION FABRICA (00 RECEPCION DE MATERIAL)
 
 def of_de_palet_function(pal_code):
     # of de palet 000000096 000011805
