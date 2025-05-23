@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     # 'django.contrib.staticfiles',
     'corsheaders',
     'zzircon',
-    'calidad'
+    'calidad',
+    'produccion'
 ]
 
 MIDDLEWARE = [
