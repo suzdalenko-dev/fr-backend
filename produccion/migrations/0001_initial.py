@@ -21,7 +21,9 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            
             name='ArticleCostsLines',
+
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
                 ('costs_id', models.BigIntegerField(null=True)),

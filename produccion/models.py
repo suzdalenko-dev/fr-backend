@@ -16,5 +16,4 @@ class ArticleCostsLines(models.Model):
     article_name = models.TextField(null=True)
     percentage   = models.IntegerField(null=True)
     alternative  = models.TextField(null=True)
-    state        = models.TextField(null=True)
    
