@@ -1,4 +1,5 @@
 from pathlib import Path
+from froxa.utils.utilities.load_config import load_app_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,13 +68,29 @@ WSGI_APPLICATION = 'froxa.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+db_config = load_app_config()
 
+print(db_config)
+
+if db_config:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'HOST': db_config['host'],
+            'PORT': db_config['port'],
+            'NAME': db_config['dbname'],
+            'USER': db_config['user'],
+            'PASSWORD': db_config['password'],
+        }
+    }
+else:
+    print("⚠️ No se cargó la configuración de base de datos. Usando SQLite por defecto.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Internationalization
