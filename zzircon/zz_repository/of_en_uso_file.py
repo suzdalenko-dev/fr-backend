@@ -3,7 +3,7 @@ from froxa.utils.connectors.libra_connector import OracleConnector
 # ordenes de fabricacion activas y seleccionadas en otras palabras que estan en el uso
 
 def of_en_uso_function():
-    sql = """SELECT o.ORDEN_DE_FABRICACION, 
+    sql = """SELECT DISTINCT o.ORDEN_DE_FABRICACION, 
                 o.CODIGO_ARTICULO,
                 (SELECT MIN(DESCRIP_COMERCIAL) FROM ARTICULOS WHERE CODIGO_ARTICULO = o.CODIGO_ARTICULO) AS NOMBRE_ARTICULO,
                 o.CODIGO_PRESENTACION,

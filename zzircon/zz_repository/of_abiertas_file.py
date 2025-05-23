@@ -2,7 +2,7 @@ from froxa.utils.connectors.libra_connector import OracleConnector
 
 # ordenes de fabricacion activas y seleccionadas en otras palabras que estan en el uso
 
-def of_activas_function():
+def ofs_abiertas_function():
     sql = """SELECT o.ORDEN_DE_FABRICACION, 
                 o.CODIGO_ARTICULO,
                 (SELECT MIN(DESCRIP_COMERCIAL) FROM ARTICULOS WHERE CODIGO_ARTICULO = o.CODIGO_ARTICULO) AS NOMBRE_ARTICULO,
