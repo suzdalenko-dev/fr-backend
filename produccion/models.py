@@ -1,11 +1,20 @@
 from django.db import models
 
-class Articulo(models.Model):
-    codigo_articulo = models.CharField(max_length=50, unique=True)
-    descripcion = models.TextField()
-    consiste = models.TextField(blank=True, null=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    more = models.TextField(blank=True, null=True)  # puedes cambiar el tipo según el contenido
+class ArticleCostsHead(models.Model):
+    id           = models.BigAutoField(primary_key=True)
+    article_code = models.CharField(max_length=22, unique=True)
+    article_name = models.TextField(null=True)
+    old_art_code = models.CharField(max_length=22, null=True)
 
-    def __str__(self):
-        return f"{self.codigo_articulo} - {self.descripcion}"
+
+
+
+class ArticleCostsLines(models.Model):
+    id           = models.BigAutoField(primary_key=True)
+    costs_id     = models.BigIntegerField(null=True)
+    article_code = models.CharField(max_length=22)
+    article_name = models.TextField(null=True)
+    percentage   = models.IntegerField(null=True)
+    alternative  = models.TextField(null=True)
+    state        = models.TextField(null=True)
+   
