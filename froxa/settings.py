@@ -1,5 +1,6 @@
 from pathlib import Path
 from froxa.utils.utilities.load_config import load_app_config
+from froxa.utils.utilities.suzdal_logger import SuzdalLogger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,8 +71,6 @@ WSGI_APPLICATION = 'froxa.wsgi.application'
 
 db_config = load_app_config()
 
-print(db_config)
-
 if db_config:
     DATABASES = {
         'default': {
@@ -84,6 +83,7 @@ if db_config:
         }
     }
 else:
+    SuzdalLogger("⚠️ No se cargó la configuración de base de datos. Usando SQLite por defecto.")
     print("⚠️ No se cargó la configuración de base de datos. Usando SQLite por defecto.")
     DATABASES = {
         'default': {
