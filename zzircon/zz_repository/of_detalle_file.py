@@ -111,7 +111,6 @@ def of_detalle_function(of_id):
                                     (SELECT VALOR_FICHA_TECNICA_ESPANOL FROM MIG_PAUTAS_IDIOMA mpi WHERE mpi.CODIGO = :codArt AND DESCRIPCION2 = 'ZONA CAPTURA' AND ROWNUM = 1)  AS ZONA_CAPTURA,
                                     (SELECT VALOR_FICHA_TECNICA_ESPANOL FROM MIG_PAUTAS_IDIOMA mpi WHERE mpi.CODIGO = :codArt AND DESCRIPCION2 = 'PESO NETO ESCURRIDO' AND ROWNUM = 1)  AS PESO_NETO_ESCURRIDO,
                                     art.RESERVADO_NUMBER_5 AS PESO_KG_ESCURRIDO,
-                                    '' AS PESO_NETO,
                                     (SELECT VALOR_FICHA_TECNICA_ESPANOL FROM MIG_PAUTAS_IDIOMA mpi WHERE mpi.CODIGO = :codArt AND C3 = 'A2R' AND ROWNUM = 1) AS TALLA,
                                     (SELECT VALOR_FICHA_TECNICA_ESPANOL FROM MIG_PAUTAS_IDIOMA mpi WHERE mpi.CODIGO = :codArt AND DESCRIPCION2 = 'INGREDIENTES' AND ROWNUM = 1)  AS INGREDIENTES,
                                     '' AS AGUA,
@@ -136,18 +135,5 @@ def of_detalle_function(of_id):
             res[0]['FICHA_ARTICULO'] = oracle.consult(ficha_articulo, {'codArt': codArt})
             break
     
-            #  parte_inspeccion = """select ORDEN_FABRICACION,
-            #                          NUMERO_PARTE,
-            #                          CODIGO_ARTICULO,
-            #                          FECHA_ENTRADA,
-            #                          FECHA_VERIFICACION,
-            #                          CANT_ACEPTADA,
-            #                          CANT_RECIBIDA,
-            #                          CODIGO_PRESENTACION,
-            #                          CODIGO_VERIFICADOR
-            #                      from ca_partes_inspeccion 
-            #                      where ORDEN_FABRICACION = :of_id"""
-            #  res[0]['PARTE_INSPECCION'] = oracle.consult(parte_inspeccion, {"of_id": of_id})
-
     oracle.close()
     return res
