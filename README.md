@@ -47,3 +47,20 @@ EL ERROR QUE DA EDI ES:
 
 Ya he cambiado el código "Punto Operacional Compra" a 8414892100014 pero siguen dando error, 
 alguna idea, Leandro, que es lo que deberia cambiar para que las facturas en EDI no tengar error y sigan pasando los pedidos ?¿
+
+
+que es lo que paso finalmente con esto ?¿
+
+
+INFORME DE SARA PROYECCIÓN DE PRECIOS:
+
+0. VISTA 360 stock y precio actual artículo:
+stock: DISPG sumar lo que hay en almacenes
+precio: 00 CARTES P.M.P EUR
+
+1. ver en libra el consumo: VENTAS y FABRICACIÓN por artículo
+
+2. donde ver los PEDIDOS a futuro
+
+3. LLEGADAS EXPEDIENTES con contenedores son € o $ ?¿
+que hacer con las FECHA_LLEGADA cuando esta pasada VS fecha actual
