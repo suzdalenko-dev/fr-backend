@@ -21,3 +21,5 @@ urlpatterns = [
 
     path('produccion_add_articules/', add_article_costs_head), # http://127.0.0.1:8000/produccion_add_articules/
 ]
+
+# hola hola
