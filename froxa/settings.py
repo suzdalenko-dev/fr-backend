@@ -33,7 +33,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'zzircon',
     'calidad',
-    'produccion'
+    'produccion',
+    'finanzas'
 ]
 
 MIDDLEWARE = [

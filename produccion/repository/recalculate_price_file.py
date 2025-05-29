@@ -1,6 +1,7 @@
 import json
 from froxa.utils.utilities.funcions_file import json_encode_all
 from produccion.models import ArticleCostsHead, ArticleCostsLines
+from produccion.utils.get_me_stock_file import get_me_stock_now
 
 
 def recalculate_price_projections(request):
@@ -47,9 +48,27 @@ def recalculate_price_projections(request):
         lineas_array = itemB['lineas']
         for lineas_itemB in lineas_array:
             for one_erp_code in lineas_itemB['codigos_erp_arr']:
-                # stock_price = AUtil::get_me_stock_now(one_erp_code)
-                stock_price = 1       
+                stock_price = get_me_stock_now(one_erp_code)
                 lineas_itemB['consiste_de_alternativos'] += [stock_price]
 
 
+    # 5. calculate the price of the alternative article consisting of substitate items
+
+    for itemC in articulos_data:
+        lineas_array  = itemC['lineas'];
+        for lineas_itemC in lineas_array:
+            formula_top_ud   = 0
+            unidades_stock   = 0
+            suma_precios     = 0
+            percentage       = lineas_itemC['percentage']
+            i = 0
+            for infoItemC in lineas_itemC['consiste_de_alternativos']:
+                print(infoItemC)
+
+            break
+
+
+
     return articulos_data
+
+

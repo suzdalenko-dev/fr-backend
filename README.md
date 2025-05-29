@@ -64,3 +64,13 @@ precio: 00 CARTES P.M.P EUR
 
 3. LLEGADAS EXPEDIENTES con contenedores son € o $ ?¿
 que hacer con las FECHA_LLEGADA cuando esta pasada VS fecha actual
+
+
+4. Precion €/kg agente ponderado = DIVIDE(
+    SUMX(V_BI_VENTAS, [UNI_SERALM] * [PRECIO_UND_CONSUMO]),
+    SUM(V_BI_VENTAS[UNI_SERALM]),
+    0
+)
+
+LMTD - Importe Neto ajustado
+LMTD - Kilos
