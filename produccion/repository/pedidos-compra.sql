@@ -62,12 +62,9 @@ LEFT JOIN
     AND ec.empresa = eae.empresa
 WHERE
   ehs.empresa = '001'
-  AND eae.articulo = '40295'
-  -- Puedes activar el filtro por rango de fechas si lo necesitas:
-  -- AND ehs.fecha_llegada BETWEEN TO_DATE('2025-06-01', 'YYYY-MM-DD') AND TO_DATE('2025-06-30', 'YYYY-MM-DD')
-  -- Puedes incluir este filtro si solo quieres registros sin entrada:
   AND ehs.codigo_entrada IS NULL
-  AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
+  AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT') 
+ORDER BY  ehs.FECHA_PREV_LLEGADA DESC
 ;
 
 
@@ -199,3 +196,27 @@ ORDER BY
     c.fecha_pedido DESC;
 
 select * from albaran_ventas_lin;
+
+
+
+
+9240.0 31 2
+596.1290322580645 ......................
+mes actual = 2025-05-31
+3781.0 31 2
+243.93548387096774 ......................
+mes actual = 2025-05-31
+1722.0 31 2
+111.09677419354838 ......................
+mes actual = 2025-05-31
+2211.0 31 2
+142.6451612903226 ......................
+mes actual = 2025-05-31
+155.0 31 2
+10.0 ......................
+mes actual = 2025-05-31
+3625.1999999999994 31 2
+233.8838709677419 ......................
+mes actual = 2025-05-31
+1947.0 31 2
+125.61290322580645

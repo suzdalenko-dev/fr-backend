@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+import calendar
 
 
 def get_me_stock_now(erp_code, oracle):
@@ -218,12 +219,12 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
     fechaHasta_dt = datetime.strptime(r_fechas['hasta'], '%Y-%m-%d')
 
     # Restar 1 año
-    # fechaDesde_dt -= relativedelta(years=1)
-    # fechaHasta_dt -= relativedelta(years=1)
+    fechaDesde_dt -= relativedelta(years=1)
+    fechaHasta_dt -= relativedelta(years=1)
 
     # Restar 1 mes !!! cambiar aqui por 1 año
-    fechaDesde_dt -= relativedelta(months=1)
-    fechaHasta_dt -= relativedelta(months=1)
+    # fechaDesde_dt -= relativedelta(months=1)
+    # fechaHasta_dt -= relativedelta(months=1)
 
     # Formato correcto a STRING para SQL
     fechaDesde = fechaDesde_dt.strftime('%Y-%m-%d')
@@ -284,3 +285,29 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
             consumo_data.extend(res)
 
     return consumo_data
+
+
+###################################################
+# fechas y dias mes restantes
+###################################################
+
+
+def verificar_mes(fecha_str):
+    """
+    Verifica si la fecha (en string "YYYY-MM-DD") está en el mes y año actual.
+    :param fecha_str: str
+    :return: "mes actual" o "mes no actual"
+    """
+    fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    ahora = datetime.now().date()
+    return "mes actual" if fecha.month == ahora.month and fecha.year == ahora.year else "mes no actual"
+
+def obtener_dias_restantes_del_mes():
+    """
+    Retorna el número de días restantes en el mes actual (incluyendo hoy).
+    :return: int
+    """
+    hoy = datetime.now().date()
+    ultimo_dia = calendar.monthrange(hoy.year, hoy.month)[1]
+    return ultimo_dia - hoy.day + 1
+

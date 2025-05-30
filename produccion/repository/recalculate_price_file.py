@@ -1,8 +1,11 @@
+import calendar
 import json
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import json_encode_all
-from produccion.models import ArticleCostsHead, ArticleCostsLines
-from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_rangos_meses, pedidos_pendientes
+from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelAdditionalCalculations
+from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 """
 1. comentar si no tengo STOCK se coge asi todo el precio que marca libra
@@ -19,8 +22,8 @@ def recalculate_price_projections(request):
     # 1. FROXA DB going to look for parent articles 
     
     # articulos_pardes = ArticleCostsHead.objects.all().values('article_code','article_name')
-    articulos_pardes = ArticleCostsHead.objects.filter(article_code=40128).values('article_code','article_name')
-    # # # # # # # # articulos_pardes = json_encode_all(articulos_pardes)
+    articulos_pardes = ArticleCostsHead.objects.filter(article_code=40128).values('id', 'article_code','article_name')
+    # articulos_pardes = json_encode_all(articulos_pardes)
 
     # 2. FROXA DB going to look for the ingredientes of parent articles
     
@@ -30,6 +33,7 @@ def recalculate_price_projections(request):
         lineas = list(lineas)
 
         articulos_data += [{
+            'id'              : a['id'],
             '__article__erp'  : str(a['article_code']),
             '__article__name' : a['article_name'], 
             'lineas'          : lineas,
@@ -121,13 +125,14 @@ def recalculate_price_projections(request):
 
                
      
-    # 9. 
+    # 9. STOCK AND PRICE
     for itemG in articulos_data:
         lineas_array  = itemG['lineas']
         for lineas_itemG in lineas_array:
             pecentage = float(lineas_itemG['percentage'])
             PRECIO    = float(lineas_itemG['resumen_alternativos']['precio_kg'])
             STOCK     = float(lineas_itemG['resumen_alternativos']['stock_kg'])
+            CONSUMO   = 0
             for rango_fechasG in lineas_itemG['rango']:
                 # exist arrivals START
                 if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
@@ -138,19 +143,80 @@ def recalculate_price_projections(request):
                 # exist arrivals FIN
         
                 rango_fechasG['precio_con_llegada']    = PRECIO;
-                rango_fechasG['precio_and_percentage'] = PRECIO / 100 * pecentage
-
+                
                 # exist consum START
                 if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
                     for consumA in rango_fechasG['consumo']:
-                        STOCK -= float(consumA['CANTIDAD'])
+                        CONSUMO += float(consumA['CANTIDAD'])
                         rango_fechasG['info_suma_consumo'] -= float(consumA['CANTIDAD'])
+
+                    if verificar_mes(rango_fechasG['hasta']) == "mes actual":
+                        print('mes actual = '+str(rango_fechasG['hasta'])+'')
+                        fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
+                        numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
+                        dias_restantes = obtener_dias_restantes_del_mes()
+                        print(CONSUMO, numero_dias, dias_restantes)
+                        CONSUMO = CONSUMO / numero_dias * dias_restantes
+                        print(CONSUMO, '......................')
+                    
+                        
                 # exist consum FIN      
+
+                STOCK = STOCK - CONSUMO
                 if STOCK < 0:
                     STOCK = 0
                 rango_fechasG['stock_final_rango'] = STOCK
+                rango_fechasG['precio_percentage'] = PRECIO / 100 * pecentage
+
+    # 10. 
+    for itemQ in articulos_data:
+        for rango in rango_meses:
+            lineas_array = itemQ['lineas']
+            coste        = 0;
+            calculo      = ''
+            for lineas_articulo_padre in lineas_array:
+                array_rangos_en_cada_linea_padre = lineas_articulo_padre['rango'];
+                for obj_rango_desde_hasta in array_rangos_en_cada_linea_padre:
+                   if(rango[1] == obj_rango_desde_hasta['hasta']):
+                        coste   += obj_rango_desde_hasta['precio_percentage']
+                        calculo += str(obj_rango_desde_hasta['precio_percentage'])+', '
+                        break
+                   
+            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'coste_actual': itemQ['precio_padre_act'], 'coste_cal_fin_mes': coste, 'composicion_precio': calculo}]
 
 
+    # 11. save en database
+    for itemW in articulos_data:
+        try:
+            head = ArticleCostsHead.objects.get(id=itemW['id'])
+            head.cost_date = json.dumps(itemW['costes_fecha'])
+            now = datetime.now()
+            head.updated_at = now.strftime('%Y-%m-%d %H:%M:%S')
+            head.save()
+        except:
+            # manejar el caso
+            pass
+
+    # 12. recalculo de excel 
+    #
+    today = datetime.today()
+    mes_menos2 = (today - relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
+    mes_menos1 = (today - relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
+    mes_actual = today.replace(day=1) + relativedelta(months=1, days=-1)
+    mes_mas1   = (today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
+    mes_mas2   = (today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
+    mes_mas3   = (today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)
+    
+    for itemZ in articulos_data:
+         excel = ExcelAdditionalCalculations.objects.filter(erp=itemZ['__article__erp']).first()
+         if not excel:
+            excel = ExcelAdditionalCalculations()
+    #     excel.erp = itemZ['erp']
+    #     excel.name = itemZ['name']
+
+
+
+      
     oracle.close()
     return articulos_data
 
