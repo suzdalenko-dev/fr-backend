@@ -1,25 +1,14 @@
-from froxa.utils.connectors.libra_connector import OracleConnector
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
-def get_me_stock_now(erp_code):
-    """
-    {
-      "__articulo____descripcion": "MINCED DE GAYI",
-      "__erp": "302632401",
-      "__pesobruto": "1000.0000",
-      "__preciocoste6": "1.847950",
-      "_stock_unidades_otros": "72518.5000",
-      "precio_kg_usar": "1.8479500000",
-      "stock_kg_usar": "72518.500000000000"
-    }
-    """
+def get_me_stock_now(erp_code, oracle):
     sql = """SELECT V_CODIGO_ALMACEN,
             D_CODIGO_ALMACEN,
             V_TIPO_SITUACION,
             V_CANTIDAD_PRESENTACION,
             V_PRESENTACION,
-            CODIGO_ARTICULO,
-            (select PRECIO_MEDIO_PONDERADO from ARTICULOS_VALORACION where CODIGO_ARTICULO = :erp_code AND CODIGO_DIVISA = 'EUR' AND CODIGO_ALMACEN = '00') AS PRECIO_MEDIO_PONDERADO
+            CODIGO_ARTICULO
             FROM 
         (
             SELECT  s.* , 
@@ -52,22 +41,246 @@ def get_me_stock_now(erp_code):
                                AND az.es_zona_reserva_virtual = 'S') 
                         GROUP BY codigo_empresa, codigo_almacen, codigo_articulo, tipo_situacion, presentacion
                 ) s 
-        )  s WHERE ( NVL(stock_unidad1, 0) != 0 OR NVL(stock_unidad2, 0) != 0) and CODIGO_ARTICULO=:erp_code order by codigo_almacen"""
+        )  s WHERE (NVL(stock_unidad1, 0) != 0 OR NVL(stock_unidad2, 0) != 0) and CODIGO_ARTICULO=:erp_code order by codigo_almacen"""
 
-
-    oracle = OracleConnector()
-    oracle.connect()
     stockArticle = oracle.consult(sql, {"erp_code": erp_code})
     stock_almcenes =  [{'almacenes': stockArticle, 'precio':0, 'stock':0}]
-    precioItem = 0
     stockItem  = 0
     if len(stockArticle) > 0:
         for almacen in stockArticle:
-            precioItem = float(almacen['PRECIO_MEDIO_PONDERADO'])
-            stockItem += float(almacen['V_CANTIDAD_PRESENTACION'])
-    stock_almcenes[0]['precio'] = precioItem
+            cantidad_raw = almacen.get('V_CANTIDAD_PRESENTACION')
+            if cantidad_raw not in [None, '', 'None']:
+                stockItem += float(cantidad_raw)
     stock_almcenes[0]['stock']  = stockItem
 
-    oracle.close()
+
+    sql = """select PRECIO_MEDIO_PONDERADO from ARTICULOS_VALORACION where CODIGO_ARTICULO = :erp_code AND CODIGO_DIVISA = 'EUR' AND CODIGO_ALMACEN = '00'"""
+    precioArticle = oracle.consult(sql, {"erp_code": erp_code})
+    precioItem = 0.0
+    if precioArticle and len(precioArticle) > 0:
+        precio_raw   = precioArticle[0].get('PRECIO_MEDIO_PONDERADO')
+        if precio_raw not in [None, '', 'None']:
+            precioItem = float(precio_raw)
+        stock_almcenes[0]['precio'] = precioItem
 
     return stock_almcenes
+
+
+
+################################################
+
+
+
+def obtener_rangos_meses():
+    rangos = []
+    meses_en_adelante = 4
+    hoy = datetime.today()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+
+    for i in range(meses_en_adelante):
+        mes = (mes_actual + i) % 12
+        mes = 12 if mes == 0 else mes
+        anio = anio_actual + ((mes_actual + i - 1) // 12)
+        
+        primera_fecha = datetime(anio, mes, 1)
+        ultima_fecha = primera_fecha + relativedelta(months=1) - timedelta(days=1)
+        
+        rangos.append([
+            primera_fecha.strftime("%Y-%m-%d"),
+            ultima_fecha.strftime("%Y-%m-%d")
+        ])
+
+    return rangos
+
+
+#######################################################
+
+
+
+def consumo_produccion(oracle, arr_codigos_erp, r_fechas):
+    pass
+
+
+
+
+#######################################################
+### here I first look for the orders and then I look for the containers
+#######################################################
+
+def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas): 
+    # desde pedidos
+    llegadas_p_data = []
+
+    iterations = 0
+    for codigo_erp in arr_codigos_erp:
+        sql_pp = """
+            SELECT
+              pc.numero_pedido,
+              pc.fecha_pedido,
+              pc.codigo_proveedor,
+              pc.codigo_divisa,
+              pcl.codigo_articulo,
+              pcl.descripcion AS descripcion_articulo,
+              pcl.precio_presentacion AS PRECIO_EUR,
+              pcl.unidades_pedidas as CANTIDAD,
+              pcl.unidades_entregadas,
+              pcl.precio_presentacion,
+              pcl.importe_lin_neto,
+              pc.status_cierre,
+              'PEDIDO' AS ENTIDAD
+            FROM
+              pedidos_compras pc
+            JOIN
+              pedidos_compras_lin pcl
+              ON pc.numero_pedido = pcl.numero_pedido
+              AND pc.serie_numeracion = pcl.serie_numeracion
+              AND pc.organizacion_compras = pcl.organizacion_compras
+              AND pc.codigo_empresa = pcl.codigo_empresa
+            WHERE
+                AND pc.fecha_pedido >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND pc.fecha_pedido <= TO_DATE(:fechaHasta, 'YYYY-MM-DD') 
+                AND pc.fecha_pedido >= TO_DATE(:fechaActual, 'YYYY-MM-DD')
+                pc.codigo_empresa = '001'
+                AND pc.status_cierre = 'E'
+                AND pcl.codigo_articulo = :codigo_erp
+        """
+
+        if iterations == 0:                                                       # espero 11 dias al pedido  
+            desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=11)).strftime('%Y-%m-%d')
+        else:
+            fechaDesde = r_fechas['desde']
+        
+        fechaActual = (datetime.today() - timedelta(days=11)).strftime('%Y-%m-%d') # espero 11 dias al pedido
+
+        res = oracle.consult(sql_pp, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual })
+
+        if res:
+            llegadas_p_data.extend(res)
+
+        iterations += 1
+
+
+    # desde expedientes !!! COMPROBAR ESTE CASO: CODIGO_PROVEEDOR: "001186"
+    iterations = 0
+    for codigo_erp in arr_codigos_erp:
+        sql_ei = """SELECT
+                      ehs.FECHA_PREV_LLEGADA,
+                      ehs.num_expediente,
+                      eae.articulo,
+                      eae.PRECIO,
+                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR,
+                      eae.cantidad as CANTIDAD,
+                      ehs.fecha_llegada,
+                      ehs.codigo_entrada,
+                      ec.contenedor,
+                      ei.divisa,
+                      ei.valor_cambio,
+                      'EXPEDIENTE' AS ENTIDAD
+                    FROM expedientes_hojas_seguim ehs
+                    JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
+                    JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa
+                    JOIN expedientes_contenedores ec ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa
+                    WHERE 
+                        ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND ehs.FECHA_PREV_LLEGADA <= TO_DATE(:fechaHasta, 'YYYY-MM-DD') 
+                        AND ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaActual, 'YYYY-MM-DD')
+                        AND eae.articulo = :codigo_erp
+                        AND ehs.codigo_entrada IS NULL
+                        AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
+                        AND ehs.empresa = '001'
+        """
+
+        if iterations == 0:                                                       # espero 11 dias al pedido  
+            desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=11)).strftime('%Y-%m-%d')
+        else:
+            fechaDesde = r_fechas['desde']
+        
+        fechaActual = (datetime.today() - timedelta(days=11)).strftime('%Y-%m-%d') # espero 11 dias al pedido
+
+        res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
+
+        if res:
+            llegadas_p_data.extend(res)
+
+        iterations += 1
+
+    return llegadas_p_data
+
+
+##########################################################
+# consume in production and sales
+##########################################################
+
+def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
+    # Convert strings to datetime objects
+    fechaDesde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
+    fechaHasta_dt = datetime.strptime(r_fechas['hasta'], '%Y-%m-%d')
+
+    # Restar 1 año
+    # fechaDesde_dt -= relativedelta(years=1)
+    # fechaHasta_dt -= relativedelta(years=1)
+
+    # Restar 1 mes !!! cambiar aqui por 1 año
+    fechaDesde_dt -= relativedelta(months=1)
+    fechaHasta_dt -= relativedelta(months=1)
+
+    # Formato correcto a STRING para SQL
+    fechaDesde = fechaDesde_dt.strftime('%Y-%m-%d')
+    fechaHasta = fechaHasta_dt.strftime('%Y-%m-%d')
+
+    consumo_data = []
+
+    for codigo_erp in arr_codigos_erp:
+        sql_of = """SELECT 
+                        ofc.FECHA_ENTREGA_PREVISTA,
+                        cofmc.ORDEN_DE_FABRICACION,
+                        cofmc.CODIGO_ARTICULO_CONSUMIDO,
+                        a.DESCRIP_COMERCIAL AS DESCRIP_CONSUMIDO,
+                        a.unidad_codigo1 AS CODIGO_PRESENTACION,
+                        TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) AS CANTIDAD,
+                        'OFS_CONSUMO' AS CONSUMO_OFS
+                    FROM 
+                        COSTES_ORDENES_FAB_MAT_CTD cofmc
+                    JOIN 
+                        ORDENES_FABRICA_CAB ofc ON ofc.ORDEN_DE_FABRICACION = cofmc.ORDEN_DE_FABRICACION
+                    JOIN 
+                        articulos a ON a.codigo_articulo = cofmc.CODIGO_ARTICULO_CONSUMIDO
+                    WHERE 
+                        ofc.FECHA_ENTREGA_PREVISTA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') 
+                        AND ofc.FECHA_ENTREGA_PREVISTA <= TO_DATE(:fechaHasta, 'YYYY-MM-DD')
+                        AND codigo_articulo_consumido = :codigo_erp
+                        AND TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) > 0
+                    ORDER BY ofc.FECHA_ENTREGA_PREVISTA ASC
+                        
+        """
+        res = oracle.consult(sql_of, { 'codigo_erp': codigo_erp, 'fechaDesde': fechaDesde, 'fechaHasta': fechaHasta })
+        if res:
+            consumo_data.extend(res)
+
+
+    for codigo_erp in arr_codigos_erp:
+        sql_pv = """SELECT
+                        c.fecha_pedido AS fecha_venta,
+                        l.articulo AS codigo_articulo,
+                        TO_NUMBER(l.uni_seralm) AS CANTIDAD,
+                        'P_VENTA' AS P_VENTA
+                    FROM
+                        albaran_ventas_lin l
+                    JOIN
+                        albaran_ventas c ON l.numero_albaran = c.numero_albaran AND l.numero_serie = c.numero_serie AND l.ejercicio = c.ejercicio AND l.organizacion_comercial = c.organizacion_comercial AND l.empresa = c.empresa
+                    JOIN
+                        articulos a ON a.codigo_articulo = l.articulo
+                    WHERE
+                        l.empresa = '001'
+                        AND NVL(l.linea_anulada, 'N') = 'N'
+                        AND l.articulo = :codigo_erp
+                        AND c.fecha_pedido BETWEEN TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND TO_DATE(:fechaHasta, 'YYYY-MM-DD')
+                    ORDER BY
+                        c.fecha_pedido DESC
+        """
+        res = oracle.consult(sql_pv, { 'codigo_erp': codigo_erp, 'fechaDesde': fechaDesde, 'fechaHasta': fechaHasta })
+        if res:
+            consumo_data.extend(res)
+
+    return consumo_data
