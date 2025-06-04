@@ -22,7 +22,7 @@ def recalculate_price_projections(request):
     # 1. FROXA DB going to look for parent articles 
     
     articulos_pardes = ArticleCostsHead.objects.all().values('id', 'article_code', 'article_name')
-    articulos_pardes = ArticleCostsHead.objects.filter(article_code=41210).values('id', 'article_code','article_name')
+    # articulos_pardes = ArticleCostsHead.objects.filter(article_code=41210).values('id', 'article_code','article_name')
     # articulos_pardes = json_encode_all(articulos_pardes)
 
     # 2. FROXA DB going to look for the ingredientes of parent articles

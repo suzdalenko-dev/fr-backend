@@ -35,11 +35,11 @@ def update_excel_line(request):
     sum_editables = precio_aceite + precio_servicios + aditivos + mod + embalajes + amort_maq + moi
 
     eEditable.precio_materia_prima  = inicio_coste_act / rendimiento
-    eEditable.final_coste_act       = (float(eEditable.inicio_coste_act ) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas1      = (float(eEditable.inicio_coste_mas1) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas2      = (float(eEditable.inicio_coste_mas2) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas3      = (float(eEditable.inicio_coste_mas3) / float(eEditable.rendimiento)) + sum_editables
-     
+    eEditable.final_coste_act       = (float(eEditable.inicio_coste_act  or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas1      = (float(eEditable.inicio_coste_mas1 or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas2      = (float(eEditable.inicio_coste_mas2 or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas3      = (float(eEditable.inicio_coste_mas3 or 0) / float(eEditable.rendimiento)) + sum_editables
+#     
     eEditable.save()
 
     return {'res':'ok'}
