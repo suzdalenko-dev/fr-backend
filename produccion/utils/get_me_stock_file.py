@@ -45,7 +45,7 @@ def get_me_stock_now(erp_code, oracle):
         )  s WHERE (NVL(stock_unidad1, 0) != 0 OR NVL(stock_unidad2, 0) != 0) and CODIGO_ARTICULO=:erp_code order by codigo_almacen"""
 
     stockArticle = oracle.consult(sql, {"erp_code": erp_code})
-    stock_almcenes =  [{'almacenes': stockArticle, 'precio':0, 'stock':0}]
+    stock_almcenes =  [{'erp': erp_code, 'almacenes': stockArticle, 'precio':0, 'stock':0}]
     stockItem  = 0
     if len(stockArticle) > 0:
         for almacen in stockArticle:
@@ -139,9 +139,9 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas):
               AND pc.organizacion_compras = pcl.organizacion_compras
               AND pc.codigo_empresa = pcl.codigo_empresa
             WHERE
-                AND pc.fecha_pedido >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND pc.fecha_pedido <= TO_DATE(:fechaHasta, 'YYYY-MM-DD') 
+                pc.fecha_pedido >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND pc.fecha_pedido <= TO_DATE(:fechaHasta, 'YYYY-MM-DD') 
                 AND pc.fecha_pedido >= TO_DATE(:fechaActual, 'YYYY-MM-DD')
-                pc.codigo_empresa = '001'
+                AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND pcl.codigo_articulo = :codigo_erp
         """
@@ -251,7 +251,7 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         ofc.FECHA_ENTREGA_PREVISTA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') 
                         AND ofc.FECHA_ENTREGA_PREVISTA <= TO_DATE(:fechaHasta, 'YYYY-MM-DD')
                         AND codigo_articulo_consumido = :codigo_erp
-                        AND TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) > 0
+                        AND TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) != 0
                     ORDER BY ofc.FECHA_ENTREGA_PREVISTA ASC
                         
         """
@@ -277,6 +277,7 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         AND NVL(l.linea_anulada, 'N') = 'N'
                         AND l.articulo = :codigo_erp
                         AND c.fecha_pedido BETWEEN TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND TO_DATE(:fechaHasta, 'YYYY-MM-DD')
+                        AND TO_NUMBER(l.uni_seralm) != 0
                     ORDER BY
                         c.fecha_pedido DESC
         """

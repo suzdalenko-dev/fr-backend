@@ -2,7 +2,7 @@ import calendar
 import json
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import json_encode_all
-from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelAdditionalCalculations
+from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEditable
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -21,8 +21,8 @@ def recalculate_price_projections(request):
 
     # 1. FROXA DB going to look for parent articles 
     
-    # articulos_pardes = ArticleCostsHead.objects.all().values('article_code','article_name')
-    articulos_pardes = ArticleCostsHead.objects.filter(article_code=40128).values('id', 'article_code','article_name')
+    articulos_pardes = ArticleCostsHead.objects.all().values('id', 'article_code', 'article_name')
+    articulos_pardes = ArticleCostsHead.objects.filter(article_code=41210).values('id', 'article_code','article_name')
     # articulos_pardes = json_encode_all(articulos_pardes)
 
     # 2. FROXA DB going to look for the ingredientes of parent articles
@@ -42,6 +42,7 @@ def recalculate_price_projections(request):
         }]
 
     # 3. FROXA DB convert erp codes into a string +"codigos_erp": "306302401, 306302431"
+
 
     for itemA in articulos_data:
         lineas_array = itemA['lineas']
@@ -66,7 +67,7 @@ def recalculate_price_projections(request):
                 stock_price = get_me_stock_now(one_erp_code, oracle)
                 lineas_itemB['consiste_de_alternativos'] += [stock_price]
             
-    # 5. calculate the price of the alternative article consisting of substitate items
+    # 5. calculate the price of the alternative article consisting of substitate items 
 
     for itemC in articulos_data:
         lineas_array  = itemC['lineas'];
@@ -74,19 +75,19 @@ def recalculate_price_projections(request):
             formula_top_ud   = 0
             unidades_stock   = 0
             suma_precios     = 0
-            percentage       = lineas_itemC['percentage']
+            percentage       = lineas_itemC['percentage'] or 0
             i = 0
             for infoItemC in lineas_itemC['consiste_de_alternativos']:
                 i += 1
-                formula_top_ud += float(infoItemC[0]['stock']) * float(infoItemC[0]['precio'])
-                unidades_stock += float(infoItemC[0]['stock'])
-                suma_precios   += float(infoItemC[0]['precio'])
+                formula_top_ud += float(infoItemC[0]['stock'] or 0) * float(infoItemC[0]['precio'] or 0)
+                unidades_stock += float(infoItemC[0]['stock'] or 0)
+                suma_precios   += float(infoItemC[0]['precio'] or 0)
                
             if unidades_stock == 0:
-                lineas_itemC['resumen_alternativos'] = {'precio_kg': float(suma_precios) / float(i), 'stock_kg': float(unidades_stock), 'parte_proporcional': float(suma_precios) / float(i) / 100 * float(percentage) }
+                lineas_itemC['resumen_alternativos'] = {'precio_kg': suma_precios / i, 'stock_kg': unidades_stock, 'parte_proporcional': suma_precios / i / 100 * float(percentage or 0) }
             else:
-                lineas_itemC['resumen_alternativos'] = {'precio_kg': float(formula_top_ud) /  float(unidades_stock), 'stock_kg': unidades_stock, 'parte_proporcional':  float((formula_top_ud / unidades_stock)) / 100 * float(percentage) }
-                
+                lineas_itemC['resumen_alternativos'] = {'precio_kg': formula_top_ud /  unidades_stock, 'stock_kg': unidades_stock, 'parte_proporcional':  (formula_top_ud / unidades_stock) / 100 * percentage }
+           
 
     # 6. calculate price actuality of parent article PUEDE SER QUE NO HACE FALTA
 
@@ -111,8 +112,6 @@ def recalculate_price_projections(request):
                 fechas_desde_hasta += [{'desde':rango[0], 'hasta':rango[1], 'info_suma_llegadas': 0, 'info_suma_consumo':0}]
             lineas_itemD['rango'] = fechas_desde_hasta
             
-        
-
     # 8. I iterante the data ranges and search for 1. container arrivals
     for itemF in articulos_data:
         lineas_array  = itemF['lineas'];
@@ -123,23 +122,23 @@ def recalculate_price_projections(request):
                 r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas)
                 r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)
 
-               
+              
      
     # 9. STOCK AND PRICE
     for itemG in articulos_data:
         lineas_array  = itemG['lineas']
         for lineas_itemG in lineas_array:
-            pecentage = float(lineas_itemG['percentage'])
-            PRECIO    = float(lineas_itemG['resumen_alternativos']['precio_kg'])
-            STOCK     = float(lineas_itemG['resumen_alternativos']['stock_kg'])
+            pecentage = float(lineas_itemG['percentage'] or 0)
+            PRECIO    = float(lineas_itemG['resumen_alternativos']['precio_kg'] or 0)
+            STOCK     = float(lineas_itemG['resumen_alternativos']['stock_kg'] or 0)
             CONSUMO   = 0
             for rango_fechasG in lineas_itemG['rango']:
                 # exist arrivals START
                 if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
-                    for llegadaG in rango_fechasG['llegadas']:      
-                        PRECIO = ((float(PRECIO) * float(STOCK)) + (float(llegadaG['CANTIDAD']) * float(llegadaG['PRECIO_EUR']))) / (float(llegadaG['CANTIDAD']) + STOCK)
-                        rango_fechasG['info_suma_llegadas'] += float(llegadaG['CANTIDAD'])
-                        STOCK                               += float(llegadaG['CANTIDAD'])
+                    for llegadaG in rango_fechasG['llegadas']:
+                        PRECIO = ((float(PRECIO) * float(STOCK)) + (float(llegadaG['CANTIDAD'] or 0) * float(llegadaG['PRECIO_EUR'] or 0))) / (float(llegadaG['CANTIDAD'] or 0) + STOCK)
+                        rango_fechasG['info_suma_llegadas'] += float(llegadaG['CANTIDAD'] or 0)
+                        STOCK                               += float(llegadaG['CANTIDAD'] or 0)
                 # exist arrivals FIN
         
                 rango_fechasG['precio_con_llegada']    = PRECIO;
@@ -148,18 +147,13 @@ def recalculate_price_projections(request):
                 if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
                     for consumA in rango_fechasG['consumo']:
                         CONSUMO += float(consumA['CANTIDAD'])
-                        rango_fechasG['info_suma_consumo'] -= float(consumA['CANTIDAD'])
+                        rango_fechasG['info_suma_consumo'] -= float(consumA['CANTIDAD'] or 0)
 
                     if verificar_mes(rango_fechasG['hasta']) == "mes actual":
-                        print('mes actual = '+str(rango_fechasG['hasta'])+'')
                         fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
                         numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
                         dias_restantes = obtener_dias_restantes_del_mes()
-                        print(CONSUMO, numero_dias, dias_restantes)
                         CONSUMO = CONSUMO / numero_dias * dias_restantes
-                        print(CONSUMO, '......................')
-                    
-                        
                 # exist consum FIN      
 
                 STOCK = STOCK - CONSUMO
@@ -168,22 +162,58 @@ def recalculate_price_projections(request):
                 rango_fechasG['stock_final_rango'] = STOCK
                 rango_fechasG['precio_percentage'] = PRECIO / 100 * pecentage
 
-    # 10. 
+
+    # 10.
+    today = datetime.today()
+    mes_actual = (today.replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas1   = ((today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas2   = ((today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas3   = ((today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+
+
     for itemQ in articulos_data:
-        for rango in rango_meses:
+        
+        eEditable, created = ExcelLinesEditable.objects.get_or_create(article_code=itemQ['__article__erp'])
+        eEditable.article_name = itemQ['__article__name']
+        if float(eEditable.rendimiento or 0) == 0: 
+            eEditable.rendimiento = 1
+        sum_editables = float(eEditable.precio_aceite or 0) + float(eEditable.precio_servicios or 0) + float(eEditable.aditivos or 0) + float(eEditable.mod or 0) + float(eEditable.embalajes or 0) + float(eEditable.amort_maq or 0) + float(eEditable.moi or 0)
+        
+        precio_materia_prima = 0
+
+        for rango in rango_meses:                                 
             lineas_array = itemQ['lineas']
-            coste        = 0;
+            coste        = 0
             calculo      = ''
             for lineas_articulo_padre in lineas_array:
-                array_rangos_en_cada_linea_padre = lineas_articulo_padre['rango'];
+                array_rangos_en_cada_linea_padre = lineas_articulo_padre['rango']
                 for obj_rango_desde_hasta in array_rangos_en_cada_linea_padre:
-                   if(rango[1] == obj_rango_desde_hasta['hasta']):
+                    if rango[1] == obj_rango_desde_hasta['hasta']:
                         coste   += obj_rango_desde_hasta['precio_percentage']
                         calculo += str(obj_rango_desde_hasta['precio_percentage'])+', '
-                        break
-                   
-            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'coste_actual': itemQ['precio_padre_act'], 'coste_cal_fin_mes': coste, 'composicion_precio': calculo}]
 
+                    if rango[1] == mes_actual:
+                        eEditable.inicio_coste_act      = coste
+                        eEditable.precio_materia_prima  = eEditable.inicio_coste_act / eEditable.rendimiento
+                        precio_materia_prima            = eEditable.precio_materia_prima
+                        eEditable.final_coste_act       = eEditable.inicio_coste_act / eEditable.rendimiento + sum_editables
+
+                    if rango[1] == mes_mas1:
+                        eEditable.inicio_coste_mas1     = coste
+                        eEditable.final_coste_mas1      = eEditable.inicio_coste_mas1 / eEditable.rendimiento + sum_editables
+                       
+                    if rango[1] == mes_mas2:
+                        eEditable.inicio_coste_mas2     = coste
+                        eEditable.final_coste_mas2      = eEditable.inicio_coste_mas2 / eEditable.rendimiento + sum_editables
+                       
+                    if rango[1] == mes_mas3:
+                        eEditable.inicio_coste_mas3     = coste
+                        eEditable.final_coste_mas3      = eEditable.inicio_coste_mas3 / eEditable.rendimiento + sum_editables
+                        
+
+            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'coste_seco_fin_mes': coste, 'composicion_precio': calculo, 'precio_materia_prima': precio_materia_prima }]
+
+        eEditable.save()   
 
     # 11. save en database
     for itemW in articulos_data:
@@ -191,28 +221,22 @@ def recalculate_price_projections(request):
             head = ArticleCostsHead.objects.get(id=itemW['id'])
             head.cost_date = json.dumps(itemW['costes_fecha'])
             now = datetime.now()
-            head.updated_at = now.strftime('%Y-%m-%d %H:%M:%S')
+            head.updated_at = now.strftime('%Y-%m-%d %H:%M:%S')        
             head.save()
         except:
             # manejar el caso
             pass
 
+
+
+
+
     # 12. recalculo de excel 
     #
     today = datetime.today()
-    mes_menos2 = (today - relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
-    mes_menos1 = (today - relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
-    mes_actual = today.replace(day=1) + relativedelta(months=1, days=-1)
-    mes_mas1   = (today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
-    mes_mas2   = (today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
-    mes_mas3   = (today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)
-    
-    for itemZ in articulos_data:
-         excel = ExcelAdditionalCalculations.objects.filter(erp=itemZ['__article__erp']).first()
-         if not excel:
-            excel = ExcelAdditionalCalculations()
-    #     excel.erp = itemZ['erp']
-    #     excel.name = itemZ['name']
+    # mes_menos2 = (today - relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
+    # mes_menos1 = (today - relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
+
 
 
 

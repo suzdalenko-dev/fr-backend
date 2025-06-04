@@ -16,7 +16,27 @@ class ArticleCostsLines(models.Model):
     alternative    = models.TextField(null=True)
    
 
-class ExcelAdditionalCalculations(models.Model):
-    erp = models.IntegerField(null=True)
-    name = models.TextField(null=True)
+class ExcelLinesEditable(models.Model):
+    article_code = models.IntegerField(unique=True)
+    article_name = models.TextField(null=True)
+
+    rendimiento          = models.FloatField(null=True)
+    precio_materia_prima = models.FloatField(null=True)
     
+    precio_aceite        = models.FloatField(null=True)
+    precio_servicios     = models.FloatField(null=True)
+    aditivos             = models.FloatField(null=True)
+    mod                  = models.FloatField(null=True)
+    embalajes            = models.FloatField(null=True)
+    amort_maq            = models.FloatField(null=True)
+    moi                  = models.FloatField(null=True)
+
+    inicio_coste_act     = models.FloatField(null=True)
+    inicio_coste_mas1    = models.FloatField(null=True)
+    inicio_coste_mas2    = models.FloatField(null=True)
+    inicio_coste_mas3    = models.FloatField(null=True)
+
+    final_coste_act      = models.FloatField(null=True)
+    final_coste_mas1     = models.FloatField(null=True)
+    final_coste_mas2     = models.FloatField(null=True)
+    final_coste_mas3     = models.FloatField(null=True)

@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
+from produccion.repository.article_costs_file import delete_article_costs_all, delete_ingrediente_line, get_all_excel_editables_lines, get_articles_libra, get_datail_art_cost, line_costs_delete_alternative, line_costs_save_alternative, line_costs_update_percentage, save_art_cost_head, save_new_ingrediente_line, update_excel_line
 from produccion.repository.recalculate_price_file import recalculate_price_projections
 
 
@@ -13,7 +14,17 @@ def production_default_controller(request, action, entity, code, description):
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
         'recalculate_price_projections': lambda: recalculate_price_projections(request),  # http://127.0.0.1:8000/produccion/get/0/0/recalculate_price_projections/
-        
+        'get_all_excel_editables_lines': lambda: get_all_excel_editables_lines(request),  # http://127.0.0.1:8000/produccion/get/0/0/get_all_excel_editables_lines/
+        'update_excel_line': lambda: update_excel_line(request),                          # http://127.0.0.1:8000/produccion/put/0/0/update_excel_line/
+        'get_articles_libra': lambda: get_articles_libra(request),                        # http://127.0.0.1:8000/produccion/get/0/0/get_articles_libra/ 
+        'save_art_cost_head': lambda: save_art_cost_head(request),                        # http://127.0.0.1:8000/produccion/get/0/0/save_art_cost_head/ 
+        'get_datail_art_cost': lambda: get_datail_art_cost(request),                      # http://127.0.0.1:8000/produccion/get/0/0/get_datail_art_cost/
+        'save_new_ingrediente_line': lambda: save_new_ingrediente_line(request),          # http://127.0.0.1:8000/produccion/get/0/0/save_new_ingrediente_line/
+        'delete_ingrediente_line': lambda: delete_ingrediente_line(request),              # http://127.0.0.1:8000/produccion/get/0/0/delete_ingrediente_line/
+        'line_costs_save_alternative': lambda: line_costs_save_alternative(request),      # http://127.0.0.1:8000/produccion/get/0/0/line_costs_save_alternative/
+        'line_costs_update_percentage': lambda: line_costs_update_percentage(request),    # http://127.0.0.1:8000/produccion/put/0/0/line_costs_update_percentage/
+        'line_costs_delete_alternative': lambda: line_costs_delete_alternative(request),  # http://127.0.0.1:8000/produccion/put/0/0/line_costs_delete_alternative/
+        'delete_article_costs_all': lambda: delete_article_costs_all(request),            # http://127.0.0.1:8000/produccion/put/0/0/delete_article_costs_all/
     }
 
     try:
