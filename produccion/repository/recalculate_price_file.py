@@ -21,10 +21,14 @@ def recalculate_price_projections(request):
 
     # 1. FROXA DB going to look for parent articles 
     
-    articulos_pardes = ArticleCostsHead.objects.all().values('id', 'article_code', 'article_name')
-    # articulos_pardes = ArticleCostsHead.objects.filter(article_code=41210).values('id', 'article_code','article_name')
-    # articulos_pardes = json_encode_all(articulos_pardes)
+    articulos_pardes = None
+    code = request.GET.get('code')
 
+    if code and code.isdigit() and int(code) > 0:
+        articulos_pardes = ArticleCostsHead.objects.filter(article_code=code).values('id', 'article_code','article_name')
+    else:
+        articulos_pardes = ArticleCostsHead.objects.all().values('id', 'article_code', 'article_name')
+    
     # 2. FROXA DB going to look for the ingredientes of parent articles
     
     articulos_data = []
@@ -177,6 +181,8 @@ def recalculate_price_projections(request):
         eEditable.article_name = itemQ['__article__name']
         if float(eEditable.rendimiento or 0) == 0: 
             eEditable.rendimiento = 1
+        eEditable.precio_padre_act = float(itemQ['precio_padre_act'] or 0)
+
         sum_editables = float(eEditable.precio_aceite or 0) + float(eEditable.precio_servicios or 0) + float(eEditable.aditivos or 0) + float(eEditable.mod or 0) + float(eEditable.embalajes or 0) + float(eEditable.amort_maq or 0) + float(eEditable.moi or 0)
         
         precio_materia_prima = 0
@@ -211,7 +217,7 @@ def recalculate_price_projections(request):
                         eEditable.final_coste_mas3      = eEditable.inicio_coste_mas3 / eEditable.rendimiento + sum_editables
                         
 
-            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'coste_seco_fin_mes': coste, 'composicion_precio': calculo, 'precio_materia_prima': precio_materia_prima }]
+            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'inicio_coste_act': coste, 'composicion_precio': calculo, 'precio_materia_prima': precio_materia_prima }]
 
         eEditable.save()   
 
@@ -226,16 +232,6 @@ def recalculate_price_projections(request):
         except:
             # manejar el caso
             pass
-
-
-
-
-
-    # 12. recalculo de excel 
-    #
-    today = datetime.today()
-    # mes_menos2 = (today - relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)
-    # mes_menos1 = (today - relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)
 
 
 

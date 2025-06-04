@@ -5,7 +5,7 @@ from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEdi
 
 
 def get_all_excel_editables_lines(request):
-    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3').order_by('article_code')
+    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'precio_padre_act', 'inicio_coste_act', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3').order_by('article_name')
     excelLines = list(excelLines)
     return excelLines
 
@@ -39,7 +39,7 @@ def update_excel_line(request):
     eEditable.final_coste_mas1      = (float(eEditable.inicio_coste_mas1 or 0) / float(eEditable.rendimiento)) + sum_editables
     eEditable.final_coste_mas2      = (float(eEditable.inicio_coste_mas2 or 0) / float(eEditable.rendimiento)) + sum_editables
     eEditable.final_coste_mas3      = (float(eEditable.inicio_coste_mas3 or 0) / float(eEditable.rendimiento)) + sum_editables
-#     
+
     eEditable.save()
 
     return {'res':'ok'}
