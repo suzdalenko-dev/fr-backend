@@ -12,7 +12,7 @@ def aviso_expediente_sin_precio(expedientes_sin_precio):
         """
         
         SMailer.send_email(
-            ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'juan.pineiro@froxa.com', 'alexey.suzdalenko@froxa.com'],
+            ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
             'Expedientes sin precio final (sin gastos imputados)',
             cuerpo,
             'none'
