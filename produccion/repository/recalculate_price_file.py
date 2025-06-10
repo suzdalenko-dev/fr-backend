@@ -2,10 +2,13 @@ import calendar
 import json
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import json_encode_all
+from froxa.utils.utilities.smailer_file import SMailer
 from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEditable
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+from produccion.utils.sent_email_file import aviso_expediente_sin_precio
 
 """
 1. comentar si no tengo STOCK se coge asi todo el precio que marca libra
@@ -104,7 +107,7 @@ def recalculate_price_projections(request):
          
         itemJU['precio_padre_act'] = father_price
         
-
+    EXPEDIENTES_SIN_PRECIO_FINAL = []
     
     # 7. obtain range months 
     rango_meses = obtener_rangos_meses()
@@ -123,10 +126,8 @@ def recalculate_price_projections(request):
             arr_codigos_erp = lineas_itemF['codigos_erp_arr']
             
             for r_fechas in lineas_itemF['rango']:
-                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas)
-                r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)
-
-              
+                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL)
+                r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)          
      
     # 9. STOCK AND PRICE
     for itemG in articulos_data:
@@ -234,8 +235,7 @@ def recalculate_price_projections(request):
             pass
 
 
-
-
+    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
       
     oracle.close()
     return articulos_data

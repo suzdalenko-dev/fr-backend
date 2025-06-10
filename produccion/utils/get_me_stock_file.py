@@ -2,6 +2,8 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 
+from produccion.utils.precio_con_gastos import consultar_precio_con_gastos
+
 
 def get_me_stock_now(erp_code, oracle):
     sql = """SELECT V_CODIGO_ALMACEN,
@@ -109,7 +111,7 @@ def consumo_produccion(oracle, arr_codigos_erp, r_fechas):
 ### here I first look for the orders and then I look for the containers
 #######################################################
 
-def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas): 
+def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio):
     # desde pedidos
     llegadas_p_data = []
 
@@ -167,17 +169,18 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas):
     for codigo_erp in arr_codigos_erp:
         sql_ei = """SELECT
                       ehs.FECHA_PREV_LLEGADA,
-                      ehs.num_expediente,
-                      eae.articulo,
+                      ehs.num_expediente AS NUM_EXPEDIENTE,
+                      eae.articulo AS ARTICULO,
                       eae.PRECIO,
-                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR,
+                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL,
                       eae.cantidad as CANTIDAD,
                       ehs.fecha_llegada,
                       ehs.codigo_entrada,
                       ec.contenedor,
                       ei.divisa,
                       ei.valor_cambio,
-                      'EXPEDIENTE' AS ENTIDAD
+                      'EXPEDIENTE' AS ENTIDAD,
+                      -2222 as PRECIO_EUR
                     FROM expedientes_hojas_seguim ehs
                     JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
                     JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa
@@ -202,6 +205,15 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas):
         res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
 
         if res:
+            for r in res:
+                precio_llegada_sql = consultar_precio_con_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
+                if precio_llegada_sql:
+                    valor_precio_final = precio_llegada_sql[0].get('N10')
+                    r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
+                    if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
+                        expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                        r['PRECIO_EUR'] = -11
+                   
             llegadas_p_data.extend(res)
 
         iterations += 1
