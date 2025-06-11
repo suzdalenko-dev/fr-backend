@@ -45,7 +45,8 @@ def recalculate_price_projections(request):
             '__article__name' : a['article_name'], 
             'lineas'          : lineas,
             'precio_padre_act': 0,
-            'costes_fecha'    : []
+            'costes_fecha'    : [],
+            'expediente_sin_precios': [],
         }]
 
     # 3. FROXA DB convert erp codes into a string +"codigos_erp": "306302401, 306302431"
@@ -228,7 +229,8 @@ def recalculate_price_projections(request):
             head = ArticleCostsHead.objects.get(id=itemW['id'])
             head.cost_date = json.dumps(itemW['costes_fecha'])
             now = datetime.now()
-            head.updated_at = now.strftime('%Y-%m-%d %H:%M:%S')        
+            head.updated_at = now.strftime('%Y-%m-%d %H:%M:%S')
+            itemW['expediente_sin_precios'] = EXPEDIENTES_SIN_PRECIO_FINAL     
             head.save()
         except:
             # manejar el caso
