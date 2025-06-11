@@ -6,15 +6,15 @@ def aviso_expediente_sin_precio(expedientes_sin_precio):
 
         lista_expedientes = ", ".join(map(str, expedientes_sin_precio))
         
-        cuerpo = f"""<h1>Aviso Libra - Expedientes sin precio final</h1>
+        body_message = f"""<h1>Aviso Libra - Expedientes sin precio final</h1>
                 <p>Hola, estos expedientes no tienen gastos imputados:</p>
                 <p><strong>{lista_expedientes}</strong></p>
         """
         
         SMailer.send_email(
             ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
-            'Expedientes sin precio final (sin gastos imputados)',
-            cuerpo,
+            'Expedientes CON CONTENEDOR ASIGNADO sin precio final ( sin gastos imputados )',
+            body_message,
             'none'
         )
 

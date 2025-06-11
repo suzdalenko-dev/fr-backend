@@ -169,8 +169,6 @@
               AND (pv.numero_serie_fra='' OR '' IS NULL)
               AND NVL(pv.anulado, 'N') = 'N'))
               AND ('' is null or exists (select 1 from expedientes_imp_agentes ea where ea.numero_expediente = expedientes_imp.codigo and ea.agente = '' and ea.empresa = expedientes_imp.empresa)) AND (EXPEDIENTES_HOJAS_SEGUIM.STATUS NOT IN ('C'))) AND (articulos.codigo_empresa = '001') AND (expedientes_imp.empresa = '001') AND (expedientes_hojas_seguim.empresa = '001') AND (expedientes_articulos_embarque.EMPRESA='001') AND (expedientes_contenedores.empresa = '001') 
-              AND expedientes_hojas_seguim.num_expediente = '231' and expedientes_articulos_embarque.articulo = '40295' and  (((SELECT SUM(hs.importe_portes) FROM reparto_portes_hs hs WHERE hs.codigo_empresa = expedientes_hojas_seguim.empresa 
-        AND hs.numero_expediente = expedientes_hojas_seguim.num_expediente AND hs.hoja_seguimiento = expedientes_hojas_seguim.num_hoja 
-        and hs.codigo_articulo = expedientes_articulos_embarque.articulo) / DECODE(articulos.unidad_valoracion, 1, expedientes_articulos_embarque.cantidad_unidad1, 2, expedientes_articulos_embarque.cantidad_unidad2)) + (expedientes_articulos_embarque.precio * DECODE(expedientes_hojas_seguim.tipo_cambio, 'E', DECODE(
-                    expedientes_imp.cambio_asegurado, 'S', expedientes_imp.valor_cambio, 'N', 1), 'S', expedientes_hojas_seguim.valor_cambio, 'N',coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1)))) > 0;
+              AND (expedientes_contenedores.contenedor IS NULL OR expedientes_contenedores.contenedor != 'CNT')
+              AND expedientes_hojas_seguim.num_expediente = '231' and expedientes_articulos_embarque.articulo = '40295';
 

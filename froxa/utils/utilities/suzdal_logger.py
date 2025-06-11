@@ -2,46 +2,29 @@ import os
 import datetime
 import threading
 
-class SuzdalLogger:
-    LOG_DIR = "/var/log/froxa"
-    os.makedirs(LOG_DIR, exist_ok=True)
+import requests
 
-    LOG_FILE = os.path.join(LOG_DIR, "app.log")
-    MES_FILE = os.path.join(LOG_DIR, "mes_actual.log")  # Archivo auxiliar para guardar el mes
+class SuzdalLogger:
+    LOG_URL = "https://ruta.froxa.net/log/libra.php"
 
     @staticmethod
     def log(message):
-        def write_log():
+        def send_log():
             now = datetime.datetime.now()
             timestamp = now.strftime("%H:%M:%S %d/%m/%Y")
-            log_entry = '\n' if message == '' else f"{timestamp} {message}\n"
-
-            # Comprobar si el mes ha cambiado
-            mes_actual = now.strftime("%Y-%m")
-            mes_guardado = None
-
-            if os.path.exists(SuzdalLogger.MES_FILE):
-                with open(SuzdalLogger.MES_FILE, "r") as f:
-                    mes_guardado = f.read().strip()
-
-            if mes_guardado != mes_actual:
-                # Se ha cambiado de mes: borrar log y guardar nuevo mes
-                try:
-                    if os.path.exists(SuzdalLogger.LOG_FILE):
-                        os.remove(SuzdalLogger.LOG_FILE)
-                except Exception as e:
-                    print(f"❌ Error al borrar el archivo de log: {e}")
-
-                with open(SuzdalLogger.MES_FILE, "w") as f:
-                    f.write(mes_actual)
+            log_entry = '' if message == '' else f"{timestamp} {message}"
 
             try:
-                with open(SuzdalLogger.LOG_FILE, "a", encoding="utf-8") as f:
-                    f.write(log_entry)
-            except Exception as e:
-                print(f"❌ Error escribiendo en el log: {e}")
+                # Codificamos la información y la enviamos por GET
+                params = {'info': log_entry}
+                response = requests.get(SuzdalLogger.LOG_URL, params=params)
 
-        thread = threading.Thread(target=write_log)
+                if response.status_code != 200:
+                    pass
+            except Exception as e:
+                pass
+
+        thread = threading.Thread(target=send_log)
         thread.daemon = True
         thread.start()
 
