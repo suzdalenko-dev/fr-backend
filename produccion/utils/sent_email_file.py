@@ -18,6 +18,7 @@ def aviso_expediente_sin_precio(expedientes_sin_precio):
             'none'
         )
 
+        # ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
 
 
         
