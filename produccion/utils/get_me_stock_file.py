@@ -212,7 +212,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
                     if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                         expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
-                        r['PRECIO_EUR'] = -11
+                        r['PRECIO_EUR'] = -1122
                    
             llegadas_p_data.extend(res)
 
