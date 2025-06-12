@@ -72,11 +72,33 @@ def get_me_stock_now(erp_code, oracle):
 
 ################################################
 
-
-
 def obtener_rangos_meses():
     rangos = []
     meses_en_adelante = 4
+    hoy = datetime.today()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+
+    for i in range(meses_en_adelante):
+        mes = (mes_actual + i) % 12
+        mes = 12 if mes == 0 else mes
+        anio = anio_actual + ((mes_actual + i - 1) // 12)
+        
+        primera_fecha = datetime(anio, mes, 1)
+        ultima_fecha = primera_fecha + relativedelta(months=1) - timedelta(days=1)
+        
+        rangos.append([
+            primera_fecha.strftime("%Y-%m-%d"),
+            ultima_fecha.strftime("%Y-%m-%d")
+        ])
+
+    return rangos
+
+################################################
+
+def obtener_rangos_meses7():
+    rangos = []
+    meses_en_adelante = 7
     hoy = datetime.today()
     mes_actual = hoy.month
     anio_actual = hoy.year

@@ -5,7 +5,7 @@ from produccion.models import EquivalentsHead
 
 def create_update_equivalents(request, action, entity, code):
     if action == 'get':
-        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative')
+        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative').order_by('article_name')
         equi = list(equi)
         return equi
     
@@ -15,7 +15,7 @@ def create_update_equivalents(request, action, entity, code):
         equiv.alternative = json.dumps([])
         equiv.save()
 
-    if action == 'get_one':  # http://127.0.0.1:8000/produccion/get_one/0/2/create_update_equivalents/                        
+    if action == 'get_one':                                 # http://127.0.0.1:8000/produccion/get_one/0/2/create_update_equivalents/                        
         eqOne = EquivalentsHead.objects.get(id=code)
         eqOne = json_encode_one(eqOne)
         return eqOne
@@ -24,3 +24,23 @@ def create_update_equivalents(request, action, entity, code):
         eqOne = EquivalentsHead.objects.get(id=code)
         eqOne.article_name = str(request.POST.get('group_name')).strip()
         eqOne.save()
+
+    if action == 'save_item_equiv':                         # http://127.0.0.1:8000/produccion/save_item_equiv/0/0/create_update_equivalents/  
+        eqOne = EquivalentsHead.objects.get(id=request.POST.get('id'))
+        listEquiv = json.loads(eqOne.alternative)
+        new_code = str(request.POST.get('code')).strip()
+        new_name = str(request.POST.get('name')).strip()
+        already_exists = any(item.get('code') == new_code for item in listEquiv)
+        if not already_exists:
+            listEquiv.append({'code': new_code, 'name': new_name})
+            eqOne.alternative = json.dumps(listEquiv)
+            eqOne.save()
+
+    if action == 'delete_item':                             # http://127.0.0.1:8000/produccion/delete_item/0/0/create_update_equivalents/
+        eqOne        = EquivalentsHead.objects.get(id=request.POST.get('id'))
+        listEquiv    = json.loads(eqOne.alternative)
+        delete_code  = str(request.POST.get('code')).strip()
+        updated_list = [item for item in listEquiv if item.get('code') != delete_code]
+        if len(updated_list) != len(listEquiv):
+            eqOne.alternative = json.dumps(updated_list)
+            eqOne.save()

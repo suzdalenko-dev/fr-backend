@@ -187,7 +187,8 @@ def recalculate_price_projections(request):
 
         sum_editables = float(eEditable.precio_aceite or 0) + float(eEditable.precio_servicios or 0) + float(eEditable.aditivos or 0) + float(eEditable.mod or 0) + float(eEditable.embalajes or 0) + float(eEditable.amort_maq or 0) + float(eEditable.moi or 0)
         
-        precio_materia_prima = 0
+        eEditable.precio_padre_mas_gastos = eEditable.precio_padre_act / eEditable.rendimiento + sum_editables
+        itemQ['precio_padre_mas_gastos']  = eEditable.precio_padre_mas_gastos
 
         for rango in rango_meses:                                 
             lineas_array = itemQ['lineas']
@@ -202,8 +203,7 @@ def recalculate_price_projections(request):
 
                     if rango[1] == mes_actual:
                         eEditable.inicio_coste_act      = coste
-                        eEditable.precio_materia_prima  = eEditable.inicio_coste_act / eEditable.rendimiento
-                        precio_materia_prima            = eEditable.precio_materia_prima
+                        eEditable.precio_materia_prima  = eEditable.precio_padre_act / eEditable.rendimiento
                         eEditable.final_coste_act       = eEditable.inicio_coste_act / eEditable.rendimiento + sum_editables
 
                     if rango[1] == mes_mas1:
@@ -219,7 +219,7 @@ def recalculate_price_projections(request):
                         eEditable.final_coste_mas3      = eEditable.inicio_coste_mas3 / eEditable.rendimiento + sum_editables
                         
 
-            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'inicio_coste_act': coste, 'composicion_precio': calculo, 'precio_materia_prima': precio_materia_prima }]
+            itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'inicio_coste_act': coste, 'composicion_precio': calculo }]
 
         eEditable.save()   
 

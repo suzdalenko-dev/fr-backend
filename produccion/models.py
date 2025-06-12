@@ -42,7 +42,7 @@ class ExcelLinesEditable(models.Model):
     final_coste_mas3     = models.FloatField(null=True)
 
     precio_padre_act     = models.FloatField(null=True)
-  
+    precio_padre_mas_gastos = models.FloatField(null=True)
 
 
 class EquivalentsHead(models.Model):

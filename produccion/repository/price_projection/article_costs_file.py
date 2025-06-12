@@ -5,7 +5,7 @@ from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEdi
 
 
 def get_all_excel_editables_lines(request):
-    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'precio_padre_act', 'inicio_coste_act', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3').order_by('article_name')
+    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'precio_padre_act', 'inicio_coste_act', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3', 'precio_padre_mas_gastos').order_by('article_name')
     excelLines = list(excelLines)
     return excelLines
 
@@ -13,33 +13,26 @@ def get_all_excel_editables_lines(request):
 # 40022
 def update_excel_line(request):
     id               = request.POST.get('id')
-    rendimiento      = float(request.POST.get('rendimiento') or 1)
-    precio_aceite    = float(request.POST.get('precio_aceite') or 0)
-    precio_servicios = float(request.POST.get('precio_servicios') or 0)
-    aditivos         = float(request.POST.get('aditivos') or 0)
-    mod              = float(request.POST.get('mod') or 0)
-    embalajes        = float(request.POST.get('embalajes') or 0)
-    amort_maq        = float(request.POST.get('amort_maq') or 0)
-    moi              = float(request.POST.get('moi') or 0)
 
     eEditable                  = ExcelLinesEditable.objects.get(id=id)
-    eEditable.rendimiento      = rendimiento
-    eEditable.precio_aceite    = precio_aceite
-    eEditable.precio_servicios = precio_servicios
-    eEditable.aditivos         = aditivos
-    eEditable.mod              = mod
-    eEditable.embalajes        = embalajes
-    eEditable.amort_maq        = amort_maq
-    eEditable.moi              = moi
+    eEditable.rendimiento      = float(request.POST.get('rendimiento') or 1)
+    eEditable.precio_aceite    = float(request.POST.get('precio_aceite') or 0)
+    eEditable.precio_servicios = float(request.POST.get('precio_servicios') or 0)
+    eEditable.aditivos         = float(request.POST.get('aditivos') or 0)
+    eEditable.mod              = float(request.POST.get('mod') or 0)
+    eEditable.embalajes        = float(request.POST.get('embalajes') or 0)
+    eEditable.amort_maq        = float(request.POST.get('amort_maq') or 0)
+    eEditable.moi              = float(request.POST.get('moi') or 0)
    
     inicio_coste_act  = float(eEditable.inicio_coste_act or 0)
     sum_editables = eEditable.precio_aceite + eEditable.precio_servicios + eEditable.aditivos + eEditable.mod + eEditable.embalajes + eEditable.amort_maq + eEditable.moi
 
-    eEditable.precio_materia_prima  = inicio_coste_act / eEditable.rendimiento
-    eEditable.final_coste_act       = (float(eEditable.inicio_coste_act  or 0) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas1      = (float(eEditable.inicio_coste_mas1 or 0) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas2      = (float(eEditable.inicio_coste_mas2 or 0) / float(eEditable.rendimiento)) + sum_editables
-    eEditable.final_coste_mas3      = (float(eEditable.inicio_coste_mas3 or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.precio_materia_prima    = eEditable.precio_padre_act / eEditable.rendimiento
+    eEditable.precio_padre_mas_gastos = eEditable.precio_padre_act / eEditable.rendimiento + sum_editables
+    eEditable.final_coste_act         = (float(eEditable.inicio_coste_act  or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas1        = (float(eEditable.inicio_coste_mas1 or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas2        = (float(eEditable.inicio_coste_mas2 or 0) / float(eEditable.rendimiento)) + sum_editables
+    eEditable.final_coste_mas3        = (float(eEditable.inicio_coste_mas3 or 0) / float(eEditable.rendimiento)) + sum_editables
     eEditable.save()
     return {'res':'ok'}
 
