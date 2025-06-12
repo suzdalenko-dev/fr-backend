@@ -170,13 +170,13 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                 AND pcl.codigo_articulo = :codigo_erp
         """
 
-        if iterations == 0:                                                       # espero 11 dias al pedido  
+        if iterations == 0:                                                        # espero 15 dias al pedido Katerina 
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=11)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=15)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=11)).strftime('%Y-%m-%d') # espero 11 dias al pedido
+        fechaActual = (datetime.today() - timedelta(days=15)).strftime('%Y-%m-%d') # espero 15 dias al pedido Katerina
 
         res = oracle.consult(sql_pp, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual })
 
@@ -216,13 +216,13 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                         AND ehs.empresa = '001'
         """
 
-        if iterations == 0:                                                       # espero 11 dias al pedido  
+        if iterations == 0:                                                       # espero 40 dias al pedido Katerina
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=11)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=40)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=11)).strftime('%Y-%m-%d') # espero 11 dias al pedido
+        fechaActual = (datetime.today() - timedelta(days=40)).strftime('%Y-%m-%d') # espero 40 dias al pedido Katerina
 
         res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
 

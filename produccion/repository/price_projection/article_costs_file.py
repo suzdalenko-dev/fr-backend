@@ -24,7 +24,6 @@ def update_excel_line(request):
     eEditable.amort_maq        = float(request.POST.get('amort_maq') or 0)
     eEditable.moi              = float(request.POST.get('moi') or 0)
    
-    inicio_coste_act  = float(eEditable.inicio_coste_act or 0)
     sum_editables = eEditable.precio_aceite + eEditable.precio_servicios + eEditable.aditivos + eEditable.mod + eEditable.embalajes + eEditable.amort_maq + eEditable.moi
 
     eEditable.precio_materia_prima    = eEditable.precio_padre_act / eEditable.rendimiento
