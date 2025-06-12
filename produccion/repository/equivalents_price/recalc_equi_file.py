@@ -1,7 +1,9 @@
+import calendar
+from datetime import datetime
 import json
 from froxa.utils.connectors.libra_connector import OracleConnector
 from produccion.models import EquivalentsHead
-from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes
+from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes, verificar_mes
 
 
 def recalculate_equiv_with_contaner(request, action, entity, code):
@@ -28,7 +30,6 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
                 'padre_name'                : eq['article_name'],
                 'articles'                  : only_code,
                 'consiste_de_alternativos'  : [],
-                'precio_padre_act'          : 0,
                 'costes_fecha'              : [],
                 'expediente_sin_precios'    : [],
             }
@@ -87,42 +88,44 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
 
 
     # 9. STOCK AND PRICE
-    # for eq5 in equiv_data:
-    #     lineas_array  = itemG['lineas']
-    #     for lineas_itemG in lineas_array:
-    #         pecentage = float(lineas_itemG['percentage'] or 0)
-    #         PRECIO    = float(lineas_itemG['resumen_alternativos']['precio_kg'] or 0)
-    #         STOCK     = float(lineas_itemG['resumen_alternativos']['stock_kg'] or 0)
-    #         CONSUMO   = 0
-    #         for rango_fechasG in lineas_itemG['rango']:
-    #             # exist arrivals START
-    #             if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
-    #                 for llegadaG in rango_fechasG['llegadas']:
-    #                     PRECIO = ((float(PRECIO) * float(STOCK)) + (float(llegadaG['CANTIDAD'] or 0) * float(llegadaG['PRECIO_EUR'] or 0))) / (float(llegadaG['CANTIDAD'] or 0) + STOCK)
-    #                     rango_fechasG['info_suma_llegadas'] += float(llegadaG['CANTIDAD'] or 0)
-    #                     STOCK                               += float(llegadaG['CANTIDAD'] or 0)
-    #             # exist arrivals FIN
-    #     
-    #             rango_fechasG['precio_con_llegada']    = PRECIO;
-    #             
-    #             # exist consum START
-    #             if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
-    #                 for consumA in rango_fechasG['consumo']:
-    #                     CONSUMO += float(consumA['CANTIDAD'])
-    #                     rango_fechasG['info_suma_consumo'] -= float(consumA['CANTIDAD'] or 0)
-    # 
-    #                 if verificar_mes(rango_fechasG['hasta']) == "mes actual":
-    #                     fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
-    #                     numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
-    #                     dias_restantes = obtener_dias_restantes_del_mes()
-    #                     CONSUMO = CONSUMO / numero_dias * dias_restantes
-    #             # exist consum FIN      
-    # 
-    #             STOCK = STOCK - CONSUMO
-    #             if STOCK < 0:
-    #                 STOCK = 0
-    #             rango_fechasG['stock_final_rango'] = STOCK
-    #             rango_fechasG['precio_percentage'] = PRECIO / 100 * pecentage
+    for eq5 in equiv_data:
+        PRECIO    = float(eq5['padre_valoracion_actual']['precio_kg'] or 0)
+        STOCK     = float(eq5['padre_valoracion_actual']['stock_kg'] or 0)
+ 
+        for rango_fechasG in eq5['rango']:
+            CONSUMO = 0
+            # exist arrivals START
+            if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
+                for llegadaG in rango_fechasG['llegadas']:
+                    PRECIO = ((float(PRECIO) * float(STOCK)) + (float(llegadaG['CANTIDAD'] or 0) * float(llegadaG['PRECIO_EUR'] or 0))) / (float(llegadaG['CANTIDAD'] or 0) + STOCK)
+                    rango_fechasG['info_suma_llegadas'] += float(llegadaG['CANTIDAD'] or 0)
+                    STOCK                               += float(llegadaG['CANTIDAD'] or 0)
+                    
+            # exist arrivals FIN
+            rango_fechasG['precio_con_llegada']    = PRECIO;
+    
+           
+
+            # exist consum START
+            if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
+                for consumA in rango_fechasG['consumo']:
+                    CONSUMO += float(consumA['CANTIDAD'])
+                
+                    if verificar_mes(rango_fechasG['hasta']) == "mes actual":
+                        print("MES ACTUAL")
+                        fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
+                        numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
+                        dias_restantes = obtener_dias_restantes_del_mes()
+                        CONSUMO = CONSUMO / numero_dias * dias_restantes
+                        
+                    rango_fechasG['info_suma_consumo'] -= CONSUMO
+            # exist consum FIN      
+    
+            STOCK = STOCK - CONSUMO
+            if STOCK < 0:
+                STOCK = 0
+            rango_fechasG['stock_final_rango'] = STOCK
+
 
 
     oracle.close()

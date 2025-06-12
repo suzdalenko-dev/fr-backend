@@ -137,8 +137,10 @@ def recalculate_price_projections(request):
             pecentage = float(lineas_itemG['percentage'] or 0)
             PRECIO    = float(lineas_itemG['resumen_alternativos']['precio_kg'] or 0)
             STOCK     = float(lineas_itemG['resumen_alternativos']['stock_kg'] or 0)
-            CONSUMO   = 0
+            
             for rango_fechasG in lineas_itemG['rango']:
+                CONSUMO   = 0
+
                 # exist arrivals START
                 if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
                     for llegadaG in rango_fechasG['llegadas']:
@@ -153,13 +155,14 @@ def recalculate_price_projections(request):
                 if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
                     for consumA in rango_fechasG['consumo']:
                         CONSUMO += float(consumA['CANTIDAD'])
-                        rango_fechasG['info_suma_consumo'] -= float(consumA['CANTIDAD'] or 0)
 
                     if verificar_mes(rango_fechasG['hasta']) == "mes actual":
                         fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
                         numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
                         dias_restantes = obtener_dias_restantes_del_mes()
                         CONSUMO = CONSUMO / numero_dias * dias_restantes
+
+                    rango_fechasG['info_suma_consumo'] -= CONSUMO
                 # exist consum FIN      
 
                 STOCK = STOCK - CONSUMO
