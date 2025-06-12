@@ -93,7 +93,7 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
         STOCK     = float(eq5['padre_valoracion_actual']['stock_kg'] or 0)
  
         for rango_fechasG in eq5['rango']:
-            CONSUMO = 0
+            
             # exist arrivals START
             if rango_fechasG['llegadas'] and len(rango_fechasG['llegadas']) > 0:
                 for llegadaG in rango_fechasG['llegadas']:
@@ -102,9 +102,8 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
                     STOCK                               += float(llegadaG['CANTIDAD'] or 0)
                     
             # exist arrivals FIN
-            rango_fechasG['precio_con_llegada']    = PRECIO;
-    
-           
+            rango_fechasG['precio_con_llegada'] = PRECIO
+            CONSUMO = 0
 
             # exist consum START
             if rango_fechasG['consumo'] and len(rango_fechasG['consumo']) > 0:     
@@ -118,7 +117,7 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
                         dias_restantes = obtener_dias_restantes_del_mes()
                         CONSUMO = CONSUMO / numero_dias * dias_restantes
                         
-                    rango_fechasG['info_suma_consumo'] -= CONSUMO
+                rango_fechasG['info_suma_consumo'] -= CONSUMO
             # exist consum FIN      
     
             STOCK = STOCK - CONSUMO
