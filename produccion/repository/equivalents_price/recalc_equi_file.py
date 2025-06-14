@@ -231,7 +231,7 @@ def recalculate_equiv_with_contaner(request):
         
     # equiv_data['files'] += 
     
-    upload_csv('detalle_entradas_equiv_cc')
-    upload_csv('equivalents_head')
+    upload_csv('1detalle_entradas_equiv_cc')
+    upload_csv('2equivalents_head')
 
     return equiv_data

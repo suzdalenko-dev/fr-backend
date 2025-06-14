@@ -14,11 +14,13 @@ def upload_csv(table_name):
     with open(file_name, 'rb') as f:
         files = {'file': (file_name, f)}
         response = requests.post(keys['host']+'?key0='+keys['key0']+'&key1='+keys['key1'], files=files)
+        print("Código de respuesta:", response.status_code)
+        print("Contenido de respuesta:", response.text)
         return response
     
 
 def generate_content_csv(table_name):
-    if table_name == 'detalle_entradas_equiv_cc':
+    if table_name == '1detalle_entradas_equiv_cc':
         fields = ["name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"] 
         for obj in DetalleEntradasEquivCC.objects.all():
             fila = [ str(obj.name or ""),
@@ -34,7 +36,7 @@ def generate_content_csv(table_name):
             ]
             fields.append(";".join(fila))
             
-    if table_name == 'equivalents_head':
+    if table_name == '2equivalents_head':
         list_dates = end_of_month_dates()
         fields = ["article_name;fecha;kg_act;price_act"]
         for obj in EquivalentsHead.objects.all():
