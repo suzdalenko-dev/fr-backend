@@ -6,7 +6,7 @@ from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
 def upload_csv(table_name):
     keys = get_keys('pbi.froxa.json')
     file_name = os.path.join("/var/log/froxa", str(table_name)+'.csv')
-        
+
     content_file = generate_content_csv(table_name)
     with open(file_name, 'w', encoding='utf-8') as f:
         f.write(content_file)
@@ -53,6 +53,7 @@ def generate_content_csv(table_name):
            
                    
     if table_name == 'x':
+        x = 0
         pass
 
 
