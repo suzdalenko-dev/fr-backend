@@ -1,11 +1,11 @@
 import json
 from froxa.utils.utilities.funcions_file import json_encode_one
-from produccion.models import EquivalentsHead
+from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
 
 
 def create_update_equivalents(request, action, entity, code):
     if action == 'get':
-        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative').order_by('article_name')
+        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative', 'kg_act', 'price_act', 'kg0', 'price0', 'kg1', 'price1', 'kg2', 'price2', 'kg3', 'price3').order_by('id')
         equi = list(equi)
         return equi
     
@@ -44,3 +44,9 @@ def create_update_equivalents(request, action, entity, code):
         if len(updated_list) != len(listEquiv):
             eqOne.alternative = json.dumps(updated_list)
             eqOne.save()
+
+
+    if action == 'get_structure':                          # http://127.0.0.1:8000/produccion/get_structure/0/0/create_update_equivalents/
+        equi = DetalleEntradasEquivCC.objects.all().values('id', 'name', 'entrada', 'stock_actual', 'pcm_actual', 'consumo_prod', 'consumo_vent', 'entrada_kg', 'entrada_eur', 'calc_kg', 'calc_eur').order_by('id')
+        equi = list(equi)
+        return equi

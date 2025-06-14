@@ -141,11 +141,11 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
     for codigo_erp in arr_codigos_erp:
         sql_pp = """
             SELECT
-              pc.numero_pedido,
-              pc.fecha_pedido,
+              pc.numero_pedido AS NUMERO,
+              pc.fecha_pedido AS FECHA_PREV_LLEGADA,
               pc.codigo_proveedor,
               pc.codigo_divisa,
-              pcl.codigo_articulo,
+              pcl.codigo_articulo AS ARTICULO,
               pcl.descripcion AS descripcion_articulo,
               pcl.precio_presentacion AS PRECIO_EUR,
               pcl.unidades_pedidas as CANTIDAD,
@@ -153,7 +153,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
               pcl.precio_presentacion,
               pcl.importe_lin_neto,
               pc.status_cierre,
-              'PEDIDO' AS ENTIDAD
+              'PED' AS ENTIDAD
             FROM
               pedidos_compras pc
             JOIN
@@ -168,6 +168,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND pcl.codigo_articulo = :codigo_erp
+            ORDER BY pc.fecha_pedido ASC
         """
 
         if iterations == 0:                                                        # espero 15 dias al pedido Katerina 
@@ -198,10 +199,10 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                       eae.cantidad as CANTIDAD,
                       ehs.fecha_llegada,
                       ehs.codigo_entrada,
-                      ec.contenedor,
+                      ec.contenedor AS NUMERO,
                       ei.divisa,
                       ei.valor_cambio,
-                      'EXPEDIENTE' AS ENTIDAD,
+                      'EXP' AS ENTIDAD,
                       -2222 as PRECIO_EUR
                     FROM expedientes_hojas_seguim ehs
                     JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
@@ -214,6 +215,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                         AND ehs.codigo_entrada IS NULL
                         AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
                         AND ehs.empresa = '001'
+                    ORDER BY ehs.FECHA_PREV_LLEGADA ASC
         """
 
         if iterations == 0:                                                       # espero 40 dias al pedido Katerina
@@ -274,7 +276,7 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         a.DESCRIP_COMERCIAL AS DESCRIP_CONSUMIDO,
                         a.unidad_codigo1 AS CODIGO_PRESENTACION,
                         TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) AS CANTIDAD,
-                        'OFS_CONSUMO' AS CONSUMO_OFS
+                        'OFS_CONSUMO' AS CONSUMO
                     FROM 
                         COSTES_ORDENES_FAB_MAT_CTD cofmc
                     JOIN 
@@ -299,7 +301,7 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         c.fecha_pedido AS fecha_venta,
                         l.articulo AS codigo_articulo,
                         TO_NUMBER(l.uni_seralm) AS CANTIDAD,
-                        'P_VENTA' AS P_VENTA
+                        'P_VENTA' AS CONSUMO
                     FROM
                         albaran_ventas_lin l
                     JOIN

@@ -4,6 +4,7 @@ from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import json_encode_all
 from froxa.utils.utilities.smailer_file import SMailer
 from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEditable
+from produccion.repository.equivalents_price.recalc_equi_file import recalculate_equiv_with_contaner
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -238,6 +239,7 @@ def recalculate_price_projections(request):
             # manejar el caso
             pass
 
+    x = recalculate_equiv_with_contaner(request)
 
     aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
       

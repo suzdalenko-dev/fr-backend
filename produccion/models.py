@@ -48,3 +48,31 @@ class ExcelLinesEditable(models.Model):
 class EquivalentsHead(models.Model):
     article_name = models.TextField(unique=True)
     alternative  = models.TextField(null=True)
+
+    kg_act = models.FloatField(null=True)
+    price_act = models.FloatField(null=True)
+
+    kg0    = models.FloatField(null=True)
+    price0 = models.FloatField(null=True)
+    kg1    = models.FloatField(null=True)
+    price1 = models.FloatField(null=True)
+    kg2    = models.FloatField(null=True)
+    price2 = models.FloatField(null=True)
+    kg3    = models.FloatField(null=True)
+    price3 = models.FloatField(null=True)
+
+
+class DetalleEntradasEquivCC(models.Model):
+    name         = models.TextField(null=True)
+    entrada      = models.TextField(null=True)
+    
+    stock_actual = models.FloatField(null=True)
+    pcm_actual   = models.FloatField(null=True)
+    consumo_prod = models.FloatField(null=True)
+    consumo_vent = models.FloatField(null=True)
+    
+    entrada_kg   = models.FloatField(null=True)
+    entrada_eur  = models.FloatField(null=True)
+
+    calc_kg      = models.FloatField(null=True)
+    calc_eur     = models.FloatField(null=True)

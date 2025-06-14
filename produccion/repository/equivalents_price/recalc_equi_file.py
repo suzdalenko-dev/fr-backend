@@ -2,11 +2,13 @@ import calendar
 from datetime import datetime
 import json
 from froxa.utils.connectors.libra_connector import OracleConnector
-from produccion.models import EquivalentsHead
+from froxa.utils.utilities.funcions_file import get_short_date
+from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
+from produccion.repository.equivalents_price.upload_data_file import upload_csv
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes, verificar_mes
+from dateutil.relativedelta import relativedelta
 
-
-def recalculate_equiv_with_contaner(request, action, entity, code):
+def recalculate_equiv_with_contaner(request):
 
     id = request.GET.get('id')
     equiv_data = []
@@ -14,9 +16,9 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
     oracle.connect()
     
     if id and id.isdigit() and int(id) > 0:
-        equiv = EquivalentsHead.objects.filter(id=id).values('id', 'article_name', 'alternative')
+        equiv = EquivalentsHead.objects.filter(id=id).values('id', 'article_name', 'alternative').order_by()
     else:
-        equiv = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative')
+        equiv = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative').order_by('id')
     equiv = list(equiv)
 
     for eq in equiv:
@@ -54,6 +56,9 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
         suma_precios     = 0
         i = 0
         lineas_array  = eq2['consiste_de_alternativos']
+
+        if len(eq2['consiste_de_alternativos']) == 0:
+            eq2['padre_valoracion_actual'] = {'precio_kg': 0, 'stock_kg': 0 }
 
         for customArticle in lineas_array:
             i += 1
@@ -110,12 +115,11 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
                 for consumA in rango_fechasG['consumo']:
                     CONSUMO += float(consumA['CANTIDAD'])
                 
-                    if verificar_mes(rango_fechasG['hasta']) == "mes actual":
-                        print("MES ACTUAL")
-                        fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
-                        numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
-                        dias_restantes = obtener_dias_restantes_del_mes()
-                        CONSUMO = CONSUMO / numero_dias * dias_restantes
+                if verificar_mes(rango_fechasG['hasta']) == "mes actual":
+                    fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
+                    numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
+                    dias_restantes = obtener_dias_restantes_del_mes()
+                    CONSUMO = CONSUMO / numero_dias * dias_restantes
                         
                 rango_fechasG['info_suma_consumo'] -= CONSUMO
             # exist consum FIN      
@@ -126,6 +130,108 @@ def recalculate_equiv_with_contaner(request, action, entity, code):
             rango_fechasG['stock_final_rango'] = STOCK
 
 
+    # 10.
+    today = datetime.today()
+    mes_actual = (today.replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas1   = ((today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas2   = ((today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas3   = ((today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+
+    for itemQ in equiv_data:
+        
+        eqArt = EquivalentsHead.objects.get(id=itemQ['id'])
+        eqArt.kg_act    = float(itemQ['padre_valoracion_actual']['stock_kg'] or 0)
+        eqArt.price_act = float(itemQ['padre_valoracion_actual']['precio_kg'] or 0)
+
+        for rango in itemQ['rango']:                                 
+            if rango['hasta'] == mes_actual:
+               eqArt.kg0    = float(rango['stock_final_rango'] or 0)
+               eqArt.price0 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas1:
+               eqArt.kg1    = float(rango['stock_final_rango'] or 0)
+               eqArt.price1 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas2:
+               eqArt.kg2    = float(rango['stock_final_rango'] or 0)
+               eqArt.price2 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas3:
+               eqArt.kg3    = float(rango['stock_final_rango'] or 0)
+               eqArt.price3 = float(rango['precio_con_llegada'] or 0)
+
+        eqArt.save()  
 
     oracle.close()
+
+    DetalleEntradasEquivCC.objects.all().delete()
+
+    for eq6 in equiv_data:
+        NAME  = eq6['padre_name']
+        STOCK = float(eq6['padre_valoracion_actual']['stock_kg'] or 0)
+        PRICE = float(eq6['padre_valoracion_actual']['precio_kg'] or 0)
+
+        deecc = DetalleEntradasEquivCC()
+        deecc.name         = NAME
+        deecc.entrada      = 'Fecha '+get_short_date()+' situacion actual'
+        deecc.stock_actual = STOCK
+        deecc.pcm_actual   = PRICE
+        deecc.save()
+
+        rangos = eq6['rango']
+        for rango in rangos:
+
+            if rango['llegadas'] and len(rango['llegadas']) > 0:
+                rango['llegadas'].sort(key=lambda x: x["FECHA_PREV_LLEGADA"])
+
+                for llegada in rango['llegadas']:
+                    idCont = ''
+                    if llegada['ENTIDAD'] == 'EXP': idCont = llegada['NUM_EXPEDIENTE']
+                    
+                    deecc = DetalleEntradasEquivCC()
+                    deecc.name         = NAME
+                    deecc.entrada      = 'Fecha '+str(llegada['FECHA_PREV_LLEGADA'])[:10]+' Art. '+str(llegada['ARTICULO'])+' '+str(llegada['ENTIDAD'])+' '+str(llegada['NUMERO'])+' '+str(idCont)
+                    deecc.entrada_kg   = float(llegada['CANTIDAD'] or 0)
+                    deecc.entrada_eur  = float(llegada['PRECIO_EUR'] or 0)
+                    
+                    PRICE              = ((STOCK * PRICE) + ( deecc.entrada_kg *  deecc.entrada_eur)) / (STOCK + deecc.entrada_kg)
+                    deecc.calc_eur     = PRICE
+                    STOCK             += deecc.entrada_kg
+                    deecc.calc_kg      = STOCK
+                    deecc.save()
+
+            CONSUMO_PROD = 0
+            CONSUMO_VENT = 0
+            if rango['consumo'] and len(rango['consumo']) > 0:    
+                for consumo in rango['consumo']:
+                    if consumo['CONSUMO'] == 'P_VENTA':
+                        CONSUMO_VENT += float(consumo['CANTIDAD'] or 0)
+                    else:
+                        CONSUMO_PROD += float(consumo['CANTIDAD'] or 0)
+
+                if verificar_mes(rango['hasta']) == "mes actual":
+                    fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
+                    numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
+                    dias_restantes = obtener_dias_restantes_del_mes()
+                    CONSUMO_VENT = CONSUMO_VENT / numero_dias * dias_restantes
+                    CONSUMO_PROD = CONSUMO_PROD / numero_dias * dias_restantes
+        
+            STOCK = STOCK - CONSUMO_PROD - CONSUMO_VENT
+            if STOCK < 0: STOCK = 0
+
+            deecc = DetalleEntradasEquivCC()
+            deecc.name         = NAME
+            deecc.entrada  = 'Fecha '+rango['hasta']+' Resultado mes'
+            deecc.consumo_prod = CONSUMO_PROD
+            deecc.consumo_vent = CONSUMO_VENT
+            deecc.calc_eur = PRICE
+            deecc.calc_kg  = STOCK
+            deecc.save()
+
+        
+    # equiv_data['files'] += 
+    
+    upload_csv('detalle_entradas_equiv_cc')
+    upload_csv('equivalents_head')
+
     return equiv_data
