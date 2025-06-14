@@ -8,9 +8,9 @@ def upload_csv(table_name):
     file_name = 'upload/'+table_name+'.csv'
     file_name = str(table_name)+'.csv'
 
-    route_dir = os.path.dirname(file_name)
-    if not os.path.exists(route_dir):
-        os.makedirs(route_dir)
+    # route_dir = os.path.dirname(file_name)
+    # if not os.path.exists(route_dir):
+    #     os.makedirs(route_dir)
     
     content_file = generate_content_csv(table_name)
     with open(file_name, 'w', encoding='utf-8') as f:
