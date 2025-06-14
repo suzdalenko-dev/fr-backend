@@ -39,15 +39,17 @@ def generate_content_csv(table_name):
         fields = ["article_name;fecha;kg_act;price_act"]
         for obj in EquivalentsHead.objects.all():
             NAME = str(obj.article_name or "")
-            for x in [0, 1, 2, 3]:
+            for x in [0, 1, 2, 3, 4]:
                 line = [NAME, list_dates[x]]
                 if x == 0:
-                    line += [tCSV(obj.kg0 or ""), tCSV(obj.price0 or "")]
+                    line += [tCSV(obj.kg_act or ""), tCSV(obj.price_act or "")]
                 if x == 1:
-                    line += [tCSV(obj.kg1 or ""), tCSV(obj.price1 or "")]
+                    line += [tCSV(obj.kg0 or ""), tCSV(obj.price0 or "")]
                 if x == 2:
-                    line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
+                    line += [tCSV(obj.kg1 or ""), tCSV(obj.price1 or "")]
                 if x == 3:
+                    line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
+                if x == 4:
                     line += [tCSV(obj.kg3 or ""), tCSV(obj.price3 or "")]
                 fields.append(";".join(line))
            
