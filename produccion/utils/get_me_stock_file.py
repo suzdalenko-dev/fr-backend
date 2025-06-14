@@ -168,6 +168,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND pcl.codigo_articulo = :codigo_erp
+                AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
             ORDER BY pc.fecha_pedido ASC
         """
 
