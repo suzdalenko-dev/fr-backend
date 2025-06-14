@@ -5,13 +5,8 @@ from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
 
 def upload_csv(table_name):
     keys = get_keys('pbi.froxa.json')
-    file_name = 'upload/'+table_name+'.csv'
-    file_name = str(table_name)+'.csv'
-
-    # route_dir = os.path.dirname(file_name)
-    # if not os.path.exists(route_dir):
-    #     os.makedirs(route_dir)
-    
+    file_name = os.path.join("/var/log/froxa", str(table_name)+'.csv')
+        
     content_file = generate_content_csv(table_name)
     with open(file_name, 'w', encoding='utf-8') as f:
         f.write(content_file)
