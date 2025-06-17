@@ -86,10 +86,12 @@ def recalculate_equiv_with_contaner(request):
     # I iterante the data ranges and search for  arrivals WITCHOUT CONTAINER AND WITH CONTAINER
     for eq4 in equiv_data:
         arr_codigos_erp = eq4['articles']
-            
+        iterations = 0
+
         for r_fechas in eq4['rango']:
-            r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL)
+            r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations)
             r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas) 
+            iterations += 1
 
 
     # 9. STOCK AND PRICE

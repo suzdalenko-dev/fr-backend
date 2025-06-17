@@ -38,3 +38,11 @@ pre= 5,0435  consiste de 5,8665
 
      "CODIGO_ARTICULO": "40233",
      "NUMERO_LOTE_INT": "052227",
+
+
+
+     if(userDontLogin('produccion')) return;
+
+
+
+     sarakey: '1475369*'

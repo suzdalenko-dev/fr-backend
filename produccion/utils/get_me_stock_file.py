@@ -1,3 +1,4 @@
+import copy
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
@@ -133,11 +134,10 @@ def consumo_produccion(oracle, arr_codigos_erp, r_fechas):
 ### here I first look for the orders and then I look for the containers
 #######################################################
 
-def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio):
+def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio, iterations):
     # desde pedidos
     llegadas_p_data = []
 
-    iterations = 0
     for codigo_erp in arr_codigos_erp:
         sql_pp = """
             SELECT
@@ -185,11 +185,8 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
         if res:
             llegadas_p_data.extend(res)
 
-        iterations += 1
-
 
     # desde expedientes !!! COMPROBAR ESTE CASO: CODIGO_PROVEEDOR: "001186"
-    iterations = 0
     for codigo_erp in arr_codigos_erp:
         sql_ei = """SELECT
                       ehs.FECHA_PREV_LLEGADA,
@@ -240,8 +237,20 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                         r['PRECIO_EUR'] = -1122
                    
             llegadas_p_data.extend(res)
+            # for _ in range(3):  # simular 3 líneas
+            #     llegadas_p_data.extend([copy.deepcopy(r) for r in res])
 
-        iterations += 1
+
+    
+    ids_in_use = []
+    suzdalIcon = "*"
+    for i in llegadas_p_data:
+        currentId = str(i['NUMERO'])+str(i['ARTICULO'])
+        if currentId in ids_in_use:
+            i['NUMERO'] = str(i['NUMERO'])+" "+str(suzdalIcon)
+            suzdalIcon += str("*")
+        ids_in_use += [currentId]
+
 
     return llegadas_p_data
 

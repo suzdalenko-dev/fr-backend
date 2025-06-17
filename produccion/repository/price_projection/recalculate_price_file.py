@@ -126,10 +126,12 @@ def recalculate_price_projections(request):
         lineas_array  = itemF['lineas'];
         for lineas_itemF in lineas_array:
             arr_codigos_erp = lineas_itemF['codigos_erp_arr']
-            
+            iterations = 0
+
             for r_fechas in lineas_itemF['rango']:
-                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL)
+                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations)
                 r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)          
+                iterations += 1
      
     # 9. STOCK AND PRICE
     for itemG in articulos_data:
