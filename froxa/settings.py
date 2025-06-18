@@ -34,7 +34,8 @@ INSTALLED_APPS = [
     'zzircon',
     'calidad',
     'produccion',
-    'finanzas'
+    'finanzas',
+    'froxa'
 ]
 
 MIDDLEWARE = [
