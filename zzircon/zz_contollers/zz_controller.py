@@ -1,5 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
+from zzircon.zz_repository.bizerba_file import bizerba_recent_lines, five_minutes
 from zzircon.zz_repository.info_recipiente_file import info_recipiente_function
 from zzircon.zz_repository.of_abiertas_file import ofs_abiertas_function
 from zzircon.zz_repository.of_de_palet_file import of_de_palet_function
@@ -21,6 +22,8 @@ def zz_production_function(request, entity, code, description):
         'of_detalle': lambda: of_detalle_function(code),            # http://127.0.0.1:8000/zzircon/of/381/of_detalle/
         'of_de_palet': lambda: of_de_palet_function(code),          # http://127.0.0.1:8000/zzircon/palet/000000096/of_de_palet/
         'info_recipiente': lambda: info_recipiente_function(code),  # http://127.0.0.1:8000/zzircon/palet/000000728/info_recipiente/
+        'bizerba-5-minutes': lambda: five_minutes(),                # http://127.0.0.1:8000/zzircon/bizerba/0/bizerba-5-minutes/
+        'bizerba_recent_lines': lambda: bizerba_recent_lines(code), # http://127.0.0.1:8000/zzircon/bizerba/10/bizerba_recent_lines/
     }
 
     try:
