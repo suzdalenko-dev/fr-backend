@@ -1,7 +1,7 @@
 import json
 import requests, os
 from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tCSV
-from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
+from produccion.models import DetalleEntradasEquivCC, EquivalentsHead, ExcelLinesEditable
 
 def upload_csv(table_name):
     keys = get_keys('pbi.froxa.json')
@@ -53,6 +53,25 @@ def generate_content_csv(table_name):
                     line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
                 if x == 4:
                     line += [tCSV(obj.kg3 or ""), tCSV(obj.price3 or "")]
+                fields.append(";".join(line))
+
+    
+    if table_name == '3proyeccion-costes-con-contenedor':
+        list_dates = end_of_month_dates()
+        fields = ["article_name;fecha;price"]
+        for obj in ExcelLinesEditable.objects.all():
+            NAME = str(obj.article_name or "")+" "+str(obj.article_code or "")
+            for x in [1, 2, 3, 4]:
+                line = [NAME, list_dates[x]]
+                if x == 1:
+                    line += [tCSV(obj.final_coste_act or 0)]
+                if x == 2:
+                    line += [tCSV(obj.final_coste_mas1 or 0)]
+                if x == 3:
+                    line += [tCSV(obj.final_coste_mas2 or 0)]
+                if x == 4:
+                    line += [tCSV(obj.final_coste_mas3 or 0)]
+
                 fields.append(";".join(line))
            
                    

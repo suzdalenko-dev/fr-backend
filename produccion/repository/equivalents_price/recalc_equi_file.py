@@ -235,5 +235,11 @@ def recalculate_equiv_with_contaner(request):
     
     upload_csv('1detalle_entradas_equiv_cc')
     upload_csv('2equivalents_head')
+    upload_csv('3proyeccion-costes-con-contenedor')
+
+
+
+
+
 
     return equiv_data
