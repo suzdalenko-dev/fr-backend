@@ -211,7 +211,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                         AND ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaActual, 'YYYY-MM-DD')
                         AND eae.articulo = :codigo_erp
                         AND ehs.codigo_entrada IS NULL
-                        AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
+                        AND (ec.contenedor IS NOT NULL AND ec.contenedor != 'CNT')
                         AND ehs.empresa = '001'
                     ORDER BY ehs.FECHA_PREV_LLEGADA ASC
         """

@@ -1,22 +1,26 @@
+import io
 import json
 import requests, os
 from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tCSV
 from produccion.models import DetalleEntradasEquivCC, EquivalentsHead, ExcelLinesEditable
 
 def upload_csv(table_name):
+    print(table_name)
     keys = get_keys('pbi.froxa.json')
-    file_name = os.path.join("/var/log/froxa", str(table_name)+'.csv')
 
+    # Generar el contenido CSV en memoria
     content_file = generate_content_csv(table_name)
-    with open(file_name, 'w', encoding='utf-8') as f:
-        f.write(content_file)
+    buffer = io.StringIO()
+    buffer.write(content_file)
+    buffer.seek(0)
 
-    with open(file_name, 'rb') as f:
-        files = {'file': (file_name, f)}
-        response = requests.post(keys['host']+'?key0='+keys['key0']+'&key1='+keys['key1'], files=files)
-        print("Código de respuesta:", response.status_code)
-        print("Contenido de respuesta:", response.text)
-        return response
+    # Simular envío de archivo sin crear localmente
+    files = {'file': ('{}.csv'.format(table_name), buffer.getvalue(), 'text/csv')}
+    response = requests.post(keys['host'] + '?key0=' + keys['key0'] + '&key1=' + keys['key1'], files=files)
+
+    print("Código de respuesta:", response.status_code)
+    print("Contenido de respuesta:", response.text)
+    return response
     
 
 def generate_content_csv(table_name):
@@ -83,3 +87,26 @@ def generate_content_csv(table_name):
     return "\n".join(fields)
 
 
+
+
+
+
+
+
+
+
+
+
+
+# file_name = os.path.join("/var/log/froxa", str(table_name)+'.csv')
+# 
+# content_file = generate_content_csv(table_name)
+# with open(file_name, 'w', encoding='utf-8') as f:
+#     f.write(content_file)
+# 
+# with open(file_name, 'rb') as f:
+#     files = {'file': (file_name, f)}
+#     response = requests.post(keys['host']+'?key0='+keys['key0']+'&key1='+keys['key1'], files=files)
+#     print("Código de respuesta:", response.status_code)
+#     print("Contenido de respuesta:", response.text)
+#     return response

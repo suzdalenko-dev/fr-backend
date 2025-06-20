@@ -1,28 +1,28 @@
- SELECT
-              pc.numero_pedido AS NUMERO,
-              pc.fecha_pedido AS FECHA_PREV_LLEGADA,
-              pc.codigo_proveedor,
-              pc.codigo_divisa,
-              pcl.codigo_articulo AS ARTICULO,
-              pcl.descripcion AS descripcion_articulo,
-              pcl.precio_presentacion AS PRECIO_EUR,
-              pcl.unidades_pedidas as CANTIDAD,
-              pcl.unidades_entregadas,
-              pcl.precio_presentacion,
-              pcl.importe_lin_neto,
-              pc.status_cierre,
-              'PED' AS ENTIDAD
-            FROM
-              pedidos_compras pc
-            JOIN
-              pedidos_compras_lin pcl
-              ON pc.numero_pedido = pcl.numero_pedido
-              AND pc.serie_numeracion = pcl.serie_numeracion
-              AND pc.organizacion_compras = pcl.organizacion_compras
-              AND pc.codigo_empresa = pcl.codigo_empresa
-            WHERE
-                 pc.codigo_empresa = '001'
-                AND pc.status_cierre = 'E'
-                AND pc.numero_pedido = 581
-                AND (pcl.unidades_entregadas is NULL OR pcl.unidades_entregadas = 0)
-            ORDER BY pc.fecha_pedido ASC;
+SELECT
+                      ehs.FECHA_PREV_LLEGADA,
+                      ehs.num_expediente AS NUM_EXPEDIENTE,
+                      eae.articulo AS ARTICULO,
+                      eae.PRECIO,
+                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL,
+                      eae.cantidad as CANTIDAD,
+                      ehs.fecha_llegada,
+                      ehs.codigo_entrada,
+                      ec.contenedor AS NUMERO,
+                      ei.divisa,
+                      ei.valor_cambio,
+                      'EXP' AS ENTIDAD,
+                      -2222 as PRECIO_EUR
+                    FROM expedientes_hojas_seguim ehs
+                    JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
+                    JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa
+                    JOIN expedientes_contenedores ec ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa
+                    WHERE 
+                        ehs.FECHA_PREV_LLEGADA >= TO_DATE('2025-06-11', 'YYYY-MM-DD')
+                        AND ehs.codigo_entrada IS NULL
+                        AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
+                        AND ehs.empresa = '001'
+                    ORDER BY ehs.FECHA_PREV_LLEGADA ASC;
+
+
+
+-- drrWq9SNsFJH AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')

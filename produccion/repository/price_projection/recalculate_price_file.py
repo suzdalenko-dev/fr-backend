@@ -241,7 +241,8 @@ def recalculate_price_projections(request):
             # manejar el caso
             pass
 
-    x = recalculate_equiv_with_contaner(request)
+    if not str(code):
+        x = recalculate_equiv_with_contaner(request)
 
     aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
       

@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
+from produccion.repository.embarcado_con_sin_cont.embarcado_file import embarcado_art_con_sin_cont
 from produccion.repository.equivalents_price.create_update_eq_file import create_update_equivalents
 from produccion.repository.equivalents_price.recalc_equi_file import recalculate_equiv_with_contaner
 from produccion.repository.price_projection.article_costs_file import delete_article_costs_all, delete_ingrediente_line, get_all_excel_editables_lines, get_articles_libra, get_datail_art_cost, line_costs_delete_alternative, line_costs_save_alternative, line_costs_update_percentage, save_art_cost_head, save_new_ingrediente_line, update_excel_line
@@ -28,8 +29,9 @@ def production_default_controller(request, action, entity, code, description):
         'line_costs_delete_alternative': lambda: line_costs_delete_alternative(request),  # http://127.0.0.1:8000/produccion/put/0/0/line_costs_delete_alternative/
         'delete_article_costs_all': lambda: delete_article_costs_all(request),            # http://127.0.0.1:8000/produccion/put/0/0/delete_article_costs_all/
 
-        'create_update_equivalents': lambda: create_update_equivalents(request, action, entity, code),              # http://127.0.0.1:8000/produccion/get/0/0/create_update_equivalents/
-        'recalculate_equiv_with_contaner': lambda: recalculate_equiv_with_contaner(request),                        # http://127.0.0.1:8000/produccion/get/0/0/recalculate_equiv_with_contaner/
+        'create_update_equivalents': lambda: create_update_equivalents(request, action, entity, code), # http://127.0.0.1:8000/produccion/get/0/0/create_update_equivalents/
+        'recalculate_equiv_with_contaner': lambda: recalculate_equiv_with_contaner(request),           # http://127.0.0.1:8000/produccion/get/0/0/recalculate_equiv_with_contaner/
+        'embarcado_art_con_sin_cont': lambda: embarcado_art_con_sin_cont(request),                     # http://127.0.0.1:8000/produccion/get/0/0/embarcado_art_con_sin_cont/ 
     }
 
     try:
