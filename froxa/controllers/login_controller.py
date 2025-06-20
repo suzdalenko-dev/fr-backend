@@ -19,7 +19,7 @@ def login_function(request):
 
             num_visitas = int(user.num_visit) if user.num_visit is not None else 0
             currentIp = get_client_ip(request)
-            if currentIp not in ['127.0.0.1','192.168.1.13']:
+            if currentIp not in ['127.0.0.1','192.168.1.131']:
                 if num_visitas == 0:
                     user.num_visit = 1
                     user.first_visit = get_current_date()
