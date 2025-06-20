@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from froxa.models import Userfroxa
+from froxa.utils.utilities.funcions_file import get_client_ip, get_current_date
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
 
 
@@ -15,6 +16,21 @@ def login_function(request):
                 return JsonResponse({"status": 404, "message": "Usuario no encontrado."})
             if user.password != password:
                 return JsonResponse({"status": 401, "message": "Contraseña incorrecta."})
+
+            num_visitas = int(user.num_visit) if user.num_visit is not None else 0
+            currentIp = get_client_ip(request)
+            if currentIp not in ['127.0.0.1']:
+                if num_visitas == 0:
+                    user.num_visit = 1
+                    user.first_visit = get_current_date()
+                else:
+                    user.last_visit = get_current_date()
+                    user.num_visit += 1
+                    user.ip = user.ip or ''
+                    if currentIp not in user.ip:
+                        user.ip += currentIp + ' '
+            
+            user.save()
 
             return JsonResponse({"data": {"username": user.name, "role": user.role, "permissions": user.permissions, "id": user.id}})
     

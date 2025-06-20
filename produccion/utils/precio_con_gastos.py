@@ -64,7 +64,8 @@ def consultar_precio_con_gastos(oracle, exp_id, art_code, cantidad):
                and ( expedientes_contenedores.contenedor is null
                 or expedientes_contenedores.contenedor != 'CNT' )
                and expedientes_hojas_seguim.num_expediente = :exp_id
-               and expedientes_articulos_embarque.articulo = :art_code"""
+               and expedientes_articulos_embarque.articulo = :art_code
+               """
         
     res = oracle.consult(sql, {'exp_id':exp_id, 'art_code': art_code})
     return res

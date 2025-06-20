@@ -5,7 +5,7 @@ from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tC
 from produccion.models import DetalleEntradasEquivCC, EquivalentsHead, ExcelLinesEditable
 
 def upload_csv(table_name):
-    print(table_name)
+
     keys = get_keys('pbi.froxa.json')
 
     # Generar el contenido CSV en memoria
@@ -18,8 +18,6 @@ def upload_csv(table_name):
     files = {'file': ('{}.csv'.format(table_name), buffer.getvalue(), 'text/csv')}
     response = requests.post(keys['host'] + '?key0=' + keys['key0'] + '&key1=' + keys['key1'], files=files)
 
-    print("Código de respuesta:", response.status_code)
-    print("Contenido de respuesta:", response.text)
     return response
     
 

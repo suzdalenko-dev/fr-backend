@@ -19,7 +19,6 @@ SELECT
   WHERE 
       ei.codigo = 273
       AND ehs.codigo_entrada IS NULL
-      AND (ec.contenedor IS NOT NULL AND ec.contenedor != 'CNT')
       AND ehs.empresa = '001'
   ORDER BY ehs.FECHA_PREV_LLEGADA ASC;
 

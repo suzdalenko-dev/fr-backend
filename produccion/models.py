@@ -76,3 +76,35 @@ class DetalleEntradasEquivCC(models.Model):
 
     calc_kg      = models.FloatField(null=True)
     calc_eur     = models.FloatField(null=True)
+
+
+
+class EmbarkedIndividualRating(models.Model):
+    article_name = models.TextField(unique=True)
+    article_code = models.TextField(null=True)
+
+    kg_act = models.FloatField(null=True)
+    price_act = models.FloatField(null=True)
+
+    kg0    = models.FloatField(null=True)
+    price0 = models.FloatField(null=True)
+    kg1    = models.FloatField(null=True)
+    price1 = models.FloatField(null=True)
+    kg2    = models.FloatField(null=True)
+    price2 = models.FloatField(null=True)
+    kg3    = models.FloatField(null=True)
+    price3 = models.FloatField(null=True)
+    kg4    = models.FloatField(null=True)
+    price4 = models.FloatField(null=True)
+    kg5    = models.FloatField(null=True)
+    price5 = models.FloatField(null=True)
+    kg6    = models.FloatField(null=True)
+    price6 = models.FloatField(null=True)
+    kg7    = models.FloatField(null=True)
+    price7 = models.FloatField(null=True)
+    kg8    = models.FloatField(null=True)
+    price8 = models.FloatField(null=True)
+    kg9    = models.FloatField(null=True)
+    price9 = models.FloatField(null=True)
+    kg10   = models.FloatField(null=True)
+    price10= models.FloatField(null=True)

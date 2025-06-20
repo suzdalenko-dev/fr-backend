@@ -95,6 +95,7 @@ def recalculate_equiv_with_contaner(request):
             r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas) 
             iterations += 1
 
+    oracle.close()
 
     # 9. STOCK AND PRICE
     for eq5 in equiv_data:
@@ -166,7 +167,6 @@ def recalculate_equiv_with_contaner(request):
 
         eqArt.save()  
 
-    oracle.close()
 
     DetalleEntradasEquivCC.objects.all().delete()
 
@@ -232,16 +232,11 @@ def recalculate_equiv_with_contaner(request):
             deecc.calc_kg  = STOCK
             deecc.save()
 
-        
-    # equiv_data['files'] += 
     
     upload_csv('1detalle_entradas_equiv_cc')
     upload_csv('2equivalents_head')
     upload_csv('3proyeccion-costes-con-contenedor')
 
-
-
     aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
-
 
     return equiv_data

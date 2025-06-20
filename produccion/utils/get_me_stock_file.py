@@ -187,7 +187,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
             llegadas_p_data.extend(res)
 
 
-    # desde expedientes !!! COMPROBAR ESTE CASO: CODIGO_PROVEEDOR: "001186"
+    # desde expedientes !!! OJO SOLO CON CONTENEDOR FILTRAMOS LA ULTIMA HOJA DE SEGUIMIENTO
     for codigo_erp in arr_codigos_erp:
         sql_ei = """SELECT
                       ehs.FECHA_PREV_LLEGADA,
