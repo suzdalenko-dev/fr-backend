@@ -19,7 +19,7 @@ SELECT
                     WHERE 
                         ehs.FECHA_PREV_LLEGADA >= TO_DATE('2025-06-11', 'YYYY-MM-DD')
                         AND ehs.codigo_entrada IS NULL
-                        AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')
+                        AND (ec.contenedor IS NOT NULL AND ec.contenedor != 'CNT')
                         AND ehs.empresa = '001'
                     ORDER BY ehs.FECHA_PREV_LLEGADA ASC;
 
