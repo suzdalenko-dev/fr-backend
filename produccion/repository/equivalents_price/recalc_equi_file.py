@@ -8,6 +8,8 @@ from produccion.repository.equivalents_price.upload_data_file import upload_csv
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes, verificar_mes
 from dateutil.relativedelta import relativedelta
 
+from produccion.utils.sent_email_file import aviso_expediente_sin_precio
+
 def recalculate_equiv_with_contaner(request):
 
     id = request.GET.get('id')
@@ -239,7 +241,7 @@ def recalculate_equiv_with_contaner(request):
 
 
 
-
+    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
 
 
     return equiv_data

@@ -133,6 +133,7 @@ def recalculate_price_projections(request):
                 r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)          
                 iterations += 1
      
+
     # 9. STOCK AND PRICE
     for itemG in articulos_data:
         lineas_array  = itemG['lineas']

@@ -138,6 +138,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
     # desde pedidos
     llegadas_p_data = []
 
+
     for codigo_erp in arr_codigos_erp:
         sql_pp = """
             SELECT
@@ -201,7 +202,8 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                       ei.divisa,
                       ei.valor_cambio,
                       'EXP' AS ENTIDAD,
-                      -2222 as PRECIO_EUR
+                      -2222 as PRECIO_EUR,
+                      ehs.NUM_HOJA
                     FROM expedientes_hojas_seguim ehs
                     JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
                     JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa
@@ -235,10 +237,27 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                     if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                         expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
                         r['PRECIO_EUR'] = -1122
-                   
-            llegadas_p_data.extend(res)
-            # for _ in range(3):  # simular 3 líneas
-            #     llegadas_p_data.extend([copy.deepcopy(r) for r in res])
+
+
+        # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta
+        exped_filtrados = []
+        for expediente in res:
+            sql_hoja_mayor = """SELECT ehs.NUM_HOJA 
+                                FROM expedientes_hojas_seguim ehs
+                                JOIN expedientes_imp ei ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
+                                WHERE ehs.num_hoja > :numHoja AND ei.codigo = :numExpediente"""
+                
+            res_sql_mayor = oracle.consult(sql_hoja_mayor, { 'numHoja': expediente['NUM_HOJA'], 'numExpediente': expediente['NUM_EXPEDIENTE']})
+            if(res_sql_mayor):
+                pass
+            else:
+                exped_filtrados.append(expediente)
+                
+
+        
+        if exped_filtrados:        
+            llegadas_p_data.extend(exped_filtrados) 
+           
 
 
     
@@ -358,3 +377,28 @@ def obtener_dias_restantes_del_mes():
     ultimo_dia = calendar.monthrange(hoy.year, hoy.month)[1]
     return ultimo_dia - hoy.day + 1
 
+###################################################
+
+def obtener_rangos_meses12():
+    rangos = []
+    meses_en_adelante = 12
+    hoy = datetime.today()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+
+    for i in range(meses_en_adelante):
+        mes = (mes_actual + i) % 12
+        mes = 12 if mes == 0 else mes
+        anio = anio_actual + ((mes_actual + i - 1) // 12)
+        
+        primera_fecha = datetime(anio, mes, 1)
+        ultima_fecha = primera_fecha + relativedelta(months=1) - timedelta(days=1)
+        
+        rangos.append([
+            primera_fecha.strftime("%Y-%m-%d"),
+            ultima_fecha.strftime("%Y-%m-%d")
+        ])
+
+    return rangos
+
+####################################################
