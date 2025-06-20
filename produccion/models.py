@@ -79,7 +79,7 @@ class DetalleEntradasEquivCC(models.Model):
 
 
 
-class EmbarkedIndividualRating(models.Model):
+class EmbarkedIndividualRatingDetail(models.Model):
     article_name = models.TextField(unique=True)
     article_code = models.TextField(null=True)
 
