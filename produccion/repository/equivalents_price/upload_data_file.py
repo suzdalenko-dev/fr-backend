@@ -2,7 +2,7 @@ import io
 import json
 import requests, os
 from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tCSV
-from produccion.models import DetalleEntradasEquivCC, EquivalentsHead, ExcelLinesEditable
+from produccion.models import DetalleEntradasEquivCC, EmbarkedIndividualRatingDetail, EquivalentsHead, ExcelLinesEditable
 
 def upload_csv(table_name):
 
@@ -17,7 +17,8 @@ def upload_csv(table_name):
     # Simular envío de archivo sin crear localmente
     files = {'file': ('{}.csv'.format(table_name), buffer.getvalue(), 'text/csv')}
     response = requests.post(keys['host'] + '?key0=' + keys['key0'] + '&key1=' + keys['key1'], files=files)
-
+    # print("Código de estado: ", response.status_code)
+    # print("Respuesta: ", response.text)
     return response
     
 
@@ -37,7 +38,8 @@ def generate_content_csv(table_name):
                 tCSV(obj.calc_eur or "")
             ]
             fields.append(";".join(fila))
-            
+
+
     if table_name == '2equivalents_head':
         list_dates = end_of_month_dates()
         fields = ["article_name;fecha;kg_act;price_act"]
@@ -76,6 +78,27 @@ def generate_content_csv(table_name):
 
                 fields.append(";".join(line))
            
+
+    if table_name == '4entradas-con-sin-contenedor-calculo-precio-stock':
+        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"]
+        for obj in EmbarkedIndividualRatingDetail.objects.all():
+           fila = [ 
+               str(obj.id or ""),
+               str(obj.name or "")+" "+str(obj.code or ""),
+               str(obj.entrada or ""),
+               tCSV(obj.stock_actual or ""), 
+               tCSV(obj.pcm_actual or ""), 
+               tCSV(obj.consumo_prod or ""), 
+               tCSV(obj.consumo_vent or ""),
+               tCSV(obj.entrada_kg or ""),
+               tCSV(obj.entrada_eur or ""),
+               tCSV(obj.calc_kg or ""),
+               tCSV(obj.calc_eur or "")
+           ]
+           fields.append(";".join(fila))
+
+
+
                    
     if table_name == 'x':
         x = 0

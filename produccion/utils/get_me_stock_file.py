@@ -202,7 +202,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                       ei.divisa,
                       ei.valor_cambio,
                       'EXP' AS ENTIDAD,
-                      -2222 as PRECIO_EUR,
+                      -2224 as PRECIO_EUR,
                       ehs.NUM_HOJA
                     FROM expedientes_hojas_seguim ehs
                     JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
@@ -330,7 +330,8 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         c.fecha_pedido AS fecha_venta,
                         l.articulo AS codigo_articulo,
                         TO_NUMBER(l.uni_seralm) AS CANTIDAD,
-                        'P_VENTA' AS CONSUMO
+                        'P_VENTA' AS CONSUMO,
+                        c.cliente
                     FROM
                         albaran_ventas_lin l
                     JOIN
@@ -343,6 +344,7 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
                         AND l.articulo = :codigo_erp
                         AND c.fecha_pedido BETWEEN TO_DATE(:fechaDesde, 'YYYY-MM-DD') AND TO_DATE(:fechaHasta, 'YYYY-MM-DD')
                         AND TO_NUMBER(l.uni_seralm) != 0
+                        AND c.cliente != '999981'
                     ORDER BY
                         c.fecha_pedido DESC
         """

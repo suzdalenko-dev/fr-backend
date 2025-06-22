@@ -1,6 +1,8 @@
 import calendar
 from datetime import datetime
 import json
+
+from django.db import connection
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import get_short_date
 from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
@@ -169,6 +171,8 @@ def recalculate_equiv_with_contaner(request):
 
 
     DetalleEntradasEquivCC.objects.all().delete()
+    with connection.cursor() as cursor:
+        cursor.execute("ALTER SEQUENCE produccion_detalleentradasequivcc_id_seq RESTART WITH 1;")
 
     for eq6 in equiv_data:
         NAME  = eq6['padre_name']
@@ -177,7 +181,7 @@ def recalculate_equiv_with_contaner(request):
 
         deecc = DetalleEntradasEquivCC()
         deecc.name         = NAME
-        deecc.entrada      = 'Fecha '+get_short_date()+' situacion actual'
+        deecc.entrada      = 'Fecha '+get_short_date()+' ESTADO ACTUAL'
         deecc.stock_actual = STOCK
         deecc.pcm_actual   = PRICE
         deecc.save()

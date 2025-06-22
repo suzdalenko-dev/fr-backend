@@ -10,3 +10,5 @@ class Userfroxa(models.Model):
     last_visit  = models.TextField(null=True)
     num_visit   = models.BigIntegerField(null=True)
     ip          = models.TextField(null=True)
+
+    action_pass = models.TextField(null=True)

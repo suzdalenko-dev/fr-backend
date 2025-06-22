@@ -5,6 +5,7 @@ from produccion.utils.precio_con_gastos import consultar_precio_con_gastos
 
 
 def give_me_that_are_in_play(oracle):
+    # ARTICLES FROM CONTAINERS
     fechaDesde = (date.today() - relativedelta(months=11)).strftime('%Y-%m-%d')
     sql = """SELECT
             ehs.FECHA_PREV_LLEGADA,
@@ -29,7 +30,7 @@ def give_me_that_are_in_play(oracle):
               ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD')
               AND ehs.codigo_entrada IS NULL
               AND ehs.empresa = '001'
-                                                                                        AND ( eae.articulo = '40095')                                  
+                                                                                        -- AND ( eae.articulo = '41479')                                  
           ORDER BY ehs.FECHA_PREV_LLEGADA DESC
     """
     
@@ -39,6 +40,47 @@ def give_me_that_are_in_play(oracle):
     unique_articles = []
     out_articles    = []
     for r in res:
+        if not r['ARTICULO'] in unique_articles:
+            unique_articles.append(r['ARTICULO'])
+            x = {'name': r['DESCRIPTION_ART'], 'code': r['ARTICULO']}
+            out_articles.append(x)
+
+
+    # ARTICLES FROM ORDERS no los usare de momento
+    sql_pp = """
+            SELECT
+              pc.numero_pedido AS NUMERO,
+              pc.fecha_pedido AS FECHA_PREV_LLEGADA,
+              pc.codigo_proveedor,
+              pc.codigo_divisa,
+              pcl.codigo_articulo AS ARTICULO,
+              (SELECT DESCRIP_COMERCIAL FROM ARTICULOS WHERE CODIGO_ARTICULO = pcl.codigo_articulo AND ROWNUM = 1) AS DESCRIPTION_ART,
+              pcl.descripcion AS descripcion_articulo,
+              pcl.precio_presentacion AS PRECIO_EUR,
+              pcl.unidades_pedidas as CANTIDAD,
+              pcl.unidades_entregadas,
+              pcl.precio_presentacion,
+              pcl.importe_lin_neto,
+              pc.status_cierre,
+              'PED' AS ENTIDAD
+            FROM
+              pedidos_compras pc
+            JOIN
+              pedidos_compras_lin pcl
+              ON pc.numero_pedido = pcl.numero_pedido
+              AND pc.serie_numeracion = pcl.serie_numeracion
+              AND pc.organizacion_compras = pcl.organizacion_compras
+              AND pc.codigo_empresa = pcl.codigo_empresa
+            WHERE
+                pc.fecha_pedido >= TO_DATE(:fechaDesde, 'YYYY-MM-DD')
+                AND pc.codigo_empresa = '001'
+                AND pc.status_cierre = 'E'
+                AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
+                                                                                                -- AND ( pcl.codigo_articulo = '41479') 
+            ORDER BY pc.fecha_pedido ASC
+        """
+    res_orderes = oracle.consult(sql_pp, {'fechaDesde':fechaDesde})
+    for r in res_orderes:
         if not r['ARTICULO'] in unique_articles:
             unique_articles.append(r['ARTICULO'])
             x = {'name': r['DESCRIPTION_ART'], 'code': r['ARTICULO']}
@@ -118,7 +160,7 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                       ei.divisa,
                       ei.valor_cambio,
                       'EXP' AS ENTIDAD,
-                      -2222 as PRECIO_EUR,
+                      -2223 as PRECIO_EUR,
                       ehs.NUM_HOJA
                     FROM expedientes_hojas_seguim ehs
                     JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
@@ -145,15 +187,17 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
 
         if res:
             for r in res:
+                # print(r)
                 precio_llegada_sql = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
-                print(str(r['NUM_EXPEDIENTE']) +" "+str(r['ARTICULO']) +" "+ str(r['CANTIDAD']))
-                print(precio_llegada_sql)
+                # print(str(r['NUM_EXPEDIENTE']) +" "+str(r['ARTICULO']) +" "+ str(r['CANTIDAD']))
+                # print(precio_llegada_sql)
                 if precio_llegada_sql:
                     valor_precio_final = precio_llegada_sql[0].get('N10')
                     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
-                    if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
-                        expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                    if r['PRECIO_EUR'] == 0:
                         r['PRECIO_EUR'] = -1122
+                    if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
+                        expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
 
 
         # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta

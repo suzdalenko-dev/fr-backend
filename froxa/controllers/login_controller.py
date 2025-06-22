@@ -32,7 +32,7 @@ def login_function(request):
             
             user.save()
 
-            return JsonResponse({"data": {"username": user.name, "role": user.role, "permissions": user.permissions, "id": user.id}})
+            return JsonResponse({"data": {"username": user.name, "role": user.role, "permissions": user.permissions, "id": user.id, 'action_pass': user.action_pass}})
     
         return JsonResponse({"data": {}})
 

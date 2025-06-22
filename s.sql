@@ -11,7 +11,7 @@ SELECT
     ei.divisa,
     ei.valor_cambio,
     'EXP' AS ENTIDAD,
-    -2222 as PRECIO_EUR
+    -23123 as PRECIO_EUR
   FROM expedientes_hojas_seguim ehs
   JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
   JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa
@@ -36,7 +36,7 @@ SELECT
     ei.divisa,
     ei.valor_cambio,
     'EXP' AS ENTIDAD,
-    -2222 as PRECIO_EUR
+    -234234 as PRECIO_EUR
   FROM expedientes_hojas_seguim ehs
   JOIN expedientes_articulos_embarque eae ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
   JOIN expedientes_imp ei ON ei.codigo = eae.num_expediente AND ei.empresa = eae.empresa

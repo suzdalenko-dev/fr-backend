@@ -1,9 +1,14 @@
 import calendar
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from django.db import connection
 from froxa.utils.connectors.libra_connector import OracleConnector
+from froxa.utils.utilities.funcions_file import get_short_date
+from produccion.models import EmbarkedIndividualRatingDetail
 from produccion.repository.embarcado_con_sin_cont.articulos_file import give_me_that_are_in_play, llegadas_pendientes
+from produccion.repository.equivalents_price.upload_data_file import upload_csv
 from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses12, pedidos_pendientes, verificar_mes
+from produccion.utils.sent_email_file import aviso_expediente_sin_precio
 
 
 def embarcado_art_con_sin_cont(request):
@@ -80,39 +85,100 @@ def embarcado_art_con_sin_cont(request):
             rango_fechasG['stock_final_rango'] = STOCK
 
 
+    EmbarkedIndividualRatingDetail.objects.all().delete()
+
+    with connection.cursor() as cursor:
+        cursor.execute("ALTER SEQUENCE produccion_embarketindividualrating_id_seq RESTART WITH 1;")
+
     # 10.
-    today = datetime.today()
-    mes_actual = (today.replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
-    mes_mas1   = ((today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
-    mes_mas2   = ((today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
-    mes_mas3   = ((today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # today = datetime.today()
+    # mes_actual = (today.replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas1   = ((today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas2   = ((today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas3   = ((today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas4   = ((today + relativedelta(months=4)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas5   = ((today + relativedelta(months=5)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas6   = ((today + relativedelta(months=6)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas7   = ((today + relativedelta(months=7)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas8   = ((today + relativedelta(months=8)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas9   = ((today + relativedelta(months=9)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas10  = ((today + relativedelta(months=10)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+   
 
-    for itemQ in codigos_art_11_month:
-        
-        eqArt = EquivalentsHead.objects.get(id=itemQ['id'])
-        eqArt.kg_act    = float(itemQ['padre_valoracion_actual']['stock_kg'] or 0)
-        eqArt.price_act = float(itemQ['padre_valoracion_actual']['precio_kg'] or 0)
+    for x in codigos_art_11_month:     
+        NAME  = x['name']
+        CODE  = x['code']
+  
+        embar = EmbarkedIndividualRatingDetail()
+        embar.name = NAME
+        embar.code = CODE
+        embar.entrada      = 'Fecha '+get_short_date()+' ESTADO ACTUAL'
+        embar.stock_actual = STOCK = float(x['precio_stock'][0]['stock'] or 0)
+        embar.pcm_actual   = PRICE = float(x['precio_stock'][0]['precio'] or 0)
+        embar.save()
 
-        for rango in itemQ['rango']:                                 
-            if rango['hasta'] == mes_actual:
-               eqArt.kg0    = float(rango['stock_final_rango'] or 0)
-               eqArt.price0 = float(rango['precio_con_llegada'] or 0)
+        rangos = x['rango']
+        for rango in rangos:
+            if rango['llegadas'] and len(rango['llegadas']) > 0:
+                rango['llegadas'].sort(key=lambda x: x["FECHA_PREV_LLEGADA"])
 
-            if rango['hasta'] == mes_mas1:
-               eqArt.kg1    = float(rango['stock_final_rango'] or 0)
-               eqArt.price1 = float(rango['precio_con_llegada'] or 0)
-
-            if rango['hasta'] == mes_mas2:
-               eqArt.kg2    = float(rango['stock_final_rango'] or 0)
-               eqArt.price2 = float(rango['precio_con_llegada'] or 0)
-
-            if rango['hasta'] == mes_mas3:
-               eqArt.kg3    = float(rango['stock_final_rango'] or 0)
-               eqArt.price3 = float(rango['precio_con_llegada'] or 0)
-
-        eqArt.save()
-
-
+                for llegada in rango['llegadas']:
+                    idCont = ''
+                    if llegada['ENTIDAD'] == 'EXP': idCont = llegada['NUM_EXPEDIENTE']
+                    
+                    deecc = EmbarkedIndividualRatingDetail()
+                    deecc.name         = NAME
+                    deecc.code         = CODE
+                    deecc.entrada      = 'Fecha '+str(llegada['FECHA_PREV_LLEGADA'])[:10]+' Art. '+str(llegada['ARTICULO'])+' '+str(llegada['ENTIDAD'])+' '+str(llegada['NUMERO'])+' '+str(idCont)
+                    deecc.entrada_kg   = float(llegada['CANTIDAD'] or 0)
+                    deecc.entrada_eur  = float(llegada['PRECIO_EUR'] or 0)
+                    
+                    PRICE              = ((STOCK * PRICE) + ( deecc.entrada_kg *  deecc.entrada_eur)) / (STOCK + deecc.entrada_kg)
+                    deecc.calc_eur     = PRICE
+                    STOCK             += deecc.entrada_kg
+                    deecc.calc_kg      = STOCK
+                    deecc.save()
 
     
+            CONSUMO_PROD = 0
+            CONSUMO_VENT = 0
+            if rango['consumo'] and len(rango['consumo']) > 0:    
+                for consumo in rango['consumo']:
+                    if consumo['CONSUMO'] == 'P_VENTA':
+                        CONSUMO_VENT += float(consumo['CANTIDAD'] or 0)
+                    else:
+                        CONSUMO_PROD += float(consumo['CANTIDAD'] or 0)
+
+                if verificar_mes(rango['hasta']) == "mes actual":
+                    fecha_dt = datetime.strptime(rango_fechasG['hasta'], "%Y-%m-%d").date()
+                    numero_dias = calendar.monthrange(fecha_dt.year, fecha_dt.month)[1]
+                    dias_restantes = obtener_dias_restantes_del_mes()
+                    CONSUMO_VENT = CONSUMO_VENT / numero_dias * dias_restantes
+                    CONSUMO_PROD = CONSUMO_PROD / numero_dias * dias_restantes
+        
+            STOCK = STOCK - CONSUMO_PROD - CONSUMO_VENT
+            if STOCK < 0: STOCK = 0
+
+            deecc = EmbarkedIndividualRatingDetail()
+            deecc.name = NAME
+            deecc.code = CODE
+            deecc.entrada  = 'Fecha '+rango['hasta']+' Resultado mes'
+            deecc.consumo_prod = CONSUMO_PROD
+            deecc.consumo_vent = CONSUMO_VENT
+            deecc.calc_eur = PRICE
+            deecc.calc_kg  = STOCK
+            deecc.save()
+
+
+    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
+    upload_csv('4entradas-con-sin-contenedor-calculo-precio-stock')
+
     return codigos_art_11_month
+
+
+
+
+def embarcado_get_all(request):
+    embs = EmbarkedIndividualRatingDetail.objects.all().values('id', 'name', 'code', 'entrada', 'stock_actual', 'pcm_actual', 'consumo_prod', 'consumo_vent', 'entrada_kg', 'entrada_eur', 'calc_kg', 'calc_eur').order_by('name', 'id')
+    embs = list(embs)
+    return embs
