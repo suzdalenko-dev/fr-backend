@@ -131,13 +131,13 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
             ORDER BY pc.fecha_pedido ASC
         """
 
-        if iterations == 0:                                                        # espero 15 dias al pedido Katerina 
+        if iterations == 0:                                                        # espero 22 dias al pedido Katerina 
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=15)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=22)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=15)).strftime('%Y-%m-%d') # espero 15 dias al pedido Katerina
+        fechaActual = (datetime.today() - timedelta(days=22)).strftime('%Y-%m-%d') # espero 22 dias al pedido Katerina
 
         res = oracle.consult(sql_pp, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual })
 
@@ -175,13 +175,13 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                     ORDER BY ehs.FECHA_PREV_LLEGADA ASC
         """
 
-        if iterations == 0:                                                       # espero 40 dias al pedido Katerina
+        if iterations == 0:                                                       # espero 66 dias al pedido Katerina
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=40)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=66)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=40)).strftime('%Y-%m-%d') # espero 40 dias al pedido Katerina
+        fechaActual = (datetime.today() - timedelta(days=66)).strftime('%Y-%m-%d') # espero 66 dias al pedido Katerina
 
         res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
 
