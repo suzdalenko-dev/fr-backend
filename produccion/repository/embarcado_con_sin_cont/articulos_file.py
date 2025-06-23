@@ -30,7 +30,7 @@ def give_me_that_are_in_play(oracle):
               ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD')
               AND ehs.codigo_entrada IS NULL
               AND ehs.empresa = '001'
-                                                                                        -- AND ( eae.articulo = '41210')                                  
+                                                                                        -- AND ( eae.articulo = '40076')                                  
           ORDER BY ehs.FECHA_PREV_LLEGADA DESC
     """
     
@@ -76,7 +76,7 @@ def give_me_that_are_in_play(oracle):
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
-                                                                                                -- AND ( pcl.codigo_articulo = '41210') 
+                                                                                                -- AND ( pcl.codigo_articulo = '40076') 
             ORDER BY pc.fecha_pedido ASC
         """
     res_orderes = oracle.consult(sql_pp, {'fechaDesde':fechaDesde})
@@ -189,15 +189,20 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
             for r in res:
                 # print(r)
                 precio_llegada_sql = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
-                # print(str(r['NUM_EXPEDIENTE']) +" "+str(r['ARTICULO']) +" "+ str(r['CANTIDAD']))
+                # print(str(r['NUM_EXPEDIENTE']) +" "+str(r['ARTICULO']))
                 # print(precio_llegada_sql)
                 if precio_llegada_sql:
                     valor_precio_final = precio_llegada_sql[0].get('N10')
+
                     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
                     if r['PRECIO_EUR'] == 0:
                         r['PRECIO_EUR'] = -1122
                         if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                             expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                        # expediente_actual = {'numero': r['NUM_EXPEDIENTE'], 'hoja': r['HOJA']} 
+                        # if not any(e['numero'] == expediente_actual['numero'] and e['hoja'] == expediente_actual['hoja']
+                        # for e in expedientes_sin_precio):
+                        #         expedientes_sin_precio.append(expediente_actual)
 
 
         # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta
