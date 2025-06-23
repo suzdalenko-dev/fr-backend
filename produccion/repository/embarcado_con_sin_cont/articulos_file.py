@@ -30,7 +30,7 @@ def give_me_that_are_in_play(oracle):
               ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD')
               AND ehs.codigo_entrada IS NULL
               AND ehs.empresa = '001'
-                                                                                        -- AND ( eae.articulo = '41479')                                  
+                                                                                        -- AND ( eae.articulo = '41210')                                  
           ORDER BY ehs.FECHA_PREV_LLEGADA DESC
     """
     
@@ -76,7 +76,7 @@ def give_me_that_are_in_play(oracle):
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
-                                                                                                -- AND ( pcl.codigo_articulo = '41479') 
+                                                                                                -- AND ( pcl.codigo_articulo = '41210') 
             ORDER BY pc.fecha_pedido ASC
         """
     res_orderes = oracle.consult(sql_pp, {'fechaDesde':fechaDesde})
@@ -196,8 +196,8 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
                     if r['PRECIO_EUR'] == 0:
                         r['PRECIO_EUR'] = -1122
-                    if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
-                        expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                        if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
+                            expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
 
 
         # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta
