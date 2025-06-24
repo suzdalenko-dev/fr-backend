@@ -7,7 +7,7 @@ from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import get_short_date
 from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
 from produccion.repository.equivalents_price.upload_data_file import upload_csv
-from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes, verificar_mes
+from produccion.utils.get_me_stock_file import consumo_pasado, get_last_changed_value, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, obtener_rangos_meses7, pedidos_pendientes, verificar_mes
 from dateutil.relativedelta import relativedelta
 
 from produccion.utils.sent_email_file import aviso_expediente_sin_precio
@@ -88,12 +88,13 @@ def recalculate_equiv_with_contaner(request):
 
 
     # I iterante the data ranges and search for  arrivals WITCHOUT CONTAINER AND WITH CONTAINER
+    LAST_CHANGE_VAL      = get_last_changed_value(oracle)
     for eq4 in equiv_data:
         arr_codigos_erp = eq4['articles']
         iterations = 0
 
         for r_fechas in eq4['rango']:
-            r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations)
+            r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations, LAST_CHANGE_VAL)
             r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas) 
             iterations += 1
 

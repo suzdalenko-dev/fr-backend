@@ -6,7 +6,7 @@ from froxa.utils.utilities.smailer_file import SMailer
 from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEditable
 from produccion.repository.embarcado_con_sin_cont.embarcado_file import embarcado_art_con_sin_cont
 from produccion.repository.equivalents_price.recalc_equi_file import recalculate_equiv_with_contaner
-from produccion.utils.get_me_stock_file import consumo_pasado, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
+from produccion.utils.get_me_stock_file import consumo_pasado, get_last_changed_value, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -123,6 +123,7 @@ def recalculate_price_projections(request):
             lineas_itemD['rango'] = fechas_desde_hasta
             
     # 8. I iterante the data ranges and search for 1. container arrivals
+    LAST_CHANGE_VAL      = get_last_changed_value(oracle)
     for itemF in articulos_data:
         lineas_array  = itemF['lineas'];
         for lineas_itemF in lineas_array:
@@ -130,7 +131,7 @@ def recalculate_price_projections(request):
             iterations = 0
 
             for r_fechas in lineas_itemF['rango']:
-                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations)
+                r_fechas['llegadas'] = pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, EXPEDIENTES_SIN_PRECIO_FINAL, iterations, LAST_CHANGE_VAL)
                 r_fechas['consumo']  = consumo_pasado(oracle, arr_codigos_erp, r_fechas)          
                 iterations += 1
      

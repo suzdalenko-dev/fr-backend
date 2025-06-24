@@ -3,7 +3,18 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 
+from produccion.repository.embarcado_con_sin_cont.articulos_file import precio_con_sin_contenedor, precio_con_sin_contenedor_sin_gastos
 from produccion.utils.precio_con_gastos import consultar_precio_con_gastos
+
+def get_last_changed_value(oracle):
+    sql  = """SELECT EMPRESA, PERIODO, CAMBIO FROM FROXA_SEGUROS_CAMBIO WHERE 1=1 AND ROWNUM=1 ORDER BY PERIODO DESC"""
+    lasst_val = oracle.consult(sql)
+    if lasst_val and len(lasst_val) > 0:
+        lasst_val = lasst_val[0].get('CAMBIO')
+        return float(lasst_val)
+    else:
+        return 0
+   
 
 
 def get_me_stock_now(erp_code, oracle):
@@ -134,7 +145,7 @@ def consumo_produccion(oracle, arr_codigos_erp, r_fechas):
 ### here I first look for the orders and then I look for the containers
 #######################################################
 
-def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio, iterations):
+def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio, iterations, LAST_CHANGE_VAL):
     # desde pedidos
     llegadas_p_data = []
 
@@ -173,13 +184,13 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
             ORDER BY pc.fecha_pedido ASC
         """
 
-        if iterations == 0:                                                        # espero 15 dias al pedido Katerina 
+        if iterations == 0:                                                        # espero 22 dias al pedido Katerina 
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=15)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=22)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=15)).strftime('%Y-%m-%d') # espero 15 dias al pedido Katerina
+        fechaActual = (datetime.today() - timedelta(days=22)).strftime('%Y-%m-%d') # espero 22 dias al pedido Katerina
 
         res = oracle.consult(sql_pp, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual })
 
@@ -193,8 +204,11 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                       ehs.FECHA_PREV_LLEGADA,
                       ehs.num_expediente AS NUM_EXPEDIENTE,
                       eae.articulo AS ARTICULO,
+                      ei.valor_cambio,
                       eae.PRECIO,
                       (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL,
+                      :LAST_CHANGE_VAL AS CAMBIO_MES,
+                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * :LAST_CHANGE_VAL ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL_CAM_MES,
                       eae.cantidad as CANTIDAD,
                       ehs.fecha_llegada,
                       ehs.codigo_entrada,
@@ -218,25 +232,47 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                     ORDER BY ehs.FECHA_PREV_LLEGADA ASC
         """
 
-        if iterations == 0:                                                       # espero 40 dias al pedido Katerina
+        if iterations == 0:                                                       # espero 66 dias al pedido Katerina
             desde_dt = datetime.strptime(r_fechas['desde'], '%Y-%m-%d')
-            fechaDesde = (desde_dt - timedelta(days=40)).strftime('%Y-%m-%d')
+            fechaDesde = (desde_dt - timedelta(days=66)).strftime('%Y-%m-%d')
         else:
             fechaDesde = r_fechas['desde']
         
-        fechaActual = (datetime.today() - timedelta(days=40)).strftime('%Y-%m-%d') # espero 40 dias al pedido Katerina
+        fechaActual = (datetime.today() - timedelta(days=66)).strftime('%Y-%m-%d') # espero 66 dias al pedido Katerina
 
-        res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
+        res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual, 'LAST_CHANGE_VAL':LAST_CHANGE_VAL})
 
         if res:
             for r in res:
-                precio_llegada_sql = consultar_precio_con_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
-                if precio_llegada_sql:
-                    valor_precio_final = precio_llegada_sql[0].get('N10')
-                    r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
-                    if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
-                        expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                # precio_llegada_sql = consultar_precio_con_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
+                # if precio_llegada_sql:
+                #     valor_precio_final = precio_llegada_sql[0].get('N10')
+                #     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
+                #     if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
+                #         expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                #         r['PRECIO_EUR'] = -1122
+
+                precio_llegada_sql_sin_gastos = precio_con_sin_contenedor_sin_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
+                precio_llegada_sql_con_gastos = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
+
+                if precio_llegada_sql_sin_gastos and precio_llegada_sql_con_gastos:
+                    PRECIO_SIN_GASTOS_EXCEL = precio_llegada_sql_sin_gastos[0].get('N9')
+                    PRECIO_SIN_GASTOS_EXCEL = float(PRECIO_SIN_GASTOS_EXCEL) if PRECIO_SIN_GASTOS_EXCEL not in [None, 'None', ''] else 0
+
+                    PRECIO_CON_GASTOS_EXCEL = precio_llegada_sql_con_gastos[0].get('N10')
+                    PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                    if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
                         r['PRECIO_EUR'] = -1122
+                        if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
+                            expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                    else:
+                        r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
+                        r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
+                        r['GASTOS']                  = r['PRECIO_CON_GASTOS_EXCEL'] - r['PRECIO_SIN_GASTOS_EXCEL']
+                        r['PRECIO_EUR'] = float(r['PRECIO_EUR_ORIGINAL_CAM_MES'] or - 4444) + r['GASTOS']
+                else:
+                    r['PRECIO_EUR'] = -3333
+
 
 
         # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta
@@ -403,4 +439,3 @@ def obtener_rangos_meses12():
 
     return rangos
 
-####################################################

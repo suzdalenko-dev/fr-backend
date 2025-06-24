@@ -30,7 +30,7 @@ def give_me_that_are_in_play(oracle):
               ehs.FECHA_PREV_LLEGADA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD')
               AND ehs.codigo_entrada IS NULL
               AND ehs.empresa = '001'
-                                                                                        -- AND ( eae.articulo = '40076')                                  
+                                                                                        -- AND ( eae.articulo = '40106')                                  
           ORDER BY ehs.FECHA_PREV_LLEGADA DESC
     """
     
@@ -76,7 +76,7 @@ def give_me_that_are_in_play(oracle):
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
-                                                                                                -- AND ( pcl.codigo_articulo = '40076') 
+                                                                                            --    AND ( pcl.codigo_articulo = '40106') 
             ORDER BY pc.fecha_pedido ASC
         """
     res_orderes = oracle.consult(sql_pp, {'fechaDesde':fechaDesde})
@@ -92,7 +92,7 @@ def give_me_that_are_in_play(oracle):
 # llegadas pendientes con o sin contenedor filtrando por la ultima hoja de seguimiento
 #####################################
 
-def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio, iterations):
+def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio, iterations, LAST_CHANGE_VAL):
      # desde pedidos
     llegadas_p_data = []
 
@@ -152,13 +152,11 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                       ehs.num_expediente AS NUM_EXPEDIENTE,
                       eae.articulo AS ARTICULO,
                       eae.PRECIO,
-                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * ei.valor_cambio ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL,
+                      :LAST_CHANGE_VAL AS CAMBIO_MES,
+                      (CASE WHEN ei.divisa = 'USD' THEN eae.precio * :LAST_CHANGE_VAL ELSE eae.precio END) AS PRECIO_EUR_ORIGINAL_CAM_MES,
                       eae.cantidad as CANTIDAD,
-                      ehs.fecha_llegada,
-                      ehs.codigo_entrada,
                       ec.contenedor AS NUMERO,
                       ei.divisa,
-                      ei.valor_cambio,
                       'EXP' AS ENTIDAD,
                       -2223 as PRECIO_EUR,
                       ehs.NUM_HOJA
@@ -183,26 +181,32 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
         
         fechaActual = (datetime.today() - timedelta(days=66)).strftime('%Y-%m-%d') # espero 66 dias al pedido Katerina
 
-        res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual})
+        res = oracle.consult(sql_ei, { 'fechaDesde': fechaDesde, 'fechaHasta': r_fechas['hasta'], 'codigo_erp': codigo_erp, 'fechaActual': fechaActual, 'LAST_CHANGE_VAL':LAST_CHANGE_VAL})
 
         if res:
             for r in res:
-                # print(r)
-                precio_llegada_sql = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
-                # print(str(r['NUM_EXPEDIENTE']) +" "+str(r['ARTICULO']))
-                # print(precio_llegada_sql)
-                if precio_llegada_sql:
-                    valor_precio_final = precio_llegada_sql[0].get('N10')
+                precio_llegada_sql_sin_gastos = precio_con_sin_contenedor_sin_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
+                precio_llegada_sql_con_gastos = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
 
-                    r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
-                    if r['PRECIO_EUR'] == 0:
+                if precio_llegada_sql_sin_gastos and precio_llegada_sql_con_gastos:
+                    PRECIO_SIN_GASTOS_EXCEL = precio_llegada_sql_sin_gastos[0].get('N9')
+                    PRECIO_SIN_GASTOS_EXCEL = float(PRECIO_SIN_GASTOS_EXCEL) if PRECIO_SIN_GASTOS_EXCEL not in [None, 'None', ''] else 0
+
+                    PRECIO_CON_GASTOS_EXCEL = precio_llegada_sql_con_gastos[0].get('N10')
+                    PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                    if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
                         r['PRECIO_EUR'] = -1122
                         if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                             expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
-                        # expediente_actual = {'numero': r['NUM_EXPEDIENTE'], 'hoja': r['HOJA']} 
-                        # if not any(e['numero'] == expediente_actual['numero'] and e['hoja'] == expediente_actual['hoja']
-                        # for e in expedientes_sin_precio):
-                        #         expedientes_sin_precio.append(expediente_actual)
+                    else:
+                        r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
+                        r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
+                        r['GASTOS']                  = r['PRECIO_CON_GASTOS_EXCEL'] - r['PRECIO_SIN_GASTOS_EXCEL']
+                        r['PRECIO_EUR'] = float(r['PRECIO_EUR_ORIGINAL_CAM_MES'] or - 4444) + r['GASTOS']
+                else:
+                    r['PRECIO_EUR'] = -3333
+
+
 
 
         # iterare hojas de seguimiento y si existe una con el numero posterior pasare a esta
@@ -246,7 +250,7 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
 # precio con y sin contenedor haber si se puede
 ##################################################
 
-def precio_con_sin_contenedor(oracle, exp_id, art_code, cantidad):
+def precio_con_sin_contenedor(oracle, exp_id, art_code):
     sql = """SELECT * FROM (
         SELECT ( ( (
                    SELECT SUM(hs.importe_portes)
@@ -280,4 +284,60 @@ def precio_con_sin_contenedor(oracle, exp_id, art_code, cantidad):
     """
 
     res = oracle.consult(sql, {'exp_id':exp_id, 'art_code': art_code})
+    return res
+
+
+
+
+####################################################
+# PRECIO SIN GASTON LINEA EXPEDIENDTE
+###################################################
+
+def precio_con_sin_contenedor_sin_gastos(oracle, exp_id, art_code):
+    sql_sin_gastos = """SELECT *
+                            FROM (
+                                SELECT
+                                    eae.articulo AS c3,
+                                    DECODE(
+                                        COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
+                                        0,
+                                        eae.precio,
+                                        eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                                    ) AS n9,
+                                    (
+                                        (
+                                            SELECT SUM(hs.importe_portes)
+                                            FROM reparto_portes_hs hs
+                                            WHERE hs.codigo_empresa = ehs.empresa
+                                              AND hs.numero_expediente = ehs.num_expediente
+                                              AND hs.hoja_seguimiento = ehs.num_hoja
+                                              AND hs.codigo_articulo = eae.articulo
+                                        ) / DECODE(
+                                            art.unidad_valoracion,
+                                            1, eae.cantidad_unidad1,
+                                            2, eae.cantidad_unidad2
+                                        )
+                                    ) + (
+                                        eae.precio * DECODE(
+                                            ehs.tipo_cambio,
+                                            'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
+                                            'S', ehs.valor_cambio,
+                                            'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                                        )
+                                    ) AS n10,
+                                    ehs.num_hoja
+                                FROM articulos art
+                                JOIN expedientes_articulos_embarque eae ON art.codigo_articulo = eae.articulo AND art.codigo_empresa = eae.empresa
+                                JOIN expedientes_hojas_seguim ehs ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
+                                JOIN expedientes_imp ei ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
+                                JOIN expedientes_contenedores ec ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa AND ec.linea = eae.linea_contenedor
+                                WHERE eae.empresa = '001'
+                                  AND eae.articulo = :art_code
+                                  AND ehs.num_expediente = :exp_id
+                                  AND ehs.status NOT IN ('C')
+                                ORDER BY ehs.num_hoja DESC
+                            )
+                            WHERE ROWNUM = 1"""
+    
+    res = oracle.consult(sql_sin_gastos, {'exp_id':exp_id, 'art_code': art_code})
     return res
