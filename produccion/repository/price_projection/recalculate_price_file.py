@@ -88,11 +88,16 @@ def recalculate_price_projections(request):
             percentage       = lineas_itemC['percentage'] or 0
             i = 0
             for infoItemC in lineas_itemC['consiste_de_alternativos']:
+                # caso sara si hay stock sin valora no hacemos nada
+                if float(infoItemC[0]['stock'] or 0) > 0 and float(infoItemC[0]['precio'] or 0) == 0:
+                    continue
                 i += 1
                 formula_top_ud += float(infoItemC[0]['stock'] or 0) * float(infoItemC[0]['precio'] or 0)
                 unidades_stock += float(infoItemC[0]['stock'] or 0)
                 suma_precios   += float(infoItemC[0]['precio'] or 0)
-               
+            
+            if i == 0:
+                i = 1
             if unidades_stock == 0:
                 lineas_itemC['resumen_alternativos'] = {'precio_kg': suma_precios / i, 'stock_kg': unidades_stock, 'parte_proporcional': suma_precios / i / 100 * float(percentage or 0) }
             else:

@@ -65,6 +65,9 @@ def recalculate_equiv_with_contaner(request):
             eq2['padre_valoracion_actual'] = {'precio_kg': 0, 'stock_kg': 0 }
 
         for customArticle in lineas_array:
+            # ignoro los que tienen stock y precio 0
+            if float(customArticle[0]['stock'] or 0) > 0 and float(customArticle[0]['precio'] or 0) == 0:
+                continue
             i += 1
             formula_top_ud += float(customArticle[0]['stock'] or 0) * float(customArticle[0]['precio'] or 0)
             unidades_stock += float(customArticle[0]['stock'] or 0)
