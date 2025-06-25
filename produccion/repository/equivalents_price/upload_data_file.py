@@ -24,7 +24,7 @@ def upload_csv(table_name):
 
 def generate_content_csv(table_name):
     if table_name == '1detalle_entradas_equiv_cc':
-        fields = ["name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"] 
+        fields = ["name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur;"] 
         for obj in DetalleEntradasEquivCC.objects.all():
             fila = [ str(obj.name or ""),
                 str(obj.entrada or ""),
@@ -94,9 +94,9 @@ def generate_content_csv(table_name):
            
 
     if table_name == '4entradas-con-sin-contenedor-calculo-precio-stock':
-        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"]
+        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur;mercado;"]
         for obj in EmbarkedIndividualRatingDetail.objects.all():
-           fila = [ 
+            fila = [ 
                str(obj.id or ""),
                str(obj.name or "")+" "+str(obj.code or ""),
                str(obj.entrada or ""),
@@ -107,15 +107,16 @@ def generate_content_csv(table_name):
                tCSV(obj.entrada_kg or ""),
                tCSV(obj.entrada_eur or ""),
                tCSV(obj.calc_kg or ""),
-               tCSV(obj.calc_eur or "")
-           ]
-           fields.append(";".join(fila))
+               tCSV(obj.calc_eur or ""),
+               str(obj.mercado or ""),
+            ]
+            fields.append(";".join(fila)+';')
 
 
     if table_name == '5entradas-con-sin-contenedor-calculo-precio-stock-horizontal':
         fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"]
         for obj in EmbarkedIndividualRatingDetail.objects.all():
-            fila = []
+            fila = ['x']
 
 
             fields.append(";".join(fila))

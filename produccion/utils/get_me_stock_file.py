@@ -155,17 +155,26 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
             SELECT
               pc.numero_pedido AS NUMERO,
               pc.fecha_pedido AS FECHA_PREV_LLEGADA,
-              pc.codigo_proveedor,
-              pc.codigo_divisa,
               pcl.codigo_articulo AS ARTICULO,
               pcl.descripcion AS descripcion_articulo,
-              pcl.precio_presentacion AS PRECIO_EUR,
-              pcl.unidades_pedidas as CANTIDAD,
+              pcl.cantidad_presentacion AS CANTIDAD,
               pcl.unidades_entregadas,
-              pcl.precio_presentacion,
-              pcl.importe_lin_neto,
-              pc.status_cierre,
-              'PED' AS ENTIDAD
+              'PED' AS ENTIDAD,
+               DECODE(
+                 (SELECT a.unidad_precio_coste 
+                  FROM articulos a 
+                  WHERE a.codigo_articulo = pcl.codigo_articulo 
+                    AND a.codigo_empresa = pcl.codigo_empresa),
+                 1,
+                   CASE 
+                     WHEN pcl.unidades_pedidas = 0 THEN 0
+                     ELSE pcl.importe_lin_neto / pcl.unidades_pedidas
+                   END,
+                 CASE 
+                   WHEN NVL(pcl.unidades_pedidas2, 0) = 0 THEN 0
+                   ELSE pcl.importe_lin_neto / pcl.unidades_pedidas2
+                 END
+               ) AS PRECIO_EUR
             FROM
               pedidos_compras pc
             JOIN
@@ -180,7 +189,7 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                 AND pc.codigo_empresa = '001'
                 AND pc.status_cierre = 'E'
                 AND pcl.codigo_articulo = :codigo_erp
-                AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
+                AND (pcl.unidades_entregadas = 0 OR pcl.unidades_entregadas IS NULL)
             ORDER BY pc.fecha_pedido ASC
         """
 

@@ -387,3 +387,111 @@ WHERE A.CODIGO_EMPRESA = '001'
 
 
 select * from FAMILIAS where numero_tabla = 8;
+
+
+
+ SELECT
+              pc.numero_pedido AS NUMERO,
+              pc.fecha_pedido AS FECHA_PREV_LLEGADA,
+              pc.codigo_proveedor,
+              pc.codigo_divisa,
+              pcl.codigo_articulo AS ARTICULO,
+              pcl.descripcion AS descripcion_articulo,
+              pcl.precio_presentacion AS PRECIO_EUR,
+              pcl.unidades_pedidas as CANTIDAD,
+              pcl.unidades_entregadas,
+              pcl.precio_presentacion,
+              pcl.importe_lin_neto,
+              pc.status_cierre,
+              'PED' AS ENTIDAD
+            FROM
+              pedidos_compras pc
+            JOIN
+              pedidos_compras_lin pcl
+              ON pc.numero_pedido = pcl.numero_pedido
+              AND pc.serie_numeracion = pcl.serie_numeracion
+              AND pc.organizacion_compras = pcl.organizacion_compras
+              AND pc.codigo_empresa = pcl.codigo_empresa
+            WHERE
+              
+                 pc.codigo_empresa = '001'
+                AND pc.status_cierre = 'E'
+                AND pcl.codigo_articulo = '40926'
+                AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
+            ORDER BY pc.fecha_pedido ASC;
+
+
+
+SELECT V_FECHA_PEDIDO,V_CODIGO_ARTICULO,V_CODIGO_PROVEEDOR,D_CODIGO_PROVEEDOR,V_CANTIDAD_PRESENTACION,V_CANTIDAD_PRESENTACION_ENT,V_PRESENTACION_PEDIDO,V_PRECIO_PRESENTACION,V_DTO_1,V_DTO_2,V_DTO_3,V_IMPORTE_LIN_NETO,V_ORGANIZACION_COMPRAS,D_ORGANIZACION_COMPRAS,V_DESCRIPCION,V_USUARIO_ALTA,V_CODIGO_ALMACEN,V_CENTRO_CONTABLE,D_CODIGO_ALMACEN,D_CENTRO_CONTABLE,V_REFERENCIA_PROVEEDOR,V_CODIGO_DIVISA,V_FECHA_ENTREGA,V_FECHA_ENTREGA_TOPE,V_FECHA_ENTREGA_CONFIRM,V_UNIDADES_PEDIDAS,V_UNIDADES_ENTREGADAS,V_UNIDADES_PEDIDAS2,V_UNIDADES_ENTREGADAS2,V_PRECIO_NETO,V_SERIE_NUMERACION,V_NUMERO_PEDIDO,V_SOLICITUD_COMPRA,HAY_REPLICACION_VTA,NUMERO_LINEA,NUMERO_EXPEDIENTE FROM (SELECT  v.* ,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = v.centro_contable AND lvcc.empresa = v.codigo_empresa) D_CENTRO_CONTABLE,(SELECT lval.nombre FROM almacenes lval WHERE lval.almacen = v.codigo_almacen AND lval.codigo_empresa = v.codigo_empresa) D_CODIGO_ALMACEN,DECODE(v.codigo_proveedor,NULL,NULL,(SELECT prlv.nombre FROM proveedores prlv WHERE prlv.codigo_rapido = v.codigo_proveedor AND codigo_empresa = v.codigo_empresa)) D_CODIGO_PROVEEDOR,(SELECT lvcpr.nombre FROM organizacion_compras lvcpr WHERE lvcpr.codigo_org_compras = v.organizacion_compras AND lvcpr.codigo_empresa = v.codigo_empresa) D_ORGANIZACION_COMPRAS,pkconsgen.hay_replicacion_pedcom_vta(v.numero_pedido, v.serie_numeracion, v.organizacion_compras, v.codigo_empresa, v.numero_linea) HAY_REPLICACION_VTA,CANTIDAD_PRESENTACION V_CANTIDAD_PRESENTACION,pkconsgen.cantidad_servida_pres_ped_com(p_empresa => codigo_empresa, p_numero_pedido => numero_pedido, p_numero_serie => serie_numeracion, p_organizacion_compras => organizacion_compras, p_numero_linea => numero_linea, p_articulo => codigo_articulo, p_presentacion_pedido => presentacion_pedido, p_cantidad_presentacion => cantidad_presentacion, p_unidades_pedidas => unidades_pedidas) V_CANTIDAD_PRESENTACION_ENT,CENTRO_CONTABLE V_CENTRO_CONTABLE,CODIGO_ALMACEN V_CODIGO_ALMACEN,CODIGO_ARTICULO V_CODIGO_ARTICULO,PKCONSGEN.DIVISA(codigo_divisa) V_CODIGO_DIVISA,CODIGO_PROVEEDOR V_CODIGO_PROVEEDOR,DESCRIPCION V_DESCRIPCION,dto_1 V_DTO_1,dto_2 V_DTO_2,dto_3 V_DTO_3,FECHA_ENTREGA V_FECHA_ENTREGA,FECHA_ENTREGA_CONFIRM V_FECHA_ENTREGA_CONFIRM,FECHA_ENTREGA_TOPE V_FECHA_ENTREGA_TOPE,FECHA_PEDIDO V_FECHA_PEDIDO,PKCONSGEN.IMPORTE_TXT(importe_lin_neto, importe_lin_neto_div, codigo_divisa) V_IMPORTE_LIN_NETO,NUMERO_PEDIDO V_NUMERO_PEDIDO,ORGANIZACION_COMPRAS V_ORGANIZACION_COMPRAS,DECODE((SELECT a.unidad_precio_coste FROM articulos a WHERE a.codigo_articulo = v.codigo_articulo AND a.codigo_empresa = v.codigo_empresa), 1, DECODE(unidades_pedidas, 0, PKCONSGEN.PRECIO_TXT(0, 0, codigo_divisa), PKCONSGEN.PRECIO_TXT(importe_lin_neto / unidades_pedidas, importe_lin_neto_div / unidades_pedidas, codigo_divisa)), DECODE(NVL(unidades_pedidas2, 0), 0, PKCONSGEN.PRECIO_TXT(0, 0, codigo_divisa), PKCONSGEN.PRECIO_TXT(importe_lin_neto  / unidades_pedidas2, importe_lin_neto_div / unidades_pedidas2, codigo_divisa))) V_PRECIO_NETO,PKCONSGEN.PRECIO_TXT(DECODE(tipo_precio, 'P', precio_presentacion, precio_coste) * cambio, DECODE(tipo_precio, 'P', precio_presentacion, precio_coste), codigo_divisa) V_PRECIO_PRESENTACION,PRESENTACION_PEDIDO V_PRESENTACION_PEDIDO,REFERENCIA_PROVEEDOR V_REFERENCIA_PROVEEDOR,SERIE_NUMERACION V_SERIE_NUMERACION,UNIDADES_ENTREGADAS V_UNIDADES_ENTREGADAS,UNIDADES_ENTREGADAS2 V_UNIDADES_ENTREGADAS2,UNIDADES_PEDIDAS V_UNIDADES_PEDIDAS,UNIDADES_PEDIDAS2 V_UNIDADES_PEDIDAS2,USUARIO_ALTA V_USUARIO_ALTA,SUBSTR(pkconsgen.f_solicitud_mat_pedido_compras(codigo_empresa, organizacion_compras, numero_pedido, serie_numeracion, numero_linea), 3) V_SOLICITUD_COMPRA FROM (SELECT l.codigo_empresa, l.codigo_articulo, c.codigo_almacen, l.unidades_entregadas, l.unidades_entregadas2, l.unidades_pedidas2, l.precio_presentacion, l.precio_coste, l.tipo_precio, l.organizacion_compras, c.centro_contable, c.fecha_pedido, l.fecha_entrega, l.fecha_entrega_confirm, l.fecha_entrega_tope, l.serie_numeracion, l.numero_pedido, l.numero_linea, DECODE(PKCONSGEN.VER_PRO_BLOQUEADOS, 'S', c.codigo_proveedor, DECODE(PKCONSGEN.PROVEEDOR_BLOQUEADO(c.codigo_empresa, c.codigo_proveedor), 'S', NULL, c.codigo_proveedor)) codigo_proveedor, l.referencia_proveedor, l.unidades_pedidas, l.unidades_facturadas, l.status_cierre, l.cantidad_presentacion, l.presentacion_pedido, l.dto_1, l.dto_2, l.dto_3, l.importe_lin_neto, l.importe_lin_neto_div, c.usuario_alta, c.codigo_divisa, c.cambio, l.descripcion,c.numero_expediente  FROM pedidos_compras c, pedidos_compras_lin l WHERE c.numero_pedido = l.numero_pedido AND c.serie_numeracion = l.serie_numeracion AND c.organizacion_compras = l.organizacion_compras AND c.codigo_empresa = l.codigo_empresa ORDER BY /*PKLBOB*/c.fecha_pedido DESC ) v)  v WHERE codigo_articulo = '40926' AND codigo_empresa = '001' AND status_cierre = 'E';
+
+
+
+SELECT
+  pc.numero_pedido AS NUMERO,
+  pc.fecha_pedido AS FECHA_PREV_LLEGADA,
+  pc.codigo_proveedor,
+  (SELECT pr.nombre 
+   FROM proveedores pr 
+   WHERE pr.codigo_rapido = pc.codigo_proveedor 
+     AND pr.codigo_empresa = pc.codigo_empresa) AS nombre_proveedor,
+
+  pc.codigo_divisa,
+
+  pcl.codigo_articulo AS ARTICULO,
+  pcl.descripcion AS descripcion_articulo,
+  
+  -- Precio neto equivalente
+  DECODE(
+    (SELECT a.unidad_precio_coste 
+     FROM articulos a 
+     WHERE a.codigo_articulo = pcl.codigo_articulo 
+       AND a.codigo_empresa = pcl.codigo_empresa),
+    1,
+      CASE 
+        WHEN pcl.unidades_pedidas = 0 THEN 0
+        ELSE pcl.importe_lin_neto / pcl.unidades_pedidas
+      END,
+    CASE 
+      WHEN NVL(pcl.unidades_pedidas2, 0) = 0 THEN 0
+      ELSE pcl.importe_lin_neto / pcl.unidades_pedidas2
+    END
+  ) AS PRECIO_EUR,
+
+  -- Cantidad presentación
+  pcl.cantidad_presentacion AS CANTIDAD,
+  
+  -- Unidades entregadas
+  pkconsgen.cantidad_servida_pres_ped_com(
+    p_empresa => pcl.codigo_empresa,
+    p_numero_pedido => pcl.numero_pedido,
+    p_numero_serie => pcl.serie_numeracion,
+    p_organizacion_compras => pcl.organizacion_compras,
+    p_numero_linea => pcl.numero_linea,
+    p_articulo => pcl.codigo_articulo,
+    p_presentacion_pedido => pcl.presentacion_pedido,
+    p_cantidad_presentacion => pcl.cantidad_presentacion,
+    p_unidades_pedidas => pcl.unidades_pedidas
+  ) AS unidades_entregadas_calc,
+
+  pcl.precio_presentacion,
+  pcl.importe_lin_neto,
+
+  pc.status_cierre,
+  'PED' AS ENTIDAD
+
+FROM
+  pedidos_compras pc
+JOIN
+  pedidos_compras_lin pcl
+    ON pc.numero_pedido = pcl.numero_pedido
+   AND pc.serie_numeracion = pcl.serie_numeracion
+   AND pc.organizacion_compras = pcl.organizacion_compras
+   AND pc.codigo_empresa = pcl.codigo_empresa
+
+WHERE
+  pc.codigo_empresa = '001'
+  AND pc.status_cierre = 'E'
+  AND pcl.codigo_articulo = '40926'
+  AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
+
+ORDER BY pc.fecha_pedido ASC;
