@@ -2,7 +2,7 @@ import io
 import json
 import requests, os
 from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tCSV
-from produccion.models import DetalleEntradasEquivCC, EmbarkedIndividualRatingDetail, EquivalentsHead, ExcelLinesEditable
+from produccion.models import DetalleEntradasEquivCC, EmbarkedIndividualRatingDetail, EmbarkedIndividualRatingHorizontal, EquivalentsHead, ExcelLinesEditable
 
 def upload_csv(table_name):
 
@@ -114,13 +114,17 @@ def generate_content_csv(table_name):
 
 
     if table_name == '5entradas-con-sin-contenedor-calculo-precio-stock-horizontal':
-        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"]
-        for obj in EmbarkedIndividualRatingDetail.objects.all():
-            fila = ['x']
+        fields = ["name;mercado;fecha;stock;precio;final;"]
+        for obj in EmbarkedIndividualRatingHorizontal.objects.all():
+            fila = [ 
+               str(obj.name or "")+" "+str(obj.code or ""),
+               str(obj.mercado or ""),
+               str(obj.fecha or ""),
+               tCSV(obj.stock or ""), 
+               tCSV(obj.precio or ""), 
+            ]
 
-
-            fields.append(";".join(fila))
-
+            fields.append(";".join(fila)+';')
 
                    
     if table_name == 'x':
