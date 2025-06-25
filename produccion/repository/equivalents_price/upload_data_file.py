@@ -112,6 +112,14 @@ def generate_content_csv(table_name):
            fields.append(";".join(fila))
 
 
+    if table_name == '5entradas-con-sin-contenedor-calculo-precio-stock-horizontal':
+        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur"]
+        for obj in EmbarkedIndividualRatingDetail.objects.all():
+            fila = []
+
+
+            fields.append(";".join(fila))
+
 
                    
     if table_name == 'x':

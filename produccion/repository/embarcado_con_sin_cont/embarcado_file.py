@@ -4,8 +4,8 @@ from dateutil.relativedelta import relativedelta
 from django.db import connection
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import get_short_date
-from produccion.models import EmbarkedIndividualRatingDetail
-from produccion.repository.embarcado_con_sin_cont.articulos_file import give_me_that_are_in_play, llegadas_pendientes
+from produccion.models import EmbarkedIndividualRatingDetail, EmbarkedIndividualRatingHorizontal
+from produccion.repository.embarcado_con_sin_cont.articulos_file import get_me_market, give_me_that_are_in_play, llegadas_pendientes
 from produccion.repository.equivalents_price.upload_data_file import upload_csv
 from produccion.utils.get_me_stock_file import consumo_pasado, get_last_changed_value, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses12, pedidos_pendientes, verificar_mes
 from produccion.utils.sent_email_file import aviso_expediente_sin_precio
@@ -86,6 +86,7 @@ def embarcado_art_con_sin_cont(request):
 
 
     EmbarkedIndividualRatingDetail.objects.all().delete()
+    EmbarkedIndividualRatingHorizontal.objects.all().delete()
 
     with connection.cursor() as cursor:
         cursor.execute("ALTER SEQUENCE produccion_embarketindividualrating_id_seq RESTART WITH 1;")
@@ -99,7 +100,7 @@ def embarcado_art_con_sin_cont(request):
     # mes_mas4   = ((today + relativedelta(months=4)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     # mes_mas5   = ((today + relativedelta(months=5)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     # mes_mas6   = ((today + relativedelta(months=6)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
-    # mes_mas7   = ((today + relativedelta(months=7)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    # mes_mas7   = ((today + relativedelta(months=7)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d") 
     # mes_mas8   = ((today + relativedelta(months=8)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     # mes_mas9   = ((today + relativedelta(months=9)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     # mes_mas10  = ((today + relativedelta(months=10)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
@@ -108,6 +109,7 @@ def embarcado_art_con_sin_cont(request):
     for x in codigos_art_11_month:     
         NAME  = x['name']
         CODE  = x['code']
+        MERCADO = get_me_market(oracle, x['code'])
   
         embar = EmbarkedIndividualRatingDetail()
         embar.name = NAME
@@ -116,6 +118,15 @@ def embarcado_art_con_sin_cont(request):
         embar.stock_actual = STOCK = float(x['precio_stock'][0]['stock'] or 0)
         embar.pcm_actual   = PRICE = float(x['precio_stock'][0]['precio'] or 0)
         embar.save()
+
+        horinzontal = EmbarkedIndividualRatingHorizontal()
+        horinzontal.name   = NAME
+        horinzontal.code   = CODE
+        horinzontal.mercado = MERCADO
+        horinzontal.fecha  = get_short_date()
+        horinzontal.stock  = STOCK
+        horinzontal.precio = PRICE
+        horinzontal.save()
 
         rangos = x['rango']
         for rango in rangos:
@@ -169,9 +180,19 @@ def embarcado_art_con_sin_cont(request):
             deecc.calc_kg  = STOCK
             deecc.save()
 
+            horinzontal = EmbarkedIndividualRatingHorizontal()
+            horinzontal.name    = NAME
+            horinzontal.code    = CODE
+            horinzontal.mercado = MERCADO
+            horinzontal.fecha   = rango['hasta']
+            horinzontal.stock   = STOCK
+            horinzontal.precio  = PRICE
+            horinzontal.save()
+
 
     aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
     upload_csv('4entradas-con-sin-contenedor-calculo-precio-stock')
+    upload_csv('5entradas-con-sin-contenedor-calculo-precio-stock-horizontal')
 
     return codigos_art_11_month
 

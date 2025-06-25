@@ -82,6 +82,7 @@ class DetalleEntradasEquivCC(models.Model):
 class EmbarkedIndividualRatingDetail(models.Model):
     name         = models.TextField(null=True)
     code         = models.TextField(null=True)
+    mercado      = models.TextField(null=True)
     entrada      = models.TextField(null=True)
     
     stock_actual = models.FloatField(null=True)
@@ -94,3 +95,13 @@ class EmbarkedIndividualRatingDetail(models.Model):
 
     calc_kg      = models.FloatField(null=True)
     calc_eur     = models.FloatField(null=True)
+
+
+class EmbarkedIndividualRatingHorizontal(models.Model):
+    name         = models.TextField(null=True)
+    code         = models.TextField(null=True)
+    mercado      = models.TextField(null=True)
+    
+    fecha        = models.TextField(null=True)
+    stock        = models.FloatField(null=True)
+    precio       = models.FloatField(null=True)

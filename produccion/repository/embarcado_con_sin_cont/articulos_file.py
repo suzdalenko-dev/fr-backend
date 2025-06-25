@@ -341,3 +341,27 @@ def precio_con_sin_contenedor_sin_gastos(oracle, exp_id, art_code):
     
     res = oracle.consult(sql_sin_gastos, {'exp_id':exp_id, 'art_code': art_code})
     return res
+
+
+
+###################################
+### dame el mercado de un articulo
+##################################
+
+def get_me_market(oracle, code_art):
+    sql =   """SELECT 
+                A.CODIGO_ESTAD8,
+                F.DESCRIPCION AS DESCRIPCION_MERCADO
+            FROM VA_ARTICULOS A
+            LEFT JOIN FAMILIAS F 
+                ON F.CODIGO_EMPRESA = A.CODIGO_EMPRESA
+                AND F.CODIGO_FAMILIA = A.CODIGO_ESTAD8
+                AND F.NUMERO_TABLA = 8
+            WHERE A.CODIGO_EMPRESA = '001'
+              AND A.CODIGO_ARTICULO = :code_art AND ROWNUM = 1"""
+    res = oracle.consult(sql, {'code_art':code_art})
+    if res:
+        market = str(res[0].get('DESCRIPCION_MERCADO'))
+        return market
+    else: 
+        return 'None2'
