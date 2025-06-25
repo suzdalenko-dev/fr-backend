@@ -363,3 +363,62 @@ FROM (
     ORDER BY ehs.num_hoja DESC
 )
 WHERE ROWNUM = 1
+
+
+
+2 PC embarcados = 
+VAR PrecioMenos1 = CALCULATE([2 Precio quival embarcados], DATEADD('dFechas'[Date], -1, MONTH)) 
+VAR PCEmbarcados = 
+    IF(
+        ISBLANK(PrecioMenos1) || PrecioMenos1 = 0,
+        0,
+        [2 Precio quival embarcados] - PrecioMenos1
+    )
+
+VAR PrecioMesActual = 
+    CALCULATE(
+        [2 Precio quival embarcados],
+        FILTER(
+            ALL('dFechas'),
+            YEAR('dFechas'[Date]) = YEAR(TODAY()) &&
+            MONTH('dFechas'[Date]) = MONTH(TODAY())
+        )
+    )
+VAR PC_MesActualEmbarcados = 
+    IF(
+        ISBLANK(PrecioMesActual) || PrecioMesActual = 0,
+        0,
+        [2 Precio quival embarcados] - PrecioMesActual
+    )
+
+// Evaluar la lógica del resultado con las nuevas condiciones
+RETURN 
+    IF(
+        PC_MesActualEmbarcados >= 0.1,
+        PC_MesActualEmbarcados,
+        IF(
+            PC_MesActualEmbarcados <= -0.1,
+            PC_MesActualEmbarcados,
+            IF(
+                PCEmbarcados >= 0.1,
+                PCEmbarcados,        
+                IF(
+                    PCEmbarcados <= -0.1,
+                    PCEmbarcados,
+                    IF(
+                        PCEmbarcados >= 0 && PC_MesActualEmbarcados >= 0,
+                        MAX(PCEmbarcados, PC_MesActualEmbarcados),
+                        IF(
+                            PCEmbarcados <= 0 && PC_MesActualEmbarcados <= 0,
+                            MIN(PCEmbarcados, PC_MesActualEmbarcados),
+                            0
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+
+2 Precio quival embarcados = AVERAGE('2 dbfroxa equivalents_head'[price_act])
+2 Price actual TOP = SUM('2 dbfroxa equivalents_head'[price_act])

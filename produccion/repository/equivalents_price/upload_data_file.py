@@ -72,9 +72,9 @@ def generate_content_csv(table_name):
             y3 = obj.final_coste_mas3 - obj.final_coste_mas2
             y  = y0 + y1 + y2 + y3
             title = 'Estable'
-            if y >= 0.99:
+            if y >= 0.099:
                 title = 'Precio sube'
-            if y <= -0.99:
+            if y <= -0.099:
                 title = 'Precio baja'
 
             for x in [0, 1, 2, 3, 4]:
