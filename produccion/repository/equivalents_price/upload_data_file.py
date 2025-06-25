@@ -42,7 +42,7 @@ def generate_content_csv(table_name):
 
     if table_name == '2equivalents_head':
         list_dates = end_of_month_dates()
-        fields = ["article_name;fecha;kg_act;price_act;value;"]
+        fields = ["article_name;fecha;kg_act;price_act;"]
         for obj in EquivalentsHead.objects.all():
             NAME = str(obj.article_name or "")
             for x in [0, 1, 2, 3, 4]:
