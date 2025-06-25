@@ -83,6 +83,9 @@ class EmbarkedIndividualRatingDetail(models.Model):
     name         = models.TextField(null=True)
     code         = models.TextField(null=True)
     mercado      = models.TextField(null=True)
+    familia      = models.TextField(null=True)
+    subfamilia   = models.TextField(null=True)
+
     entrada      = models.TextField(null=True)
     
     stock_actual = models.FloatField(null=True)
@@ -101,6 +104,8 @@ class EmbarkedIndividualRatingHorizontal(models.Model):
     name         = models.TextField(null=True)
     code         = models.TextField(null=True)
     mercado      = models.TextField(null=True)
+    familia      = models.TextField(null=True)
+    subfamilia   = models.TextField(null=True)
     
     fecha        = models.TextField(null=True)
     stock        = models.FloatField(null=True)

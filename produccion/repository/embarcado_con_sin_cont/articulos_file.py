@@ -360,7 +360,9 @@ def precio_con_sin_contenedor_sin_gastos(oracle, exp_id, art_code):
 def get_me_market(oracle, code_art):
     sql =   """SELECT 
                 A.CODIGO_ESTAD8,
-                F.DESCRIPCION AS DESCRIPCION_MERCADO
+                F.DESCRIPCION AS DESCRIPCION_MERCADO,
+                (SELECT DESCRIPCION FROM FAMILIAS WHERE CODIGO_EMPRESA = A.CODIGO_EMPRESA AND NUMERO_TABLA = 1 AND CODIGO_FAMILIA = A.CODIGO_FAMILIA) AS D_CODIGO_FAMILIA,
+                (SELECT DESCRIPCION FROM FAMILIAS WHERE CODIGO_EMPRESA = A.CODIGO_EMPRESA AND NUMERO_TABLA = 2 AND CODIGO_FAMILIA = A.CODIGO_ESTAD2) AS D_CODIGO_SUBFAMILIA
             FROM VA_ARTICULOS A
             LEFT JOIN FAMILIAS F 
                 ON F.CODIGO_EMPRESA = A.CODIGO_EMPRESA
@@ -370,7 +372,9 @@ def get_me_market(oracle, code_art):
               AND A.CODIGO_ARTICULO = :code_art AND ROWNUM = 1"""
     res = oracle.consult(sql, {'code_art':code_art})
     if res:
-        market = str(res[0].get('DESCRIPCION_MERCADO'))
-        return market
+        market     = str(res[0].get('DESCRIPCION_MERCADO'))
+        familia    = str(res[0].get('D_CODIGO_FAMILIA'))
+        subfamilia = str(res[0].get('D_CODIGO_SUBFAMILIA'))
+        return [market, familia, subfamilia]
     else: 
-        return 'None2'
+        return ["None", "None", "None"]

@@ -109,24 +109,29 @@ def embarcado_art_con_sin_cont(request):
     for x in codigos_art_11_month:     
         NAME  = x['name']
         CODE  = x['code']
-        MERCADO = get_me_market(oracle, x['code'])
+        MERCADO, FAMILIA, SUBFAMILIA = get_me_market(oracle, x['code'])
+ 
   
         embar = EmbarkedIndividualRatingDetail()
-        embar.name = NAME
-        embar.code = CODE
-        embar.mercado = MERCADO
+        embar.name         = NAME
+        embar.code         = CODE
+        embar.mercado      = MERCADO
+        embar.familia      = FAMILIA
+        embar.subfamilia   = SUBFAMILIA
         embar.entrada      = 'Fecha '+get_short_date()+' ESTADO ACTUAL'
         embar.stock_actual = STOCK = float(x['precio_stock'][0]['stock'] or 0)
         embar.pcm_actual   = PRICE = float(x['precio_stock'][0]['precio'] or 0)
         embar.save()
 
         horinzontal = EmbarkedIndividualRatingHorizontal()
-        horinzontal.name   = NAME
-        horinzontal.code   = CODE
-        horinzontal.mercado = MERCADO
-        horinzontal.fecha  = get_short_date()
-        horinzontal.stock  = STOCK
-        horinzontal.precio = PRICE
+        horinzontal.name       = NAME
+        horinzontal.code       = CODE
+        horinzontal.mercado    = MERCADO
+        horinzontal.familia    = FAMILIA
+        horinzontal.subfamilia = SUBFAMILIA
+        horinzontal.fecha      = get_short_date()
+        horinzontal.stock      = STOCK
+        horinzontal.precio     = PRICE
         horinzontal.save()
 
         rangos = x['rango']
@@ -142,6 +147,8 @@ def embarcado_art_con_sin_cont(request):
                     deecc.name         = NAME
                     deecc.code         = CODE
                     deecc.mercado      = MERCADO
+                    deecc.familia      = FAMILIA
+                    deecc.subfamilia   = SUBFAMILIA
                     deecc.entrada      = 'Fecha '+str(llegada['FECHA_PREV_LLEGADA'])[:10]+' Art. '+str(llegada['ARTICULO'])+' '+str(llegada['ENTIDAD'])+' '+str(llegada['NUMERO'])+' '+str(idCont)
                     deecc.entrada_kg   = float(llegada['CANTIDAD'] or 0)
                     deecc.entrada_eur  = float(llegada['PRECIO_EUR'] or 0)
@@ -176,6 +183,8 @@ def embarcado_art_con_sin_cont(request):
             deecc.name         = NAME
             deecc.code         = CODE
             deecc.mercado      = MERCADO
+            deecc.familia      = FAMILIA
+            deecc.subfamilia   = SUBFAMILIA
             deecc.entrada      = 'Fecha '+rango['hasta']+' Resultado mes'
             deecc.consumo_prod = CONSUMO_PROD
             deecc.consumo_vent = CONSUMO_VENT
@@ -184,12 +193,14 @@ def embarcado_art_con_sin_cont(request):
             deecc.save()
 
             horinzontal = EmbarkedIndividualRatingHorizontal()
-            horinzontal.name    = NAME
-            horinzontal.code    = CODE
-            horinzontal.mercado = MERCADO
-            horinzontal.fecha   = rango['hasta']
-            horinzontal.stock   = STOCK
-            horinzontal.precio  = PRICE
+            horinzontal.name        = NAME
+            horinzontal.code        = CODE
+            horinzontal.mercado     = MERCADO
+            horinzontal.familia     = FAMILIA
+            horinzontal.subfamilia  = SUBFAMILIA
+            horinzontal.fecha       = rango['hasta']
+            horinzontal.stock       = STOCK
+            horinzontal.precio      = PRICE
             horinzontal.save()
 
 
