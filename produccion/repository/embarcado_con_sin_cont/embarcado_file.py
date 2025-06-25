@@ -114,6 +114,7 @@ def embarcado_art_con_sin_cont(request):
         embar = EmbarkedIndividualRatingDetail()
         embar.name = NAME
         embar.code = CODE
+        embar.mercado = MERCADO
         embar.entrada      = 'Fecha '+get_short_date()+' ESTADO ACTUAL'
         embar.stock_actual = STOCK = float(x['precio_stock'][0]['stock'] or 0)
         embar.pcm_actual   = PRICE = float(x['precio_stock'][0]['precio'] or 0)
@@ -140,6 +141,7 @@ def embarcado_art_con_sin_cont(request):
                     deecc = EmbarkedIndividualRatingDetail()
                     deecc.name         = NAME
                     deecc.code         = CODE
+                    deecc.mercado      = MERCADO
                     deecc.entrada      = 'Fecha '+str(llegada['FECHA_PREV_LLEGADA'])[:10]+' Art. '+str(llegada['ARTICULO'])+' '+str(llegada['ENTIDAD'])+' '+str(llegada['NUMERO'])+' '+str(idCont)
                     deecc.entrada_kg   = float(llegada['CANTIDAD'] or 0)
                     deecc.entrada_eur  = float(llegada['PRECIO_EUR'] or 0)
@@ -171,13 +173,14 @@ def embarcado_art_con_sin_cont(request):
             if STOCK < 0: STOCK = 0
 
             deecc = EmbarkedIndividualRatingDetail()
-            deecc.name = NAME
-            deecc.code = CODE
-            deecc.entrada  = 'Fecha '+rango['hasta']+' Resultado mes'
+            deecc.name         = NAME
+            deecc.code         = CODE
+            deecc.mercado      = MERCADO
+            deecc.entrada      = 'Fecha '+rango['hasta']+' Resultado mes'
             deecc.consumo_prod = CONSUMO_PROD
             deecc.consumo_vent = CONSUMO_VENT
-            deecc.calc_eur = PRICE
-            deecc.calc_kg  = STOCK
+            deecc.calc_eur     = PRICE
+            deecc.calc_kg      = STOCK
             deecc.save()
 
             horinzontal = EmbarkedIndividualRatingHorizontal()
