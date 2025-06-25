@@ -66,10 +66,10 @@ def generate_content_csv(table_name):
         fields = ["article_name;fecha;price;y;title;"]
         for obj in ExcelLinesEditable.objects.all():
             NAME = str(obj.article_name or "")+" "+str(obj.article_code or "")
-            y0 = obj.final_coste_act  - obj.precio_padre_mas_gastos
-            y1 = obj.final_coste_mas1 - obj.final_coste_act
-            y2 = obj.final_coste_mas2 - obj.final_coste_mas1
-            y3 = obj.final_coste_mas3 - obj.final_coste_mas2
+            y0 = float(obj.final_coste_act  or 0) - float(obj.precio_padre_mas_gastos or 0)
+            y1 = float(obj.final_coste_mas1 or 0) - float(obj.final_coste_act or 0)
+            y2 = float(obj.final_coste_mas2 or 0) - float(obj.final_coste_mas1 or 0)
+            y3 = float(obj.final_coste_mas3 or 0) - float(obj.final_coste_mas2 or 0)
             y  = y0 + y1 + y2 + y3
             title = 'Estable'
             if y >= 0.099:
