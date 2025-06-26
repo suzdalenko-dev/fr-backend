@@ -179,6 +179,7 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                         AND eae.articulo = :codigo_erp
                         AND ehs.codigo_entrada IS NULL
                         AND ehs.empresa = '001'
+                        AND eae.PRECIO > 0
                     ORDER BY ehs.FECHA_PREV_LLEGADA ASC
         """
 

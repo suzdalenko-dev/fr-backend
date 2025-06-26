@@ -24,11 +24,5 @@ def aviso_expediente_sin_precio(expedientes_sin_precio):
         # ['alexey.suzdalenko@froxa.com'],
 
         """
-            1. coger el cambio del ultimo mes y calcular el precio con gastos desde el cambio de ultimo mes
-            2. ver la diferencia que su pone por el kg entre el precio netto y con gastos y sumar esta deferencia al precio con el que tengo en €
-                aplicando el cambio del mes
-
-            Familia carne subfamilia pollo, creado 198 PS SABROSO
-            003 CARNES 026 POLLO
-                198 PS SABROSO
+           QUITAR CONTENEDORES CON PRECIO 0 !!!
         """

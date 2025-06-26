@@ -94,7 +94,7 @@ def generate_content_csv(table_name):
            
 
     if table_name == '4entradas-con-sin-contenedor-calculo-precio-stock':
-        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur;mercado;"]
+        fields = ["id;name;entrada;stock_actual;pcm_actual;consumo_prod;consumo_vent;entrada_kg;entrada_eur;calc_kg;calc_eur;mercado;familia;subfamilia;"]
         for obj in EmbarkedIndividualRatingDetail.objects.all():
             fila = [ 
                str(obj.id or ""),
@@ -109,6 +109,8 @@ def generate_content_csv(table_name):
                tCSV(obj.calc_kg or ""),
                tCSV(obj.calc_eur or ""),
                str(obj.mercado or ""),
+               str(obj.familia or ""),
+               str(obj.subfamilia or ""),
             ]
             fields.append(";".join(fila)+';')
 
