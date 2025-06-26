@@ -508,4 +508,56 @@ LEFT JOIN FAMILIAS F
     AND F.CODIGO_FAMILIA = A.CODIGO_ESTAD8
     AND F.NUMERO_TABLA = 8
 WHERE A.CODIGO_EMPRESA = '001'
-  AND A.CODIGO_ARTICULO = '40000' AND ROWNUM = 1
+  AND A.CODIGO_ARTICULO = '40000' AND ROWNUM = 1;
+
+
+
+  SELECT *
+FROM (
+    SELECT
+        eae.articulo AS c3,
+        DECODE(
+            COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
+            0,
+            eae.precio,
+            eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+        ) AS n9,
+        (
+            (
+                SELECT SUM(hs.importe_portes)
+                FROM reparto_portes_hs hs
+                WHERE hs.codigo_empresa = ehs.empresa
+                  AND hs.numero_expediente = ehs.num_expediente
+                  AND hs.hoja_seguimiento = ehs.num_hoja
+                  AND hs.codigo_articulo = eae.articulo
+            ) / DECODE(
+                art.unidad_valoracion,
+                1, eae.cantidad_unidad1,
+                2, eae.cantidad_unidad2
+            )
+        ) + (
+            eae.precio * DECODE(
+                ehs.tipo_cambio,
+                'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
+                'S', ehs.valor_cambio,
+                'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+            )
+        ) AS n10,
+        ehs.num_hoja,
+        ehs.num_expediente
+    FROM articulos art
+    JOIN expedientes_articulos_embarque eae
+      ON art.codigo_articulo = eae.articulo AND art.codigo_empresa = eae.empresa
+    JOIN expedientes_hojas_seguim ehs
+      ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
+    JOIN expedientes_imp ei
+      ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
+    JOIN expedientes_contenedores ec
+      ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa AND ec.linea = eae.linea_contenedor
+    WHERE eae.empresa = '001'
+      AND eae.articulo = '40030'
+      AND ehs.status NOT IN ('C')
+) 
+WHERE n9 > 0 AND n10 > 0
+ORDER BY num_expediente DESC, num_hoja DESC
+FETCH FIRST 1 ROWS ONLY;

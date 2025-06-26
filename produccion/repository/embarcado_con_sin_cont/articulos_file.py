@@ -204,9 +204,23 @@ def llegadas_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_preci
                     PRECIO_CON_GASTOS_EXCEL = precio_llegada_sql_con_gastos[0].get('N10')
                     PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
                     if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
-                        r['PRECIO_EUR'] = -1122
                         if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                             expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                        # buscar el ultimo precio con gastos y sin gastos DE ALGUNA FORMA
+                        gasto_de_alguna_forma = dame_gasto_de_alguna_forma(oracle, r['ARTICULO'])
+                        if gasto_de_alguna_forma:
+                            PRECIO_SIN_GASTOS_EXCEL = gasto_de_alguna_forma[0].get('N9')
+                            PRECIO_SIN_GASTOS_EXCEL = float(PRECIO_SIN_GASTOS_EXCEL) if PRECIO_SIN_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                            PRECIO_CON_GASTOS_EXCEL = gasto_de_alguna_forma[0].get('N10')
+                            PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                            if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
+                                r['PRECIO_EUR'] = -1122
+                            else:
+                                
+                                r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
+                                r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
+                                r['GASTOS']                  = r['PRECIO_CON_GASTOS_EXCEL'] - r['PRECIO_SIN_GASTOS_EXCEL']
+                                r['PRECIO_EUR'] = float(r['PRECIO_EUR_ORIGINAL_CAM_MES'] or - 4444) + r['GASTOS']
                     else:
                         r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
                         r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
@@ -378,3 +392,92 @@ def get_me_market(oracle, code_art):
         return [market, familia, subfamilia]
     else: 
         return ["None", "None", "None"]
+
+###################################
+# conseguir el gasto de alguna forma
+###################################
+
+def dame_gasto_de_alguna_forma(oracle, art_code):
+    sql_sin_gastos = """
+        SELECT *
+        FROM (
+            SELECT
+                eae.articulo AS c3,
+                DECODE(
+                    COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
+                    0,
+                    eae.precio,
+                    eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                ) AS n9,
+                (
+                    (
+                        SELECT SUM(hs.importe_portes)
+                        FROM reparto_portes_hs hs
+                        WHERE hs.codigo_empresa = ehs.empresa
+                          AND hs.numero_expediente = ehs.num_expediente
+                          AND hs.hoja_seguimiento = ehs.num_hoja
+                          AND hs.codigo_articulo = eae.articulo
+                    ) / DECODE(
+                        art.unidad_valoracion,
+                        1, eae.cantidad_unidad1,
+                        2, eae.cantidad_unidad2
+                    )
+                ) + (
+                    eae.precio * DECODE(
+                        ehs.tipo_cambio,
+                        'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
+                        'S', ehs.valor_cambio,
+                        'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                    )
+                ) AS n10,
+                ehs.num_hoja
+            FROM articulos art
+            JOIN expedientes_articulos_embarque eae
+              ON art.codigo_articulo = eae.articulo AND art.codigo_empresa = eae.empresa
+            JOIN expedientes_hojas_seguim ehs
+              ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
+            JOIN expedientes_imp ei
+              ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
+            JOIN expedientes_contenedores ec
+              ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa AND ec.linea = eae.linea_contenedor
+            WHERE eae.empresa = '001'
+              AND eae.articulo = :art_code
+              AND ehs.status NOT IN ('C')
+              AND (
+                  DECODE(
+                      COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
+                      0,
+                      eae.precio,
+                      eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                  ) > 0
+              )
+              AND (
+                  (
+                      (
+                          SELECT SUM(hs.importe_portes)
+                          FROM reparto_portes_hs hs
+                          WHERE hs.codigo_empresa = ehs.empresa
+                            AND hs.numero_expediente = ehs.num_expediente
+                            AND hs.hoja_seguimiento = ehs.num_hoja
+                            AND hs.codigo_articulo = eae.articulo
+                      ) / DECODE(
+                          art.unidad_valoracion,
+                          1, eae.cantidad_unidad1,
+                          2, eae.cantidad_unidad2
+                      )
+                  ) + (
+                      eae.precio * DECODE(
+                          ehs.tipo_cambio,
+                          'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
+                          'S', ehs.valor_cambio,
+                          'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
+                      )
+                  )
+              ) > 0
+            ORDER BY ehs.num_hoja DESC
+        )
+        WHERE ROWNUM = 1
+    """
+
+    res = oracle.consult(sql_sin_gastos, {'art_code': art_code})
+    return res

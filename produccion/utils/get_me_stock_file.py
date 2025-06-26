@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 
-from produccion.repository.embarcado_con_sin_cont.articulos_file import precio_con_sin_contenedor, precio_con_sin_contenedor_sin_gastos
+from produccion.repository.embarcado_con_sin_cont.articulos_file import dame_gasto_de_alguna_forma, precio_con_sin_contenedor, precio_con_sin_contenedor_sin_gastos
 from produccion.utils.precio_con_gastos import consultar_precio_con_gastos
 
 def get_last_changed_value(oracle):
@@ -253,14 +253,6 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
 
         if res:
             for r in res:
-                # precio_llegada_sql = consultar_precio_con_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'], r['CANTIDAD'])
-                # if precio_llegada_sql:
-                #     valor_precio_final = precio_llegada_sql[0].get('N10')
-                #     r['PRECIO_EUR'] = float(valor_precio_final) if valor_precio_final not in [None, 'None', ''] else 0
-                #     if r['PRECIO_EUR'] == 0 and r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
-                #         expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
-                #         r['PRECIO_EUR'] = -1122
-
                 precio_llegada_sql_sin_gastos = precio_con_sin_contenedor_sin_gastos(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
                 precio_llegada_sql_con_gastos = precio_con_sin_contenedor(oracle, r['NUM_EXPEDIENTE'], r['ARTICULO'])
 
@@ -271,15 +263,29 @@ def pedidos_pendientes(oracle, arr_codigos_erp, r_fechas, expedientes_sin_precio
                     PRECIO_CON_GASTOS_EXCEL = precio_llegada_sql_con_gastos[0].get('N10')
                     PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
                     if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
-                        r['PRECIO_EUR'] = -1122
                         if r['NUM_EXPEDIENTE'] not in expedientes_sin_precio:
                             expedientes_sin_precio.append(r['NUM_EXPEDIENTE'])
+                        # buscar el ultimo precio con gastos y sin gastos DE ALGUNA FORMA
+                        gasto_de_alguna_forma = dame_gasto_de_alguna_forma(oracle, r['ARTICULO'])
+                        if gasto_de_alguna_forma:
+                            PRECIO_SIN_GASTOS_EXCEL = gasto_de_alguna_forma[0].get('N9')
+                            PRECIO_SIN_GASTOS_EXCEL = float(PRECIO_SIN_GASTOS_EXCEL) if PRECIO_SIN_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                            PRECIO_CON_GASTOS_EXCEL = gasto_de_alguna_forma[0].get('N10')
+                            PRECIO_CON_GASTOS_EXCEL = float(PRECIO_CON_GASTOS_EXCEL) if PRECIO_CON_GASTOS_EXCEL not in [None, 'None', ''] else 0
+                            if PRECIO_SIN_GASTOS_EXCEL == 0 or PRECIO_CON_GASTOS_EXCEL == 0:
+                                r['PRECIO_EUR'] = -1122
+                            else:
+                                r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
+                                r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
+                                r['GASTOS']                  = r['PRECIO_CON_GASTOS_EXCEL'] - r['PRECIO_SIN_GASTOS_EXCEL']
+                                r['PRECIO_EUR'] = float(r['PRECIO_EUR_ORIGINAL_CAM_MES'] or - 4444) + r['GASTOS']
                     else:
                         r['PRECIO_SIN_GASTOS_EXCEL'] = PRECIO_SIN_GASTOS_EXCEL
                         r['PRECIO_CON_GASTOS_EXCEL'] = PRECIO_CON_GASTOS_EXCEL
                         r['GASTOS']                  = r['PRECIO_CON_GASTOS_EXCEL'] - r['PRECIO_SIN_GASTOS_EXCEL']
                         r['PRECIO_EUR'] = float(r['PRECIO_EUR_ORIGINAL_CAM_MES'] or - 4444) + r['GASTOS']
                 else:
+                    
                     r['PRECIO_EUR'] = -3333
 
 
