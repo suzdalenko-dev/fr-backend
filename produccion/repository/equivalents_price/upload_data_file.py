@@ -114,14 +114,16 @@ def generate_content_csv(table_name):
 
 
     if table_name == '5entradas-con-sin-contenedor-calculo-precio-stock-horizontal':
-        fields = ["name;mercado;fecha;stock;precio;final;"]
+        fields = ["name;mercado;fecha;stock;precio;familia;subfamilia;"]
         for obj in EmbarkedIndividualRatingHorizontal.objects.all():
             fila = [ 
                str(obj.name or "")+" "+str(obj.code or ""),
                str(obj.mercado or ""),
                str(obj.fecha or ""),
                tCSV(obj.stock or ""), 
-               tCSV(obj.precio or ""), 
+               tCSV(obj.precio or ""),
+               str(obj.familia or ""),
+               str(obj.subfamilia or ""),
             ]
 
             fields.append(";".join(fila)+';')
