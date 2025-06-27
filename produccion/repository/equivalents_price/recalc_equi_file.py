@@ -245,6 +245,6 @@ def recalculate_equiv_with_contaner(request):
     upload_csv('2equivalents_head')
     upload_csv('3proyeccion-costes-con-contenedor')
 
-    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
+    aviso_expediente_sin_precio(request, EXPEDIENTES_SIN_PRECIO_FINAL)
 
     return equiv_data

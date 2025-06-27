@@ -204,7 +204,7 @@ def embarcado_art_con_sin_cont(request):
             horinzontal.save()
 
 
-    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
+    aviso_expediente_sin_precio(request, EXPEDIENTES_SIN_PRECIO_FINAL)
     upload_csv('4entradas-con-sin-contenedor-calculo-precio-stock')
     upload_csv('5entradas-con-sin-contenedor-calculo-precio-stock-horizontal')
 

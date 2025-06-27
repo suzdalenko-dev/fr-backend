@@ -249,7 +249,7 @@ def recalculate_price_projections(request):
             # manejar el caso
             pass
 
-    aviso_expediente_sin_precio(EXPEDIENTES_SIN_PRECIO_FINAL)
+    aviso_expediente_sin_precio(request, EXPEDIENTES_SIN_PRECIO_FINAL)
       
     if code and code.isdigit() and int(code) > 0:
         # ejecutado desde http://127.0.0.1:3000/dashboard/#detalle-articulo-costes?codigo=40244
