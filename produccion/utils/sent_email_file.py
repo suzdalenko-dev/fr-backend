@@ -24,3 +24,4 @@ def aviso_expediente_sin_precio(request, expedientes_sin_precio):
 
         # ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
         # ['alexey.suzdalenko@froxa.com'],
+        # D:\froxa-backend\produccion\utils\sent_email_file.py
