@@ -1,24 +1,10 @@
-Buenos días,
-necesito las siguientes palabras en nombre común asociado a
-
-
-
-familia 007 helados, subfamilia helados:
-    409 DULCE DE LECHE
-    337 NATA    - nata
-    411 PISTACHO    - pistacho
-    412 CHOCOLATE AVELLANA- chocolate avellana
-    345 STRACCIATELLA - stracciatella
-    413 CHOCOLATE BLANCO- chocolate blanco
-    243 CHOCOLATE - chocolate
-    339 LIMON - limon
-
-
-154550104 41009 no esta en el mes
-154550100 40099 no esta en el mes
-154550101 40100 no esta en el mes
-154400203 40093 no esta en el mes
-154550090 40136 no esta en el mes
-154540190 40175 no esta en el mes
-154550000 40098 no esta en el mes
-154550100 40099 no esta en el mes
+Almacenes:
+    98 TRANSITOS IMPORTACIONES
+        contra  00 CARTES 
+                01 SANTANDER DISP. 
+                02 SANTANDER. DEPA.
+                 E01
+                  E02
+                   E03
+                    E04
+                     E05

@@ -63,3 +63,29 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return str(ip)
+
+
+
+def invoices_list_of_current_month(fecha_inicio_str):
+    fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d").date()
+    hoy = date.today()
+    listado = []
+    año = fecha_inicio.year
+    mes = fecha_inicio.month
+    while date(año, mes, 1) <= hoy:
+        primer_dia = date(año, mes, 1)
+        # calcular último día del mes
+        if mes == 12:
+            ultimo_dia = date(año, mes, 31)
+        else:
+            siguiente_mes = date(año, mes + 1, 1)
+            ultimo_dia = siguiente_mes - timedelta(days=1)
+        listado.append( (primer_dia.strftime('%Y-%m-%d'), ultimo_dia.strftime('%Y-%m-%d')) )
+        # avanzar al mes siguiente
+        if mes == 12:
+            mes = 1
+            año += 1
+        else:
+            mes += 1
+    return listado
+

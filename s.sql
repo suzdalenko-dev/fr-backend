@@ -1,563 +1,783 @@
-select ehs.fecha_prev_llegada,
-       ehs.num_expediente as num_expediente,
-       eae.articulo as articulo,
-       eae.precio,
-       (
-          case
-             when ei.divisa = 'USD' then
-                eae.precio * ei.valor_cambio
-             else
-                eae.precio
-          end
-       ) as precio_eur_original,
-       eae.cantidad as cantidad,
-       ehs.fecha_llegada,
-       ehs.codigo_entrada,
-       ec.contenedor as numero,
-       ei.divisa,
-       ei.valor_cambio,
-       'EXP' as entidad,
-       - 23123 as precio_eur
-  from expedientes_hojas_seguim ehs
-  join expedientes_articulos_embarque eae
-on ehs.num_expediente = eae.num_expediente
-   and ehs.num_hoja = eae.num_hoja
-   and ehs.empresa = eae.empresa
-  join expedientes_imp ei
-on ei.codigo = eae.num_expediente
-   and ei.empresa = eae.empresa
-  join expedientes_contenedores ec
-on ec.num_expediente = eae.num_expediente
-   and ec.num_hoja = eae.num_hoja
-   and ec.empresa = eae.empresa
- where ei.codigo = 273
-   and ehs.codigo_entrada is null
-   and ehs.empresa = '001'
- order by ehs.fecha_prev_llegada asc;
-
-
-select ehs.fecha_prev_llegada,
-       ehs.num_expediente as num_expediente,
-       eae.articulo as articulo,
-       eae.precio,
-       (
-          case
-             when ei.divisa = 'USD' then
-                eae.precio * ei.valor_cambio
-             else
-                eae.precio
-          end
-       ) as precio_eur_original,
-       eae.cantidad as cantidad,
-       ehs.fecha_llegada,
-       ehs.codigo_entrada,
-       ec.contenedor as numero,
-       ei.divisa,
-       ei.valor_cambio,
-       'EXP' as entidad,
-       - 234234 as precio_eur
-  from expedientes_hojas_seguim ehs
-  join expedientes_articulos_embarque eae
-on ehs.num_expediente = eae.num_expediente
-   and ehs.num_hoja = eae.num_hoja
-   and ehs.empresa = eae.empresa
-  join expedientes_imp ei
-on ei.codigo = eae.num_expediente
-   and ei.empresa = eae.empresa
-  join expedientes_contenedores ec
-on ec.num_expediente = eae.num_expediente
-   and ec.num_hoja = eae.num_hoja
-   and ec.empresa = eae.empresa
- where ehs.fecha_prev_llegada >= to_date('2025-06-11','YYYY-MM-DD')
-   and ehs.codigo_entrada is null
-   and ehs.empresa = '001'
-   and ehs.num_expediente = 273
-   and ( eae.articulo = '40095' )
- order by ehs.fecha_prev_llegada desc;
-
-
--- eae.articulo = '41210' or
--- drrWq9SNsFJH AND (ec.contenedor IS NULL OR ec.contenedor != 'CNT')  AND eae.ARTICULO = '40342'
-
--- 01 PN ENT M
--- 02 PR M PRS
--- 03 PC
--- 04 PX M
-
-
--- 2025-PX-84
-select *
-  from pedidos_ventas_lin
- where ejercicio = '2025'
-   and numero_serie = 'PX'
-   and numero_pedido = '84';
-
-
-select empresa as last_change_value,
-       (
-          select lvemp.nombre
-            from empresas_conta lvemp
-           where lvemp.codigo = froxa_seguros_cambio.empresa
-       ) as d_gc1,
-       periodo as gc2,
-       cambio as gn1
-  from froxa_seguros_cambio
- where 1 = 1
-   and rownum = 1
- order by gc2 desc;
-
-
-select empresa,
-       (
-          select lvemp.nombre
-            from empresas_conta lvemp
-           where lvemp.codigo = froxa_seguros_cambio.empresa
-       ) as d_gc1,
-       periodo as gc2,
-       cambio as gn1
-  from froxa_seguros_cambio
- where 1 = 1
-   and rownum = 1
- order by gc2 desc;
-
-
-select empresa,
-       periodo,
-       cambio
-  from froxa_seguros_cambio
- where 1 = 1
-   and rownum = 1
- order by periodo desc;
-
-select empresa,
-       periodo,
-       cambio
-  from froxa_seguros_cambio
- where 1 = 1
-   and rownum = 1
- order by periodo desc;
-
-
-
-select expedientes_articulos_embarque.articulo c3,
-       decode(
-          coalesce(
-             expedientes_hojas_seguim.valor_cambio,
-             expedientes_imp.valor_cambio,
-             1
-          ),
-          0,
-          expedientes_articulos_embarque.precio,
-          expedientes_articulos_embarque.precio * coalesce(
-             expedientes_hojas_seguim.valor_cambio,
-             expedientes_imp.valor_cambio,
-             1
-          )
-       ) n9,
-       ( ( (
-          select sum(hs.importe_portes)
-            from reparto_portes_hs hs
-           where hs.codigo_empresa = expedientes_hojas_seguim.empresa
-             and hs.numero_expediente = expedientes_hojas_seguim.num_expediente
-             and hs.hoja_seguimiento = expedientes_hojas_seguim.num_hoja
-             and hs.codigo_articulo = expedientes_articulos_embarque.articulo
-       ) / decode(
-          articulos.unidad_valoracion,
-          1,
-          expedientes_articulos_embarque.cantidad_unidad1,
-          2,
-          expedientes_articulos_embarque.cantidad_unidad2
-       ) ) + ( expedientes_articulos_embarque.precio * decode(
-          expedientes_hojas_seguim.tipo_cambio,
-          'E',
-          decode(
-             expedientes_imp.cambio_asegurado,
-             'S',
-             expedientes_imp.valor_cambio,
-             'N',
-             1
-          ),
-          'S',
-          expedientes_hojas_seguim.valor_cambio,
-          'N',
-          coalesce(
-             expedientes_hojas_seguim.valor_cambio,
-             expedientes_imp.valor_cambio,
-             1
-          )
-       ) ) ) n10
-  from (
-   select articulos.*,
-          decode(
-             articulos.codigo_familia,
-             null,
-             null,
-             (
-                select lvfm.descripcion
-                  from familias lvfm
-                 where lvfm.codigo_familia = articulos.codigo_familia
-                   and lvfm.numero_tabla = 1
-                   and lvfm.codigo_empresa = articulos.codigo_empresa
-             )
-          ) d_codigo_familia
-     from articulos
-) articulos,
-       (
-          select expedientes_imp.*,
-                 decode(
-                    expedientes_imp.clave_arancel,
-                    null,
-                    null,
-                    (
-                       select lvarimp.descripcion
-                         from aranceles_imp lvarimp
-                        where lvarimp.clave_arancel = expedientes_imp.clave_arancel
-                          and lvarimp.codigo_empresa = expedientes_imp.empresa
-                    )
-                 ) d_clave_arancel,
-                 decode(
-                    expedientes_imp.plantilla,
-                    null,
-                    null,
-                    (
-                       select lvpltimp.nombre
-                         from plantillas_impor lvpltimp
-                        where lvpltimp.codigo = expedientes_imp.plantilla
-                          and lvpltimp.empresa = expedientes_imp.empresa
-                    )
-                 ) d_plantilla,
-                 (
-                    select lvexpc.descripcion
-                      from expedientes_cab lvexpc
-                     where lvexpc.codigo = expedientes_imp.codigo
-                       and lvexpc.empresa = expedientes_imp.empresa
-                 ) d_descripcion_expediente
-            from expedientes_imp
-       ) expedientes_imp,
-       (
-          select expedientes_hojas_seguim.*,
-                 (
-                    select descripcion
-                      from expedientes_hojas_situacion
-                     where codigo = expedientes_hojas_seguim.situacion_logistica
-                 ) d_situacion_logistica,
-                 nvl(
-                    (
-                       select pr.nombre
-                         from proveedores pr
-                        where pr.codigo_rapido = expedientes_hojas_seguim.proveedor
-                          and pr.codigo_empresa = expedientes_hojas_seguim.empresa
-                    ),
-                    (
-                       select pr.nombre
-                         from proveedores pr,
-                              expedientes_imp ei
-                        where ei.codigo = expedientes_hojas_seguim.num_expediente
-                          and ei.empresa = expedientes_hojas_seguim.empresa
-                          and pr.codigo_rapido = ei.proveedor
-                          and pr.codigo_empresa = ei.empresa
-                    )
-                 ) d_proveedor_hoja,
-
-            from expedientes_hojas_seguim
-       ) expedientes_hojas_seguim,
-       (
-          select expedientes_articulos_embarque.*,
-                 (
-                    select (
-                       select decode(
-                          usuarios.tipo_desc_art,
-                          'V',
-                          articulos.descrip_comercial,
-                          'C',
-                          articulos.descrip_compra,
-                          'T',
-                          articulos.descrip_tecnica,
-                          articulos.descrip_comercial
-                       )
-                         from usuarios
-                        where usuarios.usuario = pkpantallas.usuario_validado
-                    )
-                      from articulos
-                     where articulos.codigo_articulo = expedientes_articulos_embarque.articulo
-                       and articulos.codigo_empresa = expedientes_articulos_embarque.empresa
-                 ) d_articulo,
-                 (
-                    select decode(
-                       ar.unidad_precio_coste,
-                       1,
-                       cantidad_unidad1 * precio,
-                       cantidad_unidad2 * precio
-                    )
-                      from articulos ar
-                     where ar.codigo_articulo = expedientes_articulos_embarque.articulo
-                       and ar.codigo_empresa = expedientes_articulos_embarque.empresa
-                 ) importe
-            from expedientes_articulos_embarque
-       ) expedientes_articulos_embarque,
-       expedientes_contenedores
- where ( expedientes_contenedores.num_expediente = expedientes_articulos_embarque.num_expediente
-   and expedientes_contenedores.num_hoja = expedientes_articulos_embarque.num_hoja
-   and expedientes_contenedores.empresa = expedientes_articulos_embarque.empresa
-   and expedientes_contenedores.linea = expedientes_articulos_embarque.linea_contenedor
-   and expedientes_hojas_seguim.num_expediente = expedientes_articulos_embarque.num_expediente
-   and expedientes_hojas_seguim.num_hoja = expedientes_articulos_embarque.num_hoja
-   and expedientes_hojas_seguim.empresa = expedientes_articulos_embarque.empresa
-   and expedientes_imp.codigo = expedientes_hojas_seguim.num_expediente
-   and expedientes_imp.empresa = expedientes_hojas_seguim.empresa
-   and expedientes_articulos_embarque.empresa = '001'
-   and articulos.codigo_articulo = expedientes_articulos_embarque.articulo
-   and articulos.codigo_empresa = expedientes_articulos_embarque.empresa
-   and ( expedientes_hojas_seguim.status not in ( 'C' ) ) )
-   and ( articulos.codigo_empresa = '001' )
-   and ( expedientes_imp.empresa = '001' )
-   and ( expedientes_hojas_seguim.empresa = '001' )
-   and ( expedientes_articulos_embarque.empresa = '001' )
-   and ( expedientes_contenedores.empresa = '001' )
-   and expedientes_hojas_seguim.num_expediente = 280
-   and expedientes_articulos_embarque.articulo = 40069;
-
-
-
-   SELECT *
-FROM (
-    SELECT
-        eae.articulo AS c3,
-        DECODE(
-            COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
-            0,
-            eae.precio,
-            eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
-        ) AS n9,
-        (
-            (
-                SELECT SUM(hs.importe_portes)
-                FROM reparto_portes_hs hs
-                WHERE hs.codigo_empresa = ehs.empresa
-                  AND hs.numero_expediente = ehs.num_expediente
-                  AND hs.hoja_seguimiento = ehs.num_hoja
-                  AND hs.codigo_articulo = eae.articulo
-            ) / DECODE(
-                art.unidad_valoracion,
-                1, eae.cantidad_unidad1,
-                2, eae.cantidad_unidad2
-            )
-        ) + (
-            eae.precio * DECODE(
-                ehs.tipo_cambio,
-                'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
-                'S', ehs.valor_cambio,
-                'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
-            )
-        ) AS n10,
-        ehs.num_hoja
-    FROM articulos art
-    JOIN expedientes_articulos_embarque eae ON art.codigo_articulo = eae.articulo AND art.codigo_empresa = eae.empresa
-    JOIN expedientes_hojas_seguim ehs ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
-    JOIN expedientes_imp ei ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
-    JOIN expedientes_contenedores ec ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa AND ec.linea = eae.linea_contenedor
-    WHERE eae.empresa = '001'
-      AND eae.articulo = 40069
-      AND ehs.num_expediente = 280
-      AND ehs.status NOT IN ('C')
-    ORDER BY ehs.num_hoja DESC
-)
-WHERE ROWNUM = 1;
-
-D_CODIGO_ESTAD8
-
-select CODIGO_ESTAD8 from VA_ARTICULOS;
-
-SELECT CODIGO_ESTAD8
-FROM VA_ARTICULOS
-WHERE CODIGO_EMPRESA = '001'
-  AND CODIGO_ARTICULO = '40330';
-
-
-  SELECT 
-    A.CODIGO_ESTAD8,
-    F.DESCRIPCION AS DESCRIPCION_MERCADO
-FROM VA_ARTICULOS A
-LEFT JOIN FAMILIAS F 
-    ON F.CODIGO_EMPRESA = A.CODIGO_EMPRESA
-    AND F.CODIGO_FAMILIA = A.CODIGO_ESTAD8
-    AND F.NUMERO_TABLA = 8
-WHERE A.CODIGO_EMPRESA = '001'
-  AND A.CODIGO_ARTICULO = '40330';
-
-
-select * from FAMILIAS where numero_tabla = 8;
-
-
-
- SELECT
-              pc.numero_pedido AS NUMERO,
-              pc.fecha_pedido AS FECHA_PREV_LLEGADA,
-              pc.codigo_proveedor,
-              pc.codigo_divisa,
-              pcl.codigo_articulo AS ARTICULO,
-              pcl.descripcion AS descripcion_articulo,
-              pcl.precio_presentacion AS PRECIO_EUR,
-              pcl.unidades_pedidas as CANTIDAD,
-              pcl.unidades_entregadas,
-              pcl.precio_presentacion,
-              pcl.importe_lin_neto,
-              pc.status_cierre,
-              'PED' AS ENTIDAD
-            FROM
-              pedidos_compras pc
-            JOIN
-              pedidos_compras_lin pcl
-              ON pc.numero_pedido = pcl.numero_pedido
-              AND pc.serie_numeracion = pcl.serie_numeracion
-              AND pc.organizacion_compras = pcl.organizacion_compras
-              AND pc.codigo_empresa = pcl.codigo_empresa
-            WHERE
-              
-                 pc.codigo_empresa = '001'
-                AND pc.status_cierre = 'E'
-                AND pcl.codigo_articulo = '40926'
-                AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
-            ORDER BY pc.fecha_pedido ASC;
-
-
-
-SELECT V_FECHA_PEDIDO,V_CODIGO_ARTICULO,V_CODIGO_PROVEEDOR,D_CODIGO_PROVEEDOR,V_CANTIDAD_PRESENTACION,V_CANTIDAD_PRESENTACION_ENT,V_PRESENTACION_PEDIDO,V_PRECIO_PRESENTACION,V_DTO_1,V_DTO_2,V_DTO_3,V_IMPORTE_LIN_NETO,V_ORGANIZACION_COMPRAS,D_ORGANIZACION_COMPRAS,V_DESCRIPCION,V_USUARIO_ALTA,V_CODIGO_ALMACEN,V_CENTRO_CONTABLE,D_CODIGO_ALMACEN,D_CENTRO_CONTABLE,V_REFERENCIA_PROVEEDOR,V_CODIGO_DIVISA,V_FECHA_ENTREGA,V_FECHA_ENTREGA_TOPE,V_FECHA_ENTREGA_CONFIRM,V_UNIDADES_PEDIDAS,V_UNIDADES_ENTREGADAS,V_UNIDADES_PEDIDAS2,V_UNIDADES_ENTREGADAS2,V_PRECIO_NETO,V_SERIE_NUMERACION,V_NUMERO_PEDIDO,V_SOLICITUD_COMPRA,HAY_REPLICACION_VTA,NUMERO_LINEA,NUMERO_EXPEDIENTE FROM (SELECT  v.* ,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = v.centro_contable AND lvcc.empresa = v.codigo_empresa) D_CENTRO_CONTABLE,(SELECT lval.nombre FROM almacenes lval WHERE lval.almacen = v.codigo_almacen AND lval.codigo_empresa = v.codigo_empresa) D_CODIGO_ALMACEN,DECODE(v.codigo_proveedor,NULL,NULL,(SELECT prlv.nombre FROM proveedores prlv WHERE prlv.codigo_rapido = v.codigo_proveedor AND codigo_empresa = v.codigo_empresa)) D_CODIGO_PROVEEDOR,(SELECT lvcpr.nombre FROM organizacion_compras lvcpr WHERE lvcpr.codigo_org_compras = v.organizacion_compras AND lvcpr.codigo_empresa = v.codigo_empresa) D_ORGANIZACION_COMPRAS,pkconsgen.hay_replicacion_pedcom_vta(v.numero_pedido, v.serie_numeracion, v.organizacion_compras, v.codigo_empresa, v.numero_linea) HAY_REPLICACION_VTA,CANTIDAD_PRESENTACION V_CANTIDAD_PRESENTACION,pkconsgen.cantidad_servida_pres_ped_com(p_empresa => codigo_empresa, p_numero_pedido => numero_pedido, p_numero_serie => serie_numeracion, p_organizacion_compras => organizacion_compras, p_numero_linea => numero_linea, p_articulo => codigo_articulo, p_presentacion_pedido => presentacion_pedido, p_cantidad_presentacion => cantidad_presentacion, p_unidades_pedidas => unidades_pedidas) V_CANTIDAD_PRESENTACION_ENT,CENTRO_CONTABLE V_CENTRO_CONTABLE,CODIGO_ALMACEN V_CODIGO_ALMACEN,CODIGO_ARTICULO V_CODIGO_ARTICULO,PKCONSGEN.DIVISA(codigo_divisa) V_CODIGO_DIVISA,CODIGO_PROVEEDOR V_CODIGO_PROVEEDOR,DESCRIPCION V_DESCRIPCION,dto_1 V_DTO_1,dto_2 V_DTO_2,dto_3 V_DTO_3,FECHA_ENTREGA V_FECHA_ENTREGA,FECHA_ENTREGA_CONFIRM V_FECHA_ENTREGA_CONFIRM,FECHA_ENTREGA_TOPE V_FECHA_ENTREGA_TOPE,FECHA_PEDIDO V_FECHA_PEDIDO,PKCONSGEN.IMPORTE_TXT(importe_lin_neto, importe_lin_neto_div, codigo_divisa) V_IMPORTE_LIN_NETO,NUMERO_PEDIDO V_NUMERO_PEDIDO,ORGANIZACION_COMPRAS V_ORGANIZACION_COMPRAS,DECODE((SELECT a.unidad_precio_coste FROM articulos a WHERE a.codigo_articulo = v.codigo_articulo AND a.codigo_empresa = v.codigo_empresa), 1, DECODE(unidades_pedidas, 0, PKCONSGEN.PRECIO_TXT(0, 0, codigo_divisa), PKCONSGEN.PRECIO_TXT(importe_lin_neto / unidades_pedidas, importe_lin_neto_div / unidades_pedidas, codigo_divisa)), DECODE(NVL(unidades_pedidas2, 0), 0, PKCONSGEN.PRECIO_TXT(0, 0, codigo_divisa), PKCONSGEN.PRECIO_TXT(importe_lin_neto  / unidades_pedidas2, importe_lin_neto_div / unidades_pedidas2, codigo_divisa))) V_PRECIO_NETO,PKCONSGEN.PRECIO_TXT(DECODE(tipo_precio, 'P', precio_presentacion, precio_coste) * cambio, DECODE(tipo_precio, 'P', precio_presentacion, precio_coste), codigo_divisa) V_PRECIO_PRESENTACION,PRESENTACION_PEDIDO V_PRESENTACION_PEDIDO,REFERENCIA_PROVEEDOR V_REFERENCIA_PROVEEDOR,SERIE_NUMERACION V_SERIE_NUMERACION,UNIDADES_ENTREGADAS V_UNIDADES_ENTREGADAS,UNIDADES_ENTREGADAS2 V_UNIDADES_ENTREGADAS2,UNIDADES_PEDIDAS V_UNIDADES_PEDIDAS,UNIDADES_PEDIDAS2 V_UNIDADES_PEDIDAS2,USUARIO_ALTA V_USUARIO_ALTA,SUBSTR(pkconsgen.f_solicitud_mat_pedido_compras(codigo_empresa, organizacion_compras, numero_pedido, serie_numeracion, numero_linea), 3) V_SOLICITUD_COMPRA FROM (SELECT l.codigo_empresa, l.codigo_articulo, c.codigo_almacen, l.unidades_entregadas, l.unidades_entregadas2, l.unidades_pedidas2, l.precio_presentacion, l.precio_coste, l.tipo_precio, l.organizacion_compras, c.centro_contable, c.fecha_pedido, l.fecha_entrega, l.fecha_entrega_confirm, l.fecha_entrega_tope, l.serie_numeracion, l.numero_pedido, l.numero_linea, DECODE(PKCONSGEN.VER_PRO_BLOQUEADOS, 'S', c.codigo_proveedor, DECODE(PKCONSGEN.PROVEEDOR_BLOQUEADO(c.codigo_empresa, c.codigo_proveedor), 'S', NULL, c.codigo_proveedor)) codigo_proveedor, l.referencia_proveedor, l.unidades_pedidas, l.unidades_facturadas, l.status_cierre, l.cantidad_presentacion, l.presentacion_pedido, l.dto_1, l.dto_2, l.dto_3, l.importe_lin_neto, l.importe_lin_neto_div, c.usuario_alta, c.codigo_divisa, c.cambio, l.descripcion,c.numero_expediente  FROM pedidos_compras c, pedidos_compras_lin l WHERE c.numero_pedido = l.numero_pedido AND c.serie_numeracion = l.serie_numeracion AND c.organizacion_compras = l.organizacion_compras AND c.codigo_empresa = l.codigo_empresa ORDER BY /*PKLBOB*/c.fecha_pedido DESC ) v)  v WHERE codigo_articulo = '40926' AND codigo_empresa = '001' AND status_cierre = 'E';
 
 
 
 SELECT
-  pc.numero_pedido AS NUMERO,
-  pc.fecha_pedido AS FECHA_PREV_LLEGADA,
-  pc.codigo_proveedor,
-  (SELECT pr.nombre 
-   FROM proveedores pr 
-   WHERE pr.codigo_rapido = pc.codigo_proveedor 
-     AND pr.codigo_empresa = pc.codigo_empresa) AS nombre_proveedor,
+    hc.CODIGO_CLIENTE,
+    (SELECT cli.NOMBRE || '  ' || hc.CODIGO_CLIENTE
+     FROM VA_CLIENTES cli
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE AND cli.CODIGO_EMPRESA = hc.EMPRESA AND ROWNUM = 1
+    ) AS NOMBRE_CLIENTE,
+    (SELECT org.NOMBRE
+     FROM VA_CLIENTES cli, ORGANIZACION_COMERCIAL org
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE
+       AND cli.CODIGO_EMPRESA = hc.EMPRESA
+       AND cli.ORG_COMER = org.CODIGO_ORG_COMER
+       AND org.CODIGO_EMPRESA = hc.EMPRESA
+       AND ROWNUM = 1
+    ) AS DESCRIPCION_ORG_COMER,
+    (SELECT ag.NOMBRE
+     FROM agentes_clientes ac, agentes ag
+     WHERE ac.CODIGO_CLIENTE = hc.CODIGO_CLIENTE
+       AND ac.AGENTE = ag.CODIGO
+       AND ROWNUM = 1
+    ) AS NOMBRE_AGENTE,
+    hc.DOCUMENTO, 
+    hc.TIPO_TRANSACCION, 
+    TO_NUMBER(hc.IMPORTE) AS IMPORTE, 
 
-  pc.codigo_divisa,
+    -- ✅ IMPORTE_COBRADO real
+    TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO_REAL,
 
-  pcl.codigo_articulo AS ARTICULO,
-  pcl.descripcion AS descripcion_articulo,
-  
-  -- Precio neto equivalente
-  DECODE(
-    (SELECT a.unidad_precio_coste 
-     FROM articulos a 
-     WHERE a.codigo_articulo = pcl.codigo_articulo 
-       AND a.codigo_empresa = pcl.codigo_empresa),
-    1,
-      CASE 
-        WHEN pcl.unidades_pedidas = 0 THEN 0
-        ELSE pcl.importe_lin_neto / pcl.unidades_pedidas
-      END,
-    CASE 
-      WHEN NVL(pcl.unidades_pedidas2, 0) = 0 THEN 0
-      ELSE pcl.importe_lin_neto / pcl.unidades_pedidas2
-    END
-  ) AS PRECIO_EUR,
+    -- ✅ IMPORTE_COBRADO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN TO_NUMBER(hc.IMPORTE)
+        ELSE TO_NUMBER(hc.IMPORTE_COBRADO)
+    END AS IMPORTE_COBRADO,
 
-  -- Cantidad presentación
-  pcl.cantidad_presentacion AS CANTIDAD,
-  
-  -- Unidades entregadas
-  pkconsgen.cantidad_servida_pres_ped_com(
-    p_empresa => pcl.codigo_empresa,
-    p_numero_pedido => pcl.numero_pedido,
-    p_numero_serie => pcl.serie_numeracion,
-    p_organizacion_compras => pcl.organizacion_compras,
-    p_numero_linea => pcl.numero_linea,
-    p_articulo => pcl.codigo_articulo,
-    p_presentacion_pedido => pcl.presentacion_pedido,
-    p_cantidad_presentacion => pcl.cantidad_presentacion,
-    p_unidades_pedidas => pcl.unidades_pedidas
-  ) AS unidades_entregadas_calc,
+    TO_CHAR(hc.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
+    TO_CHAR(hc.FECHA_VENCIMIENTO, 'YYYY-MM-DD') AS FECHA_VENCIMIENTO,
+    TO_CHAR(hc.FECHA_ACEPTACION, 'YYYY-MM-DD') AS FECHA_ACEPTACION,
+    TO_CHAR(hc.FECHA_REMESA, 'YYYY-MM-DD') AS FECHA_REMESA,
 
-  pcl.precio_presentacion,
-  pcl.importe_lin_neto,
 
-  pc.status_cierre,
-  'PED' AS ENTIDAD
+      -- ✅ FECHA_ASIENTO_COBRO ajustada: real si existe, si no y no está vivo, vencimiento
+    (SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
+                        FROM HISTORICO_DETALLADO_APUNTES ha
+                        WHERE ha.DOCUMENTO = hc.DOCUMENTO
+                          AND ha.EMPRESA = hc.EMPRESA
+                          AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+                          AND ha.CODIGO_CONCEPTO = 'COB'
+                    ) AS FECHA_ASIENTO_COBRO,
+
+
+    hc.DOCUMENTO_VIVO,
+
+    -- ✅ STATUS_COBRO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN 'COBRADO'
+        WHEN ABS(NVL(hc.IMPORTE_COBRADO,0) - hc.IMPORTE) < 1 THEN 'COBRADO'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) > 0 THEN 'PARCIAL'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) = 0 THEN 'PENDIENTE'
+        ELSE 'INDEFINIDO'
+    END AS STATUS_COBRO,
+
+    -- ✅ DIAS_REAL_PAGO final con lógica de cierre
+    CASE
+        WHEN (
+            SELECT MAX(ha.FECHA_ASIENTO)
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) IS NOT NULL THEN (
+            SELECT MAX(ha.FECHA_ASIENTO) - hc.FECHA_FACTURA
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        )
+        ELSE NULL
+    END AS DIAS_REAL_PAGO,
+
+    -- ✅ DIAS_EXCESO_PAGO final con lógica de cierre
+    CASE
+        WHEN (
+            SELECT MAX(ha.FECHA_ASIENTO)
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) IS NOT NULL THEN (
+            SELECT GREATEST(0, MAX(ha.FECHA_ASIENTO) - hc.FECHA_VENCIMIENTO)
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        )
+        ELSE NULL
+    END AS DIAS_EXCESO_PAGO
+
+FROM 
+    HISTORICO_COBROS hc
+WHERE 
+    'suzdalenko'='suzdalenko'
+    AND hc.IMPORTE > 0
+    AND hc.FECHA_FACTURA > TO_DATE('2025-01-31', 'YYYY-MM-DD')
+    AND hc.DOCUMENTO = 'FX1/000025'
+    AND hc.CODIGO_CLIENTE = '003666'
+ORDER BY 
+    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO;
+
+
+----------------------- SIN FECHA DE COBRO y sin dias pago o dias exceso -----
+
+
+SELECT
+    hc.CODIGO_CLIENTE,
+    (SELECT cli.NOMBRE || '  ' || hc.CODIGO_CLIENTE
+     FROM VA_CLIENTES cli
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE AND cli.CODIGO_EMPRESA = hc.EMPRESA AND ROWNUM = 1
+    ) AS NOMBRE_CLIENTE,
+    (SELECT org.NOMBRE
+     FROM VA_CLIENTES cli, ORGANIZACION_COMERCIAL org
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE
+       AND cli.CODIGO_EMPRESA = hc.EMPRESA
+       AND cli.ORG_COMER = org.CODIGO_ORG_COMER
+       AND org.CODIGO_EMPRESA = hc.EMPRESA
+       AND ROWNUM = 1
+    ) AS DESCRIPCION_ORG_COMER,
+    (SELECT ag.NOMBRE
+     FROM agentes_clientes ac, agentes ag
+     WHERE ac.CODIGO_CLIENTE = hc.CODIGO_CLIENTE
+       AND ac.AGENTE = ag.CODIGO
+       AND ROWNUM = 1
+    ) AS NOMBRE_AGENTE,
+    hc.DOCUMENTO, 
+    hc.TIPO_TRANSACCION, 
+    TO_NUMBER(hc.IMPORTE) AS IMPORTE, 
+
+    -- ✅ IMPORTE_COBRADO real
+    TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO_REAL,
+
+    -- ✅ IMPORTE_COBRADO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN TO_NUMBER(hc.IMPORTE)
+        ELSE TO_NUMBER(hc.IMPORTE_COBRADO)
+    END AS IMPORTE_COBRADO,
+
+    TO_CHAR(hc.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
+    TO_CHAR(hc.FECHA_VENCIMIENTO, 'YYYY-MM-DD') AS FECHA_VENCIMIENTO,
+    TO_CHAR(hc.FECHA_ACEPTACION, 'YYYY-MM-DD') AS FECHA_ACEPTACION,
+    TO_CHAR(hc.FECHA_REMESA, 'YYYY-MM-DD') AS FECHA_REMESA,
+    hc.DOCUMENTO_VIVO,
+
+    -- ✅ STATUS_COBRO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN 'COBRADO'
+        WHEN ABS(NVL(hc.IMPORTE_COBRADO,0) - hc.IMPORTE) < 1 THEN 'COBRADO'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) > 0 THEN 'PARCIAL'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) = 0 THEN 'PENDIENTE'
+        ELSE 'INDEFINIDO'
+    END AS STATUS_COBRO,
+
+    -- ✅ FECHA_ASIENTO_COBRO final con lógica de cierre si no está vivo
+     (SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+    ) AS FECHA_ASIENTO_COBRO,
+
+    -- ✅ DIAS_REAL_PAGO final con lógica de cierre si no está vivo
+    (SELECT MAX(ha.FECHA_ASIENTO) - hc.FECHA_FACTURA
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_REAL_PAGO,
+
+    (SELECT GREATEST(0, MAX(ha.FECHA_ASIENTO) - hc.FECHA_VENCIMIENTO) AS DIAS_EXCESO_PAGO
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_EXCESO_PAGO
+
+FROM 
+    HISTORICO_COBROS hc
+WHERE 
+    'suzdalenko'='suzdalenko'
+    AND hc.IMPORTE > 0
+    AND hc.FECHA_FACTURA > TO_DATE('2025-01-31', 'YYYY-MM-DD')
+    AND hc.DOCUMENTO = 'FX1/000025'
+    AND hc.CODIGO_CLIENTE = '003666'
+ORDER BY 
+    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO;
+
+
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where
+CODIGO_ENTIDAD = '003666'
+ AND CODIGO_CONCEPTO = 'COB';
+
+
+select * 
+from RIESGO_CLIENTES_AUX
+where CODIGO_CLIENTE = '003666'
+order by FECHA_FACTURA
+;
+
+select distinct numero_serie, cliente, fecha_factura
+from facturas_ventas
+where fecha_factura >= TO_DATE('2025-02-01', 'YYYY-MM-DD')
+ and numero_serie not in('FR1', 'FX1', 'FN1')
+;
+
+
+select *
+from facturas_ventas
+where -- cliente = '003702'
+   numero_serie = 'RX1'
+;
+
+select numero_fra_conta, ejercicio, numero_serie, tipo_factura, cliente, fecha_factura, liquido_factura, numero_asiento_borrador, diario, id_crm, id_digital, id_agrupacion
+from facturas_ventas
+where cliente = '003702'
+    -- and numero_factura in ('1829', '1554', '971')
+    or numero_fra_conta like '%cambio'
+;
+
+-- extracto cliente --
+
+SELECT V_NUMERO_SERIE,V_NUMERO_FACTURA,V_FECHA_FACTURA,V_ORGANIZACION_COMERCIAL,D_ORGANIZACION_COMERCIAL,D_STATUS_FIRMA_DIGITAL,D_STATUS_FACTURA,V_CENTRO_CONTABLE,D_CENTRO_CONTABLE,V_FORMA_COBRO,V_CLIENTE,D_FORMA_COBRO,D_CLIENTE,V_DTOS_GLOBAL,V_LIQUIDO_FACTURA,V_PENDIENTE_COBRO,V_CODIGO_DIVISA,V_MARGEN_COMERCIAL,V_RECARGO_FINANCIERO,V_IMP_RECARGO_FINANCIERO,V_ENVIADO_EDI,V_FECHA_CERTIFICADO,V_UUID,EMPRESA,EJERCICIO,FECHA_CONTABILIZACION,NUMERO_ASIENTO_BORRADOR,ID_CRM,ID_DIGITAL,HAY_ASOCIACION_CRM,HAY_ARCHIVOS,V_USUARIO,NUMERO_FRA_CONTA FROM (SELECT  facturas_ventas.* ,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = facturas_ventas.centro_contable AND lvcc.empresa = facturas_ventas.empresa) D_CENTRO_CONTABLE,DECODE(facturas_ventas.codigo_cliente,NULL,NULL,(SELECT clv.nombre FROM clientes clv WHERE clv.codigo_rapido = facturas_ventas.codigo_cliente AND clv.codigo_empresa = facturas_ventas.empresa)) D_CLIENTE,(SELECT lvfcp.nombre FROM formas_cobro_pago lvfcp WHERE lvfcp.codigo = facturas_ventas.forma_cobro) D_FORMA_COBRO,(SELECT lvoc.nombre FROM organizacion_comercial lvoc WHERE lvoc.codigo_org_comer = facturas_ventas.organizacion_comercial AND lvoc.codigo_empresa = facturas_ventas.empresa) D_ORGANIZACION_COMERCIAL,pkconsgen.f_desc_status_factura(status_factura) D_STATUS_FACTURA,pkconsgen.f_desc_status_firma_digital(status_firma_digital) D_STATUS_FIRMA_DIGITAL,pkconsgen.hay_archivos_x_id_digital(id_digital,'EFACTURA') HAY_ARCHIVOS,pkconsgen.hay_asociacion_crm(empresa, id_crm) HAY_ASOCIACION_CRM,CENTRO_CONTABLE V_CENTRO_CONTABLE,codigo_cliente V_CLIENTE,PKCONSGEN.DIVISA(codigo_divisa) V_CODIGO_DIVISA,NVL(DTOS_GLOBAL, 0) V_DTOS_GLOBAL,enviado_edi V_ENVIADO_EDI,(SELECT fd.fecha_certificado FROM facturas_ventas_doc fd WHERE fd.empresa = facturas_ventas.empresa AND fd.ejercicio = facturas_ventas.ejercicio AND fd.numero_serie = facturas_ventas.numero_serie AND fd.numero_factura = facturas_ventas.numero_factura) V_FECHA_CERTIFICADO,FECHA_FACTURA V_FECHA_FACTURA,FORMA_COBRO V_FORMA_COBRO,PKCONSGEN.IMPORTE_TXT(imp_recargo_financiero, imp_recargo_financiero_div, codigo_divisa) V_IMP_RECARGO_FINANCIERO,PKCONSGEN.IMPORTE_TXT(liquido_factura, liquido_factura_div, codigo_divisa) V_LIQUIDO_FACTURA,DECODE(importe_fac_neto, 0, 0, ROUND((importe_fac_neto - coste_bruto) * 100 / importe_fac_neto, 2)) V_MARGEN_COMERCIAL,NUMERO_FACTURA V_NUMERO_FACTURA,NUMERO_SERIE V_NUMERO_SERIE,ORGANIZACION_COMERCIAL V_ORGANIZACION_COMERCIAL,DECODE(numero_asiento_borrador, NULL, PKCONSGEN.IMPORTE_TXT(liquido_factura, liquido_factura_div, codigo_divisa), PKCONSGEN.IMPORTE_PDTE_COBRO_DOC_TXT(empresa, numero_fra_conta, fecha_factura, codigo_divisa, liquido_factura, liquido_factura_div)) V_PENDIENTE_COBRO,RECARGO_FINANCIERO V_RECARGO_FINANCIERO,USUARIO V_USUARIO,(SELECT fd.uuid FROM facturas_ventas_doc fd WHERE fd.empresa = facturas_ventas.empresa AND fd.ejercicio = facturas_ventas.ejercicio AND fd.numero_serie = facturas_ventas.numero_serie AND fd.numero_factura = facturas_ventas.numero_factura) V_UUID FROM (SELECT facturas_ventas.*, DECODE(pkconsgen.ver_cli_bloqueados, 'S', facturas_ventas.cliente, DECODE(pkconsgen.cliente_bloqueado(facturas_ventas.empresa, facturas_ventas.cliente), 'S', NULL, facturas_ventas.cliente)) codigo_cliente FROM facturas_ventas) facturas_ventas)  facturas_ventas WHERE cliente = '003702' AND empresa = '001' AND EXISTS (SELECT 1 FROM usuarios_gb_cc ugbcc WHERE ugbcc.centro_contable = facturas_ventas.centro_contable AND ugbcc.codigo_empresa = '001' AND ugbcc.usuario = 'MFERNANDEZ') AND EXISTS (SELECT 1 FROM org_comerc_usuarios ocu WHERE ocu.usuario = 'MFERNANDEZ' AND ocu.organizacion_comercial = facturas_ventas.organizacion_comercial AND ocu.codigo_empresa = '001') AND NOT EXISTS (SELECT 1 FROM albaran_ventas av WHERE av.empresa = facturas_ventas.empresa AND av.ejercicio_factura = facturas_ventas.ejercicio AND av.numero_serie_fra = facturas_ventas.numero_serie AND av.numero_factura = facturas_ventas.numero_factura AND NOT EXISTS (SELECT 1 FROM usuario_tipo_pedido ocu WHERE ocu.codigo_usuario = 'MFERNANDEZ' AND ocu.organizacion_comercial = av.organizacion_comercial AND ocu.tipo_pedido = av.tipo_pedido AND ocu.empresa = '001'))/*INIQRY*/  order by fecha_factura DESC, numero_serie, numero_factura DESC;
+SELECT V_NUMERO_SERIE,V_NUMERO_FACTURA,V_FECHA_FACTURA,V_ORGANIZACION_COMERCIAL,D_ORGANIZACION_COMERCIAL,D_STATUS_FIRMA_DIGITAL,D_STATUS_FACTURA,V_CENTRO_CONTABLE,D_CENTRO_CONTABLE,V_FORMA_COBRO,V_CLIENTE,D_FORMA_COBRO,D_CLIENTE,V_DTOS_GLOBAL,V_LIQUIDO_FACTURA,V_PENDIENTE_COBRO,V_CODIGO_DIVISA,V_MARGEN_COMERCIAL,V_RECARGO_FINANCIERO,V_IMP_RECARGO_FINANCIERO,V_ENVIADO_EDI,V_FECHA_CERTIFICADO,V_UUID,EMPRESA,EJERCICIO,FECHA_CONTABILIZACION,NUMERO_ASIENTO_BORRADOR,ID_CRM,ID_DIGITAL,HAY_ASOCIACION_CRM,HAY_ARCHIVOS,V_USUARIO,NUMERO_FRA_CONTA FROM (SELECT  facturas_ventas.* ,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = facturas_ventas.centro_contable AND lvcc.empresa = facturas_ventas.empresa) D_CENTRO_CONTABLE,DECODE(facturas_ventas.codigo_cliente,NULL,NULL,(SELECT clv.nombre FROM clientes clv WHERE clv.codigo_rapido = facturas_ventas.codigo_cliente AND clv.codigo_empresa = facturas_ventas.empresa)) D_CLIENTE,(SELECT lvfcp.nombre FROM formas_cobro_pago lvfcp WHERE lvfcp.codigo = facturas_ventas.forma_cobro) D_FORMA_COBRO,(SELECT lvoc.nombre FROM organizacion_comercial lvoc WHERE lvoc.codigo_org_comer = facturas_ventas.organizacion_comercial AND lvoc.codigo_empresa = facturas_ventas.empresa) D_ORGANIZACION_COMERCIAL,pkconsgen.f_desc_status_factura(status_factura) D_STATUS_FACTURA,pkconsgen.f_desc_status_firma_digital(status_firma_digital) D_STATUS_FIRMA_DIGITAL,pkconsgen.hay_archivos_x_id_digital(id_digital,'EFACTURA') HAY_ARCHIVOS,pkconsgen.hay_asociacion_crm(empresa, id_crm) HAY_ASOCIACION_CRM,CENTRO_CONTABLE V_CENTRO_CONTABLE,codigo_cliente V_CLIENTE,PKCONSGEN.DIVISA(codigo_divisa) V_CODIGO_DIVISA,NVL(DTOS_GLOBAL, 0) V_DTOS_GLOBAL,enviado_edi V_ENVIADO_EDI,(SELECT fd.fecha_certificado FROM facturas_ventas_doc fd WHERE fd.empresa = facturas_ventas.empresa AND fd.ejercicio = facturas_ventas.ejercicio AND fd.numero_serie = facturas_ventas.numero_serie AND fd.numero_factura = facturas_ventas.numero_factura) V_FECHA_CERTIFICADO,FECHA_FACTURA V_FECHA_FACTURA,FORMA_COBRO V_FORMA_COBRO,PKCONSGEN.IMPORTE_TXT(imp_recargo_financiero, imp_recargo_financiero_div, codigo_divisa) V_IMP_RECARGO_FINANCIERO,PKCONSGEN.IMPORTE_TXT(liquido_factura, liquido_factura_div, codigo_divisa) V_LIQUIDO_FACTURA,DECODE(importe_fac_neto, 0, 0, ROUND((importe_fac_neto - coste_bruto) * 100 / importe_fac_neto, 2)) V_MARGEN_COMERCIAL,NUMERO_FACTURA V_NUMERO_FACTURA,NUMERO_SERIE V_NUMERO_SERIE,ORGANIZACION_COMERCIAL V_ORGANIZACION_COMERCIAL,DECODE(numero_asiento_borrador, NULL, PKCONSGEN.IMPORTE_TXT(liquido_factura, liquido_factura_div, codigo_divisa), PKCONSGEN.IMPORTE_PDTE_COBRO_DOC_TXT(empresa, numero_fra_conta, fecha_factura, codigo_divisa, liquido_factura, liquido_factura_div)) V_PENDIENTE_COBRO,RECARGO_FINANCIERO V_RECARGO_FINANCIERO,USUARIO V_USUARIO,(SELECT fd.uuid FROM facturas_ventas_doc fd WHERE fd.empresa = facturas_ventas.empresa AND fd.ejercicio = facturas_ventas.ejercicio AND fd.numero_serie = facturas_ventas.numero_serie AND fd.numero_factura = facturas_ventas.numero_factura) V_UUID FROM (SELECT facturas_ventas.*, DECODE(pkconsgen.ver_cli_bloqueados, 'S', facturas_ventas.cliente, DECODE(pkconsgen.cliente_bloqueado(facturas_ventas.empresa, facturas_ventas.cliente), 'S', NULL, facturas_ventas.cliente)) codigo_cliente FROM facturas_ventas) facturas_ventas)  facturas_ventas WHERE cliente = '000005' AND empresa = '001'  order by fecha_factura DESC, numero_serie, numero_factura DESC;
+
+EFECTO NUEVO DAG1224 GRUPO ITH (JACA)
+
+SELECT
+    CASE
+        WHEN hc.FECHA_VENCIMIENTO < TRUNC(SYSDATE) THEN 'VENCIDO'
+        ELSE 'NO VENCIDO'
+    END AS ESTADO_VENCIMIENTO,
+    hc.CODIGO_CLIENTE,
+    (SELECT cli.NOMBRE || '  ' || hc.CODIGO_CLIENTE
+     FROM VA_CLIENTES cli
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE AND cli.CODIGO_EMPRESA = hc.EMPRESA AND ROWNUM = 1
+    ) AS NOMBRE_CLIENTE,
+    (SELECT org.NOMBRE
+    FROM VA_CLIENTES cli, ORGANIZACION_COMERCIAL org
+    WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE
+      AND cli.CODIGO_EMPRESA = hc.EMPRESA
+      AND cli.ORG_COMER = org.CODIGO_ORG_COMER
+      AND org.CODIGO_EMPRESA = hc.EMPRESA
+      AND org.NOMBRE NOT IN ('VENTA LOGISTICA FROXA', 'VENTA TIENDA CARTES FROXA')
+      AND org.NOMBRE IS NOT NULL
+    ) AS DESCRIPCION_ORG_COMER,
+    (SELECT ag.NOMBRE
+     FROM agentes_clientes ac, agentes ag
+     WHERE ac.CODIGO_CLIENTE = hc.CODIGO_CLIENTE
+       AND ac.AGENTE = ag.CODIGO
+       AND ROWNUM = 1
+    ) AS NOMBRE_AGENTE,
+    hc.DOCUMENTO, 
+    hc.TIPO_TRANSACCION, 
+    TO_NUMBER(hc.IMPORTE) AS IMPORTE, 
+
+    -- ✅ IMPORTE_COBRADO real
+    TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO_REAL,
+
+    -- ✅ IMPORTE_COBRADO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN TO_NUMBER(hc.IMPORTE)
+        ELSE TO_NUMBER(hc.IMPORTE_COBRADO)
+    END AS IMPORTE_COBRADO,
+
+    TO_CHAR(hc.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
+    TO_CHAR(hc.FECHA_VENCIMIENTO, 'YYYY-MM-DD') AS FECHA_VENCIMIENTO,
+    TO_CHAR(hc.FECHA_ACEPTACION, 'YYYY-MM-DD') AS FECHA_ACEPTACION,
+    TO_CHAR(hc.FECHA_REMESA, 'YYYY-MM-DD') AS FECHA_REMESA,
+    hc.DOCUMENTO_VIVO,
+
+    -- ✅ STATUS_COBRO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN 'COBRADO'
+        WHEN ABS(NVL(hc.IMPORTE_COBRADO,0) - hc.IMPORTE) < 1 THEN 'COBRADO'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) > 0 THEN 'PARCIAL'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) = 0 THEN 'PENDIENTE'
+        ELSE 'INDEFINIDO'
+    END AS STATUS_COBRO,
+
+    -- ✅ FECHA_ASIENTO_COBRO final con lógica de cierre si no está vivo
+     (SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+    ) AS FECHA_ASIENTO_COBRO,
+
+    -- ✅ DIAS_REAL_PAGO final con lógica de cierre si no está vivo
+    (SELECT MAX(ha.FECHA_ASIENTO) - hc.FECHA_FACTURA
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_REAL_PAGO,
+
+    (SELECT GREATEST(0, MAX(ha.FECHA_ASIENTO) - hc.FECHA_VENCIMIENTO) AS DIAS_EXCESO_PAGO
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_EXCESO_PAGO
+
+FROM 
+    HISTORICO_COBROS hc
+WHERE 
+    'suzdalenko'='suzdalenko'
+    AND hc.IMPORTE > 0
+    AND hc.FECHA_FACTURA >= TO_DATE('2025-02-01', 'YYYY-MM-DD')
+    AND EXISTS (
+        SELECT 1
+        FROM facturas_ventas fv
+        WHERE fv.numero_fra_conta = hc.documento
+    )
+    -- AND hc.DOCUMENTO NOT LIKE '%DAG%'
+    -- AND hc.DOCUMENTO NOT LIKE '%DAR%'
+    -- AND hc.DOCUMENTO = 'FX1/000025'
+    -- AND hc.CODIGO_CLIENTE = '003666'
+ORDER BY 
+    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO;
+
+
+
+select * 
+from historico_detallado_apuntes
+where codigo_entidad = '004242'
+ and codigo_concepto = 'COB'
+;
+
+DAG1224
+
+select * 
+from historico_detallado_apuntes
+where documento = 'DAG1224'
+        and codigo_concepto = 'COB'
+        and codigo_entidad  = '004242' 
+       -- fecha de asiento es FECHA DE LA OPERACION !!! numero_asiento_borrador 35587
+;
+
+select * 
+from historico_detallado_apuntes
+where codigo_entidad  = '004242' 
+       -- fecha de asiento es FECHA DE LA OPERACION !!! numero_asiento_borrador 35587
+;
+
+select * 
+from historico_detallado_apuntes
+where numero_asiento_borrador = '35583'
+ORDER BY FECHA_ASIENTO asc
+;
+
+
+select * from asientos;
+
+select * 
+from HISTORICO_COBROS
+where documento like '%DAG1224%' or concepto like '%DAG1224%'
+;
+
+SELECT DIARIO,CODIGO_CUENTA,CODIGO_CONCEPTO,SIGNO,IMPORTE,FECHA_ASIENTO,NUMERO_ASIENTO_BORRADOR,NUMERO_ASIENTO_OFICIAL,DOCUMENTO,CARACTER_ASIENTO,NUMERO_LINEA_BORRADOR,NUMERO_LINEA_OFICIAL,SERIE_JUSTIFICANTE,JUSTIFICANTE,CONCEPTO,FECHA_VALOR,DEBE,HABER,SALDO 
+FROM 
+    (SELECT estado, 
+            empresa, 
+            fecha_asiento, 
+            diario, 
+            numero_asiento_borrador, 
+            numero_linea_borrador, 
+            codigo_cuenta, 
+            codigo_concepto, 
+            concepto,  
+            DECODE(signo,'D',importe) debe, 
+            DECODE(signo,'H',importe) haber,  
+            SUM(DECODE(signo, 'D', importe, -importe)
+    ) OVER
+    (PARTITION BY codigo_entidad, codigo_cuenta, empresa, estado  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) + NVL(pkpantallas.get_variable_env_number('EXTRCLIE.SALDO_INICIAL'), 0) saldo, SUM(DECODE(signo, 'D', importe_divisa, -importe_divisa)) OVER (PARTITION BY codigo_entidad, codigo_cuenta, empresa, estado  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) + NVL(pkpantallas.get_variable_env_number('EXTRCLIE.SALDO_INICIAL_DIVISA'), 0) saldo_divisa,0 saldo_euro,  asiento_con_impuesto, situacion_apunte, importe, importe_divisa, resumir, signo,  caracter_asiento, fecha_valor, numero_linea_oficial, documento, DECODE(signo,'D',importe_divisa) debe_divisa, DECODE(signo,'H',importe_divisa) haber_divisa,  divisa_origen, fecha_valor_divisa, marca_punteo, serie_justificante, justificante,  fecha_impuesto, formula_reparto, numero_linea_resumen, comentarios, entidad, codigo_entidad,  numero_asiento_origen, numero_linea_origen, empresa_apunte, id_conciliacion, usuario, DECODE(situacion_apunte,'B','*',NULL) borrador, 0 debe_euro, 0 haber_euro,  NULL NUMERO_ASIENTO_OFICIAL  FROM HISTORICO_DETALLADO_APUNTES  WHERE FECHA_ASIENTO BETWEEN NVL(TO_DATE('','DD-MM-YYYY'),TO_DATE('01011900','DDMMYYYY')) AND NVL(TO_DATE('30-06-2025','DD-MM-YYYY'), TO_DATE('01012500','DDMMYYYY')) AND ENTIDAD = 'CL'  AND (caracter_asiento IS NULL OR caracter_asiento IN (SELECT b.codigo_centro FROM centros_grupo_ccont B WHERE b.empresa = historico_detallado_apuntes.empresa AND b.codigo_grupo = '01')) AND EXISTS(SELECT 1 FROM historico_asientos ha WHERE ha.numero_asiento_borrador = historico_detallado_apuntes.numero_asiento_borrador AND ha.fecha_asiento = historico_detallado_apuntes.fecha_asiento AND ha.diario = historico_detallado_apuntes.diario AND ha.empresa = historico_detallado_apuntes.empresa AND ha.anulado = 'N' )  AND DIARIO NOT IN (SELECT CODIGO FROM DIARIOS WHERE APERTURA_CIERRE in ('A','C'))  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador) WHERE (ESTADO='ESP') and (EMPRESA='001') and (CODIGO_CUENTA='4300030') and (CODIGO_ENTIDAD='004242') order by FECHA_ASIENTO ASC;
+
+
+
+SELECT
+    hc.CODIGO_CLIENTE,
+    hc.DOCUMENTO,
+    hc.TIPO_TRANSACCION,
+    TO_NUMBER(hc.IMPORTE) AS IMPORTE,
+    TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO,
+    hc.FECHA_FACTURA,
+    hc.FECHA_VENCIMIENTO,
+    hc.FECHA_ACEPTACION,
+    hc.FECHA_REMESA,
+    hc.DOCUMENTO_VIVO,
+
+    -- Datos de apuntes unidos
+    hda.FECHA_ASIENTO,
+    hda.DIARIO,
+    hda.CODIGO_CUENTA,
+    hda.CODIGO_CONCEPTO,
+    hda.CONCEPTO,
+    hda.IMPORTE AS IMPORTE_APUNTE,
+    hda.SIGNO,
+    hda.NUMERO_ASIENTO_BORRADOR,
+    hda.NUMERO_LINEA_BORRADOR
 
 FROM
-  pedidos_compras pc
-JOIN
-  pedidos_compras_lin pcl
-    ON pc.numero_pedido = pcl.numero_pedido
-   AND pc.serie_numeracion = pcl.serie_numeracion
-   AND pc.organizacion_compras = pcl.organizacion_compras
-   AND pc.codigo_empresa = pcl.codigo_empresa
+    HISTORICO_COBROS hc
+
+LEFT JOIN
+    HISTORICO_DETALLADO_APUNTES hda
+    ON hc.DOCUMENTO = hda.DOCUMENTO
+   AND hc.EMPRESA = hda.EMPRESA
+   AND hc.CODIGO_CLIENTE = hda.CODIGO_ENTIDAD
 
 WHERE
-  pc.codigo_empresa = '001'
-  AND pc.status_cierre = 'E'
-  AND pcl.codigo_articulo = '40926'
-  AND (pcl.unidades_entregadas IS NULL OR pcl.unidades_entregadas = 0)
+    hda.ENTIDAD = 'CL'
+    AND (hda.CARACTER_ASIENTO IS NULL 
+         OR hda.CARACTER_ASIENTO IN (
+            SELECT b.CODIGO_CENTRO
+            FROM CENTROS_GRUPO_CCONT b
+            WHERE b.EMPRESA = hda.EMPRESA
+              AND b.CODIGO_GRUPO = '01'
+         )
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM HISTORICO_ASIENTOS ha
+        WHERE ha.NUMERO_ASIENTO_BORRADOR = hda.NUMERO_ASIENTO_BORRADOR
+          AND ha.FECHA_ASIENTO = hda.FECHA_ASIENTO
+          AND ha.DIARIO = hda.DIARIO
+          AND ha.EMPRESA = hda.EMPRESA
+          AND ha.ANULADO = 'N'
+    )
+    AND hda.DIARIO NOT IN (
+        SELECT CODIGO
+        FROM DIARIOS
+        WHERE APERTURA_CIERRE IN ('A','C')
+    )
+    AND hda.ESTADO = 'ESP'
+    AND hda.EMPRESA = '001'
+    AND hda.CODIGO_CUENTA = '4300030'
+    AND hda.CODIGO_ENTIDAD = '004242'
+    and     hda.NUMERO_ASIENTO_BORRADOR = '35583'
 
-ORDER BY pc.fecha_pedido ASC;
+ORDER BY
+    hda.FECHA_ASIENTO,
+    hda.NUMERO_ASIENTO_BORRADOR,
+    hda.NUMERO_LINEA_BORRADOR
+    ;
+
+
+-- FC1/000007 cliente 004242
+
+select * 
+from HISTORICO_COBROS
+where documento = 'FC1/000007'
+    and NUMERO_ASIENTO_BORRADOR = 11446
+    and CODIGO_CUENTA = 4300030
+    and JUSTIFICANTE = '000007'
+    and IDENTICKET = 'OC 158/202'
+;
+
+
+select * 
+from historico_asientos
+where NUMERO_ASIENTO_BORRADOR = '35583'
+;
+
+select * 
+from historico_asientos
+where NUMERO_ASIENTO_BORRADOR = '11446'
+;
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where DOCUMENTO = 'FC1/000007'
+   -- and codigo_concepto = 'ZZZ' -- de aqui NUMERO_ASIENTO_BORRADOR
+;
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where NUMERO_ASIENTO_BORRADOR = '35583'
+;
+
+
+
+select * 
+from historico_mov_cartera
+where codigo_cliente = '004242'
+;
+
+select * from historico_cobros_temporal;
 
 
 SELECT 
-    A.CODIGO_ESTAD8,
-    F.DESCRIPCION AS DESCRIPCION_MERCADO,
-    (SELECT DESCRIPCION FROM FAMILIAS WHERE CODIGO_EMPRESA = A.CODIGO_EMPRESA AND NUMERO_TABLA = 1 AND CODIGO_FAMILIA = A.CODIGO_FAMILIA) AS D_CODIGO_FAMILIA,
-    (SELECT DESCRIPCION FROM FAMILIAS WHERE CODIGO_EMPRESA = A.CODIGO_EMPRESA AND NUMERO_TABLA = 2 AND CODIGO_FAMILIA = A.CODIGO_ESTAD2) AS D_CODIGO_SUBFAMILIA
-FROM VA_ARTICULOS A
-LEFT JOIN FAMILIAS F 
-    ON F.CODIGO_EMPRESA = A.CODIGO_EMPRESA
-    AND F.CODIGO_FAMILIA = A.CODIGO_ESTAD8
-    AND F.NUMERO_TABLA = 8
-WHERE A.CODIGO_EMPRESA = '001'
-  AND A.CODIGO_ARTICULO = '40000' AND ROWNUM = 1;
+  hm.documento,
+  hm.fecha_factura,
+  hm.fecha_vencimiento,
+  hm.tipo_transaccion,
+  hm.tipo_movimiento,
+  hm.fecha_asiento,
+  DECODE(hm.tipo_movimiento, 'CONRD', hm.fecha_vencimiento, hm.fecha_asiento) AS fecha_operacion,
+  hm.importe_mov,
+  h.codigo_cliente,
+  p.razon_social
+FROM 
+  historico_mov_cartera hm
+JOIN 
+  historico_cobros h
+  ON h.documento = hm.documento
+ AND h.fecha_vencimiento = hm.fecha_vencimiento
+ AND h.tipo_transaccion = hm.tipo_transaccion
+ AND h.fecha_factura = hm.fecha_factura
+ AND h.empresa = hm.empresa
+JOIN 
+  clientes p
+  ON p.codigo_rapido = h.codigo_cliente
+ AND p.codigo_empresa = h.empresa
+WHERE
+  hm.empresa = '001'
+  AND h.codigo_cliente = '004242'
+ORDER BY
+  hm.fecha_asiento DESC;
+
+
+SELECT *
+FROM historico_mov_cartera hm
+WHERE hm.codigo_cliente = '004242'
+  AND hm.documento = 'FC1/000007';
 
 
 
-  SELECT *
-FROM (
-    SELECT
-        eae.articulo AS c3,
-        DECODE(
-            COALESCE(ehs.valor_cambio, ei.valor_cambio, 1),
-            0,
-            eae.precio,
-            eae.precio * COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
-        ) AS n9,
-        (
-            (
-                SELECT SUM(hs.importe_portes)
-                FROM reparto_portes_hs hs
-                WHERE hs.codigo_empresa = ehs.empresa
-                  AND hs.numero_expediente = ehs.num_expediente
-                  AND hs.hoja_seguimiento = ehs.num_hoja
-                  AND hs.codigo_articulo = eae.articulo
-            ) / DECODE(
-                art.unidad_valoracion,
-                1, eae.cantidad_unidad1,
-                2, eae.cantidad_unidad2
-            )
-        ) + (
-            eae.precio * DECODE(
-                ehs.tipo_cambio,
-                'E', DECODE(ei.cambio_asegurado, 'S', ei.valor_cambio, 'N', 1),
-                'S', ehs.valor_cambio,
-                'N', COALESCE(ehs.valor_cambio, ei.valor_cambio, 1)
-            )
-        ) AS n10,
-        ehs.num_hoja,
-        ehs.num_expediente
-    FROM articulos art
-    JOIN expedientes_articulos_embarque eae
-      ON art.codigo_articulo = eae.articulo AND art.codigo_empresa = eae.empresa
-    JOIN expedientes_hojas_seguim ehs
-      ON ehs.num_expediente = eae.num_expediente AND ehs.num_hoja = eae.num_hoja AND ehs.empresa = eae.empresa
-    JOIN expedientes_imp ei
-      ON ei.codigo = ehs.num_expediente AND ei.empresa = ehs.empresa
-    JOIN expedientes_contenedores ec
-      ON ec.num_expediente = eae.num_expediente AND ec.num_hoja = eae.num_hoja AND ec.empresa = eae.empresa AND ec.linea = eae.linea_contenedor
-    WHERE eae.empresa = '001'
-      AND eae.articulo = '40030'
-      AND ehs.status NOT IN ('C')
-) 
-WHERE n9 > 0 AND n10 > 0
-ORDER BY num_expediente DESC, num_hoja DESC
-FETCH FIRST 1 ROWS ONLY;
+SELECT TEXT
+FROM ALL_VIEWS
+WHERE VIEW_NAME = 'V_HISTORICO_DET_BANCOS';
+
+SELECT /*$PNTPKLIB$ASIDE%CTRL(FTES:00004:*/ a.codigo_cuenta, a.estado, a.codigo_entidad, a.empresa, a.fecha_asiento, a.fecha_valor, a.numero_asiento_borrador, a.numero_linea_borrador, a.documento, 
+       a.concepto, a.serie_justificante,
+       a.justificante, a.importe, a.importe_divisa, a.divisa_origen, a.signo, a.marca_punteo, a.situacion_apunte, a.caracter_asiento, a.codigo_concepto, a.diario, a.fecha_envio_listado,
+       a.fecha_envio_fichero, NVL(a.int_ext, c.int_ext) int_ext, a.importe_div2_empresa
+  FROM historico_detallado_apuntes a, cuentas c
+ WHERE c.empresa = a.empresa
+   AND c.estado = a.estado
+   AND c.codigo = a.codigo_cuenta
+   AND a.entidad = 'BA';
+
+select FECHA_ASIENTO
+from historico_detallado_apuntes
+where entidad = 'BA'
+    and DOCUMENTO = 'DAG1224'
+;
+
+
+
+SELECT 
+    TO_CHAR(fv.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
+    TO_CHAR(fv.FECHA_FACTURA, 'YYYY') AS EJERCICIO,
+    fv.EMPRESA, 
+    fv.CLIENTE, 
+    fv.NUMERO_FRA_CONTA,
+
+    (SELECT cli.NOMBRE || ' ' || cli.CODIGO_RAPIDO 
+        FROM VA_CLIENTES cli
+        WHERE cli.CODIGO_RAPIDO = fv.CLIENTE 
+          AND cli.CODIGO_EMPRESA = fv.EMPRESA 
+          AND ROWNUM = 1
+    ) AS NOMBRE_CLIENTE,
+
+    (SELECT org.NOMBRE
+        FROM VA_CLIENTES cli
+        JOIN ORGANIZACION_COMERCIAL org
+          ON cli.ORG_COMER = org.CODIGO_ORG_COMER
+         AND cli.CODIGO_EMPRESA = org.CODIGO_EMPRESA
+        WHERE cli.CODIGO_RAPIDO = fv.CLIENTE
+          AND cli.CODIGO_EMPRESA = fv.EMPRESA
+          AND org.NOMBRE NOT IN ('VENTA LOGISTICA FROXA', 'VENTA TIENDA CARTES FROXA')
+          AND org.NOMBRE IS NOT NULL
+          AND ROWNUM = 1
+    ) AS DESCRIPCION_ORG_COMER,
+
+    (SELECT ag.NOMBRE
+    FROM agentes_clientes ac, agentes ag
+    WHERE ac.CODIGO_CLIENTE = fv.CLIENTE
+      AND ac.AGENTE = ag.CODIGO
+      AND ROWNUM = 1
+    ) AS NOMBRE_AGENTE
+
+FROM 
+    facturas_ventas fv
+WHERE 
+    fv.CLIENTE = '004242'
+ORDER BY 
+    fv.FECHA_FACTURA, 
+    fv.NUMERO_FRA_CONTA;
+
+
+
+
+select * from VA_CLIENTES;
+
+SELECT *
+FROM facturas_ventas fv
+WHERE cliente = '004242'
+;
+
+select * from facturas_ventas;
+
+select * 
+from AGRUPACIONES_DESGLOSES
+WHERE NUMERO_AGRUPACION = 2024
+; 
+
+select * 
+from AGRUPACIONES_DESGLOSES
+WHERE DOCUMENTO = 'FC1/000007'
+; 
+
+select * from V_HISTORICO_DET_BANCOS
+where DOCUMENTO = 'DAG1224'
+;
+
+select FECHA_ASIENTO from HISTORICO_COBROS
+where  DOCUMENTO = 'DAG1224'
+;
+
+select  TO_DATE(FECHA_VENCIMIENTO, 'YYYY-MM-DD') FECHA_VENCIMIENTO from HISTORICO_COBROS
+where  DOCUMENTO = 'FC1/000005'
+;
+
+
+select * from HISTORICO_COBROS
+where  DOCUMENTO = 'FC1/000007'
+;
+
+
+
+select * from historico_detallado_apuntes
+where  DOCUMENTO = 'FC1/000005' and ENTIDAD = 'CL' and CODIGO_CONCEPTO = 'COB'
+;
+
+select * from historico_detallado_apuntes
+where  DOCUMENTO = 'DAG1224' and ENTIDAD = 'BA' and CODIGO_CONCEPTO = 'COB'
+;
+
+select *  
+from historico_detallado_apuntes 
+where  DOCUMENTO = 'DAG1224';
+
+select *  
+from historico_detallado_apuntes 
+where  DOCUMENTO = 'DAG1225';
+
+select TO_CHAR(FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_COBRO
+                                                            from historico_detallado_apuntes 
+                                                            where  DOCUMENTO = 'DAG1225' and CODIGO_CONCEPTO = 'COB' AND ROWNUM = 1
+                                                            ORDER BY FECHA_ASIENTO DESC;
+
+
+factura -> desgloses > dag > dag que tenga la fecha de cobro historico_detallado_apuntes where entidad = 'BA'
+ 
+
+                                        Fecha Oper
+FC1/000007	11/03/2025	TRA	11/03/2025	27/06/2025	12.396,12
+
+select TO_DATE(FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_OPERACION 
+                                                            from historico_detallado_apuntes
+                                                            where DOCUMENTO = 'DAG1224' and ENTIDAD = 'BA' and CODIGO_CONCEPTO = 'COB';
+
+
+
+SELECT
+    CASE
+        WHEN hc.FECHA_VENCIMIENTO < TRUNC(SYSDATE) THEN 'VENCIDO'
+        ELSE 'NO VENCIDO'
+    END AS ESTADO_VENCIMIENTO,
+    hc.CODIGO_CLIENTE,
+    (SELECT cli.NOMBRE || '  ' || hc.CODIGO_CLIENTE
+     FROM VA_CLIENTES cli
+     WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE AND cli.CODIGO_EMPRESA = hc.EMPRESA AND ROWNUM = 1
+    ) AS NOMBRE_CLIENTE,
+    (SELECT org.NOMBRE
+    FROM VA_CLIENTES cli, ORGANIZACION_COMERCIAL org
+    WHERE cli.CODIGO_RAPIDO = hc.CODIGO_CLIENTE
+      AND cli.CODIGO_EMPRESA = hc.EMPRESA
+      AND cli.ORG_COMER = org.CODIGO_ORG_COMER
+      AND org.CODIGO_EMPRESA = hc.EMPRESA
+      AND org.NOMBRE NOT IN ('VENTA LOGISTICA FROXA', 'VENTA TIENDA CARTES FROXA')
+      AND org.NOMBRE IS NOT NULL
+    ) AS DESCRIPCION_ORG_COMER,
+    (SELECT ag.NOMBRE
+     FROM agentes_clientes ac, agentes ag
+     WHERE ac.CODIGO_CLIENTE = hc.CODIGO_CLIENTE
+       AND ac.AGENTE = ag.CODIGO
+       AND ROWNUM = 1
+    ) AS NOMBRE_AGENTE,
+    hc.DOCUMENTO, 
+    hc.TIPO_TRANSACCION, 
+    TO_NUMBER(hc.IMPORTE) AS IMPORTE, 
+
+    -- ✅ IMPORTE_COBRADO real
+    TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO_REAL,
+
+    -- ✅ IMPORTE_COBRADO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN TO_NUMBER(hc.IMPORTE)
+        ELSE TO_NUMBER(hc.IMPORTE_COBRADO)
+    END AS IMPORTE_COBRADO,
+
+    TO_CHAR(hc.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
+    TO_CHAR(hc.FECHA_VENCIMIENTO, 'YYYY-MM-DD') AS FECHA_VENCIMIENTO,
+    TO_CHAR(hc.FECHA_ACEPTACION, 'YYYY-MM-DD') AS FECHA_ACEPTACION,
+    TO_CHAR(hc.FECHA_REMESA, 'YYYY-MM-DD') AS FECHA_REMESA,
+    hc.DOCUMENTO_VIVO,
+
+    -- ✅ STATUS_COBRO final con lógica de cierre si no está vivo
+    CASE
+        WHEN hc.DOCUMENTO_VIVO = 'N' THEN 'COBRADO'
+        WHEN ABS(NVL(hc.IMPORTE_COBRADO,0) - hc.IMPORTE) < 1 THEN 'COBRADO'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) > 0 THEN 'PARCIAL'
+        WHEN NVL(hc.IMPORTE_COBRADO,0) = 0 THEN 'PENDIENTE'
+        ELSE 'INDEFINIDO'
+    END AS STATUS_COBRO,
+
+    -- ✅ FECHA_ASIENTO_COBRO final con lógica de cierre si no está vivo
+     (SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+    ) AS FECHA_ASIENTO_COBRO,
+
+    -- ✅ DIAS_REAL_PAGO final con lógica de cierre si no está vivo
+    (SELECT MAX(ha.FECHA_ASIENTO) - hc.FECHA_FACTURA
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_REAL_PAGO,
+
+    (SELECT GREATEST(0, MAX(ha.FECHA_ASIENTO) - hc.FECHA_VENCIMIENTO) AS DIAS_EXCESO_PAGO
+            FROM HISTORICO_DETALLADO_APUNTES ha
+            WHERE ha.DOCUMENTO = hc.DOCUMENTO
+              AND ha.EMPRESA = hc.EMPRESA
+              AND ha.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+              AND ha.CODIGO_CONCEPTO = 'COB'
+        ) AS DIAS_EXCESO_PAGO
+
+FROM 
+    HISTORICO_COBROS hc
+WHERE 
+    'suzdalenko'='suzdalenko'
+    AND hc.FECHA_FACTURA >= TO_DATE('2025-02-01', 'YYYY-MM-DD')
+    AND EXISTS (
+        SELECT 1
+        FROM facturas_ventas fv
+        WHERE fv.numero_fra_conta = hc.documento
+    )
+    -- AND hc.IMPORTE > 0
+    -- AND hc.DOCUMENTO NOT LIKE '%DAG%'
+    -- AND hc.DOCUMENTO NOT LIKE '%DAR%'
+    -- AND hc.DOCUMENTO = 'FX1/000025'
+    -- AND hc.CODIGO_CLIENTE = '003666'
+ORDER BY 
+    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO
