@@ -1,5 +1,6 @@
 # http://127.0.0.1:8000/finanzas/get/0/0/payments_and_receipts/
 
+from finanzas.fin_utils.inf_expedientes.save_line_invoice_file import save_line_invoice_line
 from finanzas.models import InvoicesSales
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import get_current_date, invoices_list_of_current_month
@@ -11,9 +12,15 @@ def payments_and_receipts(request):
     oracle = OracleConnector()
     oracle.connect()
     
-    fechas_mes_a_mes = invoices_list_of_current_month('2025-02-01')
+    fechas_mes_a_mes = invoices_list_of_current_month('2025-01-01')
     for start_month, end_month in fechas_mes_a_mes:
         sql2 = """SELECT 
+                        TO_NUMBER(fv.LIQUIDO_FACTURA) AS LIQUIDO_FACTURA,
+                        
+                        NVL((SELECT TO_NUMBER(hc.IMPORTE_COBRADO) 
+                        FROM HISTORICO_COBROS hc
+                        WHERE hc.DOCUMENTO = fv.NUMERO_FRA_CONTA AND hc.CODIGO_CLIENTE = fv.CLIENTE AND hc.FECHA_FACTURA = fv.FECHA_FACTURA), 0) AS IMPORTE_COBRADO,
+
                         TO_CHAR(fv.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
                         TO_CHAR(fv.FECHA_FACTURA, 'YYYY') AS EJERCICIO,
                         fv.EMPRESA, 
@@ -69,15 +76,20 @@ def payments_and_receipts(request):
                         'suzdalenko'='suzdalenko'
                         AND fv.FECHA_FACTURA >= TO_DATE('2025-02-01', 'YYYY-MM-DD')
                         AND fv.FECHA_FACTURA >= TO_DATE(:start_month, 'YYYY-MM-DD') AND fv.FECHA_FACTURA <= TO_DATE(:end_month, 'YYYY-MM-DD')
-                        AND fv.CLIENTE = '004242'
+                        AND fv.CLIENTE = '001918'                   -- 001918 004242
+                        AND fv.NUMERO_FRA_CONTA = 'FR1/005277'       -- 'FR1/003211' FR1/005277 
                     ORDER BY 
                         fv.FECHA_FACTURA, 
                         fv.NUMERO_FRA_CONTA
                 """
 
-        print({'start_month':start_month, 'end_month':end_month})
+        # print({'start_month':start_month, 'end_month':end_month})
 
-        invoices = oracle.consult(sql2, {'start_month':start_month, 'end_month':end_month})
+        invoices = oracle.consult(sql2, {'start_month':start_month, 'end_month':end_month}) or []
+
+        # print(invoices)
+
+        # return invoices
     
         # listado facturas
         for invoice in invoices:
@@ -103,29 +115,46 @@ def payments_and_receipts(request):
                                     if documentoDag != documentoString:
                                         if documentoDag not in numeros_dags:
                                             numeros_dags += [documentoDag]
+                                            sqlEsFactura = """SELECT 1 FROM facturas_ventas fv WHERE fv.numero_fra_conta = :documentoDag"""
+                                            esFactura    = oracle.consult(sqlEsFactura, {'documentoDag': documentoDag})
+                                            # quito las facturas rectificativas que se mezclan con los dags
+                                            if esFactura is not None and len(esFactura) > 0:
+                                                continue
+                                            yaUsoDag = InvoicesSales.objects.filter(dag=documentoDag).exists()
+                                            if yaUsoDag:
+                                                continue
+                                            print(documentoDag)
                                             saleLine, created = InvoicesSales.objects.get_or_create(documento=documentoString, ejercicio=yearString, dag=documentoDag)
-                                            saleLine.updated  = currentDate
-                                            chargeSql  = """select TO_CHAR(FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_COBRO
-                                                            from historico_detallado_apuntes 
-                                                            where  DOCUMENTO = :documentoDag and CODIGO_CONCEPTO = 'COB'
-                                                            ORDER BY FECHA_ASIENTO DESC
+                                            chargeSql  = """select TO_NUMBER(hc.IMPORTE) AS IMPORTE, TO_NUMBER(hc.IMPORTE_COBRADO) AS IMPORTE_COBRADO, TO_CHAR(hda.FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_COBRO
+                                                            from historico_detallado_apuntes hda, HISTORICO_COBROS hc
+                                                            where hda.DOCUMENTO = hc.DOCUMENTO 
+                                                                AND hda.DOCUMENTO = :documentoDag 
+                                                                AND hda.CODIGO_CONCEPTO = 'COB' 
+                                                                AND hda.ENTIDAD = 'CL'
+                                                                AND hda.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+                                                                AND NOT EXISTS ( SELECT 1 FROM facturas_ventas fv WHERE fv.numero_fra_conta = :documentoDag)
+                                                            ORDER BY hda.FECHA_ASIENTO DESC
                                                         """
                                             chargeInfo = oracle.consult(chargeSql, {'documentoDag':documentoDag})
-                                            if chargeSql is not None and len(chargeSql) > 0:
-                                                saleLine.fecha_cobro = chargeInfo[0]['FECHA_COBRO']
-
-
-                                            print(documentoDag)
                                             print(chargeInfo)
-
-                                            saleLine.save()
+                                            if chargeInfo is not None and len(chargeInfo) > 0:
+                                                invoice['fecha_cobro_dag_TOP'] = f"COBRADO {documentoDag} {chargeInfo[0]['FECHA_COBRO']}"
+                                                save_line_invoice_line(saleLine, chargeInfo[0]['FECHA_COBRO'], currentDate, invoice, chargeInfo[0]['IMPORTE'], chargeInfo[0]['IMPORTE_COBRADO'])
+                                            else:
+                                                # aqui no deberia llegar y tampoco tener facturas rectificativas
+                                                invoice['fecha_cobro_dag_BOTTOM'] = f"NO COBRADO {documentoDag} DAG BOTTOM"
+                                                
+                                    
                                                   
        
             else:
                 saleLine, created = InvoicesSales.objects.get_or_create(documento=documentoString, ejercicio=yearString)
-                saleLine.updated  = currentDate
+                invoice['fecha_cobro_dag'] = 'FACTURA SIN DAGS'
+                save_line_invoice_line(saleLine, invoice['FECHA_ASIENTO_COBRO'], currentDate, invoice, invoice['LIQUIDO_FACTURA'], invoice['IMPORTE_COBRADO'])
+              
+    
 
-                saleLine.save()
+               
 
 
            

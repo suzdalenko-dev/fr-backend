@@ -673,6 +673,10 @@ select TO_CHAR(FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_COBRO
                                                             ORDER BY FECHA_ASIENTO DESC;
 
 
+select *
+from facturas_ventas;
+
+
 factura -> desgloses > dag > dag que tenga la fecha de cobro historico_detallado_apuntes where entidad = 'BA'
  
 
@@ -780,4 +784,51 @@ WHERE
     -- AND hc.DOCUMENTO = 'FX1/000025'
     -- AND hc.CODIGO_CLIENTE = '003666'
 ORDER BY 
-    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO
+    hc.FECHA_FACTURA, FECHA_ASIENTO_COBRO;
+
+
+select *
+from HISTORICO_COBROS hc
+where hc.DOCUMENTO = 'FC1/000005'
+; 
+
+
+select hc.*
+from historico_detallado_apuntes hc
+where  DOCUMENTO = 'DAG1224'
+;
+
+select hc.IMPORTE, hc.IMPORTE_COBRADO, TO_CHAR(hda.FECHA_ASIENTO, 'YYYY-MM-DD') AS FECHA_COBRO
+from historico_detallado_apuntes hda, HISTORICO_COBROS hc
+where hda.DOCUMENTO = hc.DOCUMENTO 
+    AND hda.DOCUMENTO = 'DAG802' 
+    AND hda.CODIGO_CONCEPTO = 'COB' 
+    AND hda.ENTIDAD = 'CL'
+    AND hda.CODIGO_ENTIDAD = hc.CODIGO_CLIENTE
+    
+;
+
+select * from AGRUPACIONES_DESGLOSES
+WHERE DOCUMENTO = 'FR1/003211'
+;
+
+select * from AGRUPACIONES_DESGLOSES
+where numero_agrupacion = 1169
+;
+
+select hc.*
+from historico_detallado_apuntes hc
+where  DOCUMENTO = 'DAG802'
+;
+
+select *
+from HISTORICO_COBROS hc
+where hc.DOCUMENTO = 'DAG990'
+; 
+
+
+cobradas:
+    FR1/001515 > DAG511 > fecha cobro 2025-05-26
+    FR1/003211 > DAG802 >             2025-06-24
+?¿
+    FR1/005277 > DAG990 >
