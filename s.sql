@@ -832,3 +832,55 @@ cobradas:
     FR1/003211 > DAG802 >             2025-06-24
 ?¿
     FR1/005277 > DAG990 >
+
+
+
+
+
+SELECT V_DOCUMENTO,V_CONCEPTO,V_CARACTER_ASIENTO,V_FORMA_COBRO,V_TIPO_TRANSACCION,V_FECHA_FACTURA,V_FECHA_VENCIMIENTO,V_IMPORTE,V_IMPORTE_COBRADO,V_DIVISA,D_AGENTE,V_DOCUMENTO_AGRUPADO,V_STATUS_IMPRESION,V_STATUS_ACEPTADO,V_STATUS_IMPAGADO,V_STATUS_REMESADO,V_STATUS_RECLAMACION,V_STATUS_CONTABILIZADO,V_STATUS_RETENIDO,V_PDTE_CTROL_VCTOS,V_STATUS_FINANCIADO,V_IMPORTE_ENDOSADO,V_IMP_SUSTITUIDO,V_IMP_IMPAGADO,V_GASTOS_DEVOLUCION,V_GASTOS_PROTESTO,D_CARACTER_ASIENTO,D_FORMA_COBRO,D_TIPO_TRANSACCION,V_NUMERO_REMESA,V_FECHA_REMESA,V_BANCO_REMESA,V_BANCO_REMESA_FINANCIACION,V_TIPO_REMESA,V_TIPO_REMESA_FINANCIACION,V_FECHA_REMESA_FINANCIACION,V_NUMERO_REMESA_FINANCIACION,D_BANCO_REMESA,D_BANCO_REMESA_FINANCIACION,D_TIPO_REMESA,D_TIPO_REMESA_FINANCIACION,V_CODIGO_CUENTA,V_FECHA_ENVIO,V_FECHA_ACEPTACION,EMPRESA,V_IMPORTE_TOTALIZAR,V_IMPORTE_COBRADO_TOTALIZAR,V_AGENTE,V_CODIGO_CLIENTE,D_V_CODIGO_CLIENTE FROM (SELECT HISTORICO_COBROS.* ,DECODE(historico_cobros.agente,NULL,NULL,(SELECT lvag.nombre FROM agentes lvag WHERE lvag.codigo = historico_cobros.agente AND lvag.empresa = historico_cobros.empresa)) D_AGENTE,DECODE(historico_cobros.numero_remesa,NULL,NULL,(SELECT lvba.nombre FROM bancos lvba WHERE lvba.codigo_rapido = (SELECT r.codigo_banco FROM remesas r WHERE r.numero = historico_cobros.numero_remesa AND r.fecha_remesa = historico_cobros.fecha_remesa AND r.empresa = historico_cobros.empresa) AND lvba.empresa = historico_cobros.empresa)) D_BANCO_REMESA,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = historico_cobros.caracter_asiento AND lvcc.empresa = historico_cobros.empresa) D_CARACTER_ASIENTO,(SELECT lvfcp.nombre FROM formas_cobro_pago lvfcp WHERE lvfcp.codigo = historico_cobros.forma_cobro) D_FORMA_COBRO,DECODE(historico_cobros.numero_remesa,NULL,NULL,(SELECT lvtr.descripcion FROM tipos_remesa lvtr where lvtr.empresa = historico_cobros.empresa and lvtr.codigo = (SELECT r.tipo_remesa FROM remesas r WHERE historico_cobros.empresa=r.empresa AND historico_cobros.numero_remesa = r.numero AND historico_cobros.fecha_remesa=r.fecha_remesa))) D_TIPO_REMESA,(SELECT lvtt.nombre FROM tipos_transacciones lvtt WHERE lvtt.codigo = historico_cobros.tipo_transaccion) D_TIPO_TRANSACCION,(SELECT c.nombre FROM clientes c WHERE c.codigo_rapido = historico_cobros.codigo_cliente AND c.codigo_empresa = historico_cobros.empresa) D_V_CODIGO_CLIENTE,agente V_AGENTE,DECODE(numero_remesa, NULL, NULL, (SELECT r.codigo_banco FROM remesas r WHERE r.numero = historico_cobros.numero_remesa AND r.fecha_remesa = historico_cobros.fecha_remesa AND r.empresa = historico_cobros.empresa)) V_BANCO_REMESA,CARACTER_ASIENTO V_CARACTER_ASIENTO,CODIGO_CLIENTE V_CODIGO_CLIENTE,CODIGO_CUENTA V_CODIGO_CUENTA,CONCEPTO V_CONCEPTO,PKCONSGEN.DIVISA(DIVISA_ORIGEN) V_DIVISA,DOCUMENTO V_DOCUMENTO,DOCUMENTO_AGRUPADO V_DOCUMENTO_AGRUPADO,FECHA_ACEPTACION V_FECHA_ACEPTACION,FECHA_ENVIO V_FECHA_ENVIO,FECHA_FACTURA V_FECHA_FACTURA,FECHA_REMESA V_FECHA_REMESA,FECHA_VENCIMIENTO V_FECHA_VENCIMIENTO,FORMA_COBRO V_FORMA_COBRO,pkconsgen.importe_txt(NVL(importe, 0), NVL(importe_divisa, 0), divisa_origen) V_IMPORTE,DECODE(documento_vivo, 'N', pkconsgen.importe_txt(NVL(importe, 0), NVL(importe_divisa, 0), divisa_origen), 'S', PKCONSGEN.IMPORTE_TXT(NVL(importe_cobrado, 0) + NVL(importe_sustituido, 0) + NVL(IMPORTE_COMPENSADO, 0), NVL(importe_cobrado_DIVISA, 0) + NVL(importe_sustituido_DIVISA, 0) + NVL(IMPORTE_COMPENSADO_DIVISA, 0), divisa_origen)) V_IMPORTE_COBRADO,DECODE(documento_vivo, 'N', pkconsgen.importE(NVL(importe, 0), NVL(importe_divisa, 0), divisa_origen), 'S', PKCONSGEN.IMPORTE(NVL(importe_cobrado, 0) + NVL(importe_sustituido, 0) + NVL(IMPORTE_COMPENSADO, 0), NVL(importe_cobrado_DIVISA, 0) + NVL(importe_sustituido_DIVISA, 0) + NVL(IMPORTE_COMPENSADO_DIVISA, 0), divisa_origen)) V_IMPORTE_COBRADO_TOTALIZAR, pkconsgen.importe(NVL(importe, 0), NVL(importe_divisa, 0), divisa_origen) V_IMPORTE_TOTALIZAR,NUMERO_REMESA V_NUMERO_REMESA,NVL((SELECT 'S'
+FROM historico_cobros hc
+WHERE documento_vivo = 'S'
+  AND status_contabilizado = 'S'
+  AND historico_cobros.documento = hc.documento
+  AND historico_cobros.fecha_factura = hc.fecha_factura
+  AND historico_cobros.tipo_transaccion = hc.tipo_transaccion
+  AND historico_cobros.empresa = hc.empresa
+  AND EXISTS (
+        SELECT 1
+        FROM tipos_remesa tr, remesas r
+        WHERE tr.empresa = r.empresa
+        AND tr.codigo = r.tipo_remesa
+        AND r.empresa = hc.empresa
+        AND hc.numero_remesa = r.numero
+        AND r.fecha_remesa = hc.fecha_remesa
+        AND tr.METODO IN ('C', 'D')
+    )), 'N') V_PDTE_CTROL_VCTOS,STATUS_ACEPTADO V_STATUS_ACEPTADO,STATUS_CONTABILIZADO V_STATUS_CONTABILIZADO,STATUS_IMPAGADO V_STATUS_IMPAGADO,STATUS_IMPRESION V_STATUS_IMPRESION,STATUS_RECLAMACION V_STATUS_RECLAMACION,STATUS_REMESADO V_STATUS_REMESADO,STATUS_RETENIDO V_STATUS_RETENIDO,DECODE(historico_cobros.numero_remesa, NULL, NULL, (SELECT r.tipo_remesa FROM remesas r WHERE historico_cobros.empresa=r.empresa AND historico_cobros.numero_remesa = r.numero AND historico_cobros.fecha_remesa=r.fecha_remesa)) V_TIPO_REMESA,TIPO_TRANSACCION V_TIPO_TRANSACCION,DECODE(historico_cobros.numero_remesa_financiacion,NULL,NULL,(SELECT lvba.nombre FROM bancos lvba WHERE lvba.codigo_rapido = (SELECT fn.codigo_banco FROM financiaciones fn WHERE historico_cobros.empresa = fn.empresa AND historico_cobros.numero_remesa_financiacion = fn.numero AND historico_cobros.fecha_remesa_financiacion = fn.fecha_remesa) AND lvba.empresa = historico_cobros.empresa)) D_BANCO_REMESA_FINANCIACION,DECODE(historico_cobros.numero_remesa_financiacion,NULL,NULL,(SELECT lvtrf.descripcion FROM tipos_remesa_financiacion lvtrf where lvtrf.empresa = historico_cobros.empresa and lvtrf.codigo = (SELECT fn.tipo_remesa FROM financiaciones fn WHERE historico_cobros.empresa = fn.empresa AND historico_cobros.numero_remesa_financiacion = fn.numero AND historico_cobros.fecha_remesa_financiacion = fn.fecha_remesa))) D_TIPO_REMESA_FINANCIACION,DECODE(historico_cobros.numero_remesa_financiacion, NULL, NULL,(SELECT fn.codigo_banco FROM financiaciones fn WHERE historico_cobros.empresa = fn.empresa AND historico_cobros.numero_remesa_financiacion = fn.numero AND historico_cobros.fecha_remesa_financiacion = fn.fecha_remesa)) V_BANCO_REMESA_FINANCIACION,FECHA_REMESA_FINANCIACION V_FECHA_REMESA_FINANCIACION,GASTOS_DEVOLUCION V_GASTOS_DEVOLUCION,GASTOS_PROTESTO V_GASTOS_PROTESTO,IMPORTE_ENDOSADO V_IMPORTE_ENDOSADO,PKCONSGEN.IMPORTE_TXT(importe_impagado, importe_impagado_divisa, divisa_origen) V_IMP_IMPAGADO,PKCONSGEN.IMPORTE_TXT(importe_sustituido, importe_sustituido_divisa, divisa_origen) V_IMP_SUSTITUIDO,NUMERO_REMESA_FINANCIACION V_NUMERO_REMESA_FINANCIACION,STATUS_FINANCIADO V_STATUS_FINANCIADO,DECODE(historico_cobros.numero_remesa_financiacion, NULL, NULL, (SELECT fn.tipo_remesa FROM financiaciones fn WHERE historico_cobros.empresa = fn.empresa AND historico_cobros.numero_remesa_financiacion = fn.numero AND historico_cobros.fecha_remesa_financiacion = fn.fecha_remesa)) V_TIPO_REMESA_FINANCIACION FROM HISTORICO_COBROS) HISTORICO_COBROS WHERE documento = 'FN1/000070' AND fecha_factura = TO_DATE('06-02-2025', 'DD-MM-YYYY') AND empresa = '001'  order by fecha_vencimiento DESC;
+
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where documento = 'FN1/000070'
+;
+
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where documento = 'FN1/000582'
+;
+
+select * 
+from HISTORICO_DETALLADO_APUNTES
+where documento = 'DAR422'
+;
+
+select * 
+from HISTORICO_COBROS
+where documento = 'DAR422'
+;
+
+select * 
+from AGRUPACIONES_DESGLOSES 
+WHERE NUMERO_AGRUPACION = '356'
+;
+
+select * from facturas_ventas;

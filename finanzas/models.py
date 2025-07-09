@@ -8,7 +8,7 @@ class InvoicesSales(models.Model):
     agente             = models.TextField(null=True)
     ejercicio          = models.TextField(null=True)
     updated            = models.TextField(null=True)
-    info_error         = models.TextField(null=True)
+    forma_cobro        = models.TextField(null=True)
 
     documento          = models.TextField(null=True)
     dag                = models.TextField(null=True)

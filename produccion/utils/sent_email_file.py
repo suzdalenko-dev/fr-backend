@@ -16,7 +16,7 @@ def aviso_expediente_sin_precio(request, expedientes_sin_precio):
         """
         
         SMailer.send_email(
-            ['alexey.suzdalenko@froxa.com'],
+            ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
             'Expedientes sin precio final ( sin gastos imputados ) hay que imputar gastos en todas las hojas de seguimiento',
             body_message,
             'none'
