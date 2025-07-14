@@ -9,7 +9,7 @@ class InvoicesSales(models.Model):
     updated            = models.TextField(null=True)
     forma_cobro        = models.TextField(null=True)
 
-    documento          = models.TextField(null=True)
+    documento          = models.TextField(null=True, unique=True)
     dag                = models.TextField(null=True)
     importe            = models.FloatField(null=True)
     importe_cobrado    = models.FloatField(null=True)

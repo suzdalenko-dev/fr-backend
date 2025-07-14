@@ -3,7 +3,7 @@ FROM HISTORICO_MOV_CARTERA
 WHERE documento = 'FR1/001533'
 ;
 
-select * from HISTORICO_COBROS where DOCUMENTO = 'FR1/001533';
+select * from HISTORICO_COBROS where DOCUMENTO = 'DAR401';
 
 select *
 FROM HISTORICO_MOV_CARTERA WHERE documento = 'FR1/009812';
@@ -83,30 +83,13 @@ where DOCUMENTO = 'FR1/007165';
 
 */
 
-SELECT DIARIO,
-    CODIGO_CUENTA,
-    CODIGO_CONCEPTO,
-    CODIGO_ENTIDAD,
-    SIGNO,
-    FECHA_IMPUESTO,
-    IMPORTE,
-    FECHA_ASIENTO,
-    NUMERO_ASIENTO_BORRADOR,
-    SERIE_JUSTIFICANTE,
-    JUSTIFICANTE,
-    CONCEPTO,
-    DEBE,
-    HABER,
-    SALDO
-FROM  (SELECT estado, empresa, fecha_asiento, diario, numero_asiento_borrador, numero_linea_borrador, codigo_cuenta, codigo_concepto, concepto,  DECODE(signo,'D',importe) debe, DECODE(signo,'H',importe) haber,  SUM(DECODE(signo, 'D', importe, -importe)) OVER (PARTITION BY codigo_entidad, codigo_cuenta, empresa, estado  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) + NVL(pkpantallas.get_variable_env_number('EXTRCLIE.SALDO_INICIAL'), 0) saldo, SUM(DECODE(signo, 'D', importe_divisa, -importe_divisa)) OVER (PARTITION BY codigo_entidad, codigo_cuenta, empresa, estado  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) + NVL(pkpantallas.get_variable_env_number('EXTRCLIE.SALDO_INICIAL_DIVISA'), 0) saldo_divisa,0 saldo_euro,  asiento_con_impuesto, situacion_apunte, importe, importe_divisa, resumir, signo,  caracter_asiento, fecha_valor, numero_linea_oficial, documento, DECODE(signo,'D',importe_divisa) debe_divisa, DECODE(signo,'H',importe_divisa) haber_divisa,  divisa_origen, fecha_valor_divisa, marca_punteo, serie_justificante, justificante,  fecha_impuesto, formula_reparto, numero_linea_resumen, comentarios, entidad, codigo_entidad,  numero_asiento_origen, numero_linea_origen, empresa_apunte, id_conciliacion, usuario, DECODE(situacion_apunte,'B','*',NULL) borrador, 0 debe_euro, 0 haber_euro,  NULL NUMERO_ASIENTO_OFICIAL  
-FROM HISTORICO_DETALLADO_APUNTES  
-WHERE ENTIDAD = 'CL'  AND (caracter_asiento IS NULL OR caracter_asiento IN (SELECT b.codigo_centro FROM centros_grupo_ccont B WHERE b.empresa = historico_detallado_apuntes.empresa AND b.codigo_grupo = '01')) AND EXISTS(SELECT 1 FROM historico_asientos ha WHERE ha.numero_asiento_borrador = historico_detallado_apuntes.numero_asiento_borrador AND ha.fecha_asiento = historico_detallado_apuntes.fecha_asiento AND ha.diario = historico_detallado_apuntes.diario AND ha.empresa = historico_detallado_apuntes.empresa AND ha.anulado = 'N' )  AND DIARIO NOT IN (SELECT CODIGO FROM DIARIOS WHERE APERTURA_CIERRE in ('A','C'))  ORDER BY fecha_asiento, numero_asiento_borrador, numero_linea_borrador) 
-WHERE CODIGO_CUENTA='4300020' and CODIGO_ENTIDAD='004266' and DOCUMENTO = 'FR1/001533';
+-- FN1/001369 cobrado todo     AQUI ME FALTA EL COBRO COMPLETO 
+-- FN1/001918 cobrada la mitad ESTO ESTA BIEN
+-- 
 
-
-select NVL(SUM(IMPORTE),0) AS IMPORTE_COBRADO_CUENTA 
-from HISTORICO_DETALLADO_APUNTES where documento = 'FR1/001533' 
-    and CODIGO_CUENTA IN (4300010,4300011,4300020,4300030,4300040,4300090,4309010,4310010,4310020,4310030,4310040,4311010,4312000,4315010,4315020,4360010,4360020,4360030,4360040,4380000,4380020) 
+select * -- NVL(SUM(IMPORTE),0) AS IMPORTE_COBRADO_CUENTA 
+from HISTORICO_DETALLADO_APUNTES where documento = 'DAR401' 
+    -- and CODIGO_CUENTA IN (4300010,4300011,4300020,4300030,4300040,4300090,4309010,4310010,4310020,4310030,4310040,4311010,4312000,4315010,4315020,4360010,4360020,4360030,4360040,4380000,4380020)
     and signo='H'
 ;
 
@@ -116,10 +99,59 @@ where CODIGO_CUENTA >= '4300000' AND CODIGO_CUENTA <= '5000000' order by CODIGO_
 
 select * 
 from AGRUPACIONES_DESGLOSES 
-WHERE DOCUMENTO = 'FN1/000040'
+WHERE DOCUMENTO = 'FN1/001369'
 ;
 
 select * 
 from AGRUPACIONES_DESGLOSES 
-WHERE NUMERO_AGRUPACION = '983' -- and documento = 'FN1/000857'
+WHERE NUMERO_AGRUPACION = '1923' -- and documento = 'FN1/000857'
 ;
+
+SELECT
+    FECHA_FACTURA,
+    FECHA_VENCIMIENTO,
+    TIPO_TRANSACCION,
+    DOCUMENTO,
+    V_TIPO_REGISTRO,V_NUMERO_AGRUPACION,V_EJERCICIO,V_IMPORTE,V_IMPORTE_DIVISA FROM (SELECT AGRUPACIONES_DESGLOSES.* ,EJERCICIO V_EJERCICIO,IMPORTE V_IMPORTE,IMPORTE_DIVISA V_IMPORTE_DIVISA,NUMERO_AGRUPACION V_NUMERO_AGRUPACION,
+    TIPO_REGISTRO V_TIPO_REGISTRO FROM AGRUPACIONES_DESGLOSES) AGRUPACIONES_DESGLOSES WHERE (DOCUMENTO='FN1/001369');
+
+
+select * 
+from AGRUPACIONES_DESGLOSES 
+WHERE DOCUMENTO = 'FN1/001369'
+;
+
+select * 
+from AGRUPACIONES_DESGLOSES 
+WHERE DOCUMENTO = 'FN1/001918'
+;
+
+select * 
+from HISTORICO_COBROS 
+where DOCUMENTO = 'FN1/001369'
+;
+
+select * 
+from HISTORICO_COBROS 
+where DOCUMENTO = 'FN1/001918'
+;
+
+select *
+from FACTURAS_VENTAS_VCTOS
+where numero_serie = 'FN1'
+    and numero_factura = '001369'
+;
+
+select *
+from FACTURAS_VENTAS_VCTOS
+where numero_serie = 'FN1'
+    and numero_factura in ( '001369', '001918')
+;
+select * 
+from HISTORICO_COBROS 
+where DOCUMENTO in ( 'FN1/001369')
+;
+
+ SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
+                                FROM HISTORICO_DETALLADO_APUNTES ha
+                                WHERE ha.DOCUMENTO = 'FN1/001918' AND ha.CODIGO_CONCEPTO in ('COB', 'REM') AND DIARIO = 'BANC' AND ha.ENTIDAD = 'CL'

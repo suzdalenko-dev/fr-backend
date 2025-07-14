@@ -5,6 +5,7 @@ from produccion.repository.equivalents_price.create_update_eq_file import create
 from produccion.repository.equivalents_price.recalc_equi_file import recalculate_equiv_with_contaner
 from produccion.repository.price_projection.article_costs_file import delete_article_costs_all, delete_ingrediente_line, get_all_excel_editables_lines, get_articles_libra, get_datail_art_cost, line_costs_delete_alternative, line_costs_save_alternative, line_costs_update_percentage, save_art_cost_head, save_new_ingrediente_line, update_excel_line
 from produccion.repository.price_projection.recalculate_price_file import recalculate_price_projections
+from produccion.utils.sent_email_file import error_message_to_alexey
 
 
 def production_default_controller(request, action, entity, code, description): 
@@ -41,5 +42,6 @@ def production_default_controller(request, action, entity, code, description):
         result = query_func()
         return JsonResponse({"status": 200, 'message': 'ok', "data": result})
     except Exception as e:
+        error_message_to_alexey(request, e)
         SuzdalLogger.log(f"❌ Error en consulta: str{e} ❌")
         return JsonResponse({"status": 500,"message": "Ha ocurrido un error en el servidor.","error": str(e)}, status=500)

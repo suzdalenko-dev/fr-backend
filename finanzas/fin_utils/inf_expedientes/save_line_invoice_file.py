@@ -50,5 +50,8 @@ def save_line_invoice_line(invoiceLine, chargeDate, currentDate, sqlRes, importe
         else:
             invoiceLine.status_vencimiento = 'VENCIDO'
 
+    if sqlRes['DOCUMENTO_VIVO'] == 'N' and len(str(invoiceLine.fecha_cobro)) == 10:
+        invoiceLine.status_cobro    = 'COBRADO'
+        invoiceLine.importe_cobrado = invoiceLine.importe
 
     invoiceLine.save()

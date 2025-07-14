@@ -25,3 +25,16 @@ def aviso_expediente_sin_precio(request, expedientes_sin_precio):
         # ['kateryna.kosheleva@froxa.com', 'alejandra.ungidos@froxa.com', 'alexey.suzdalenko@froxa.com'],
         # ['alexey.suzdalenko@froxa.com'],
         # D:\froxa-backend\produccion\utils\sent_email_file.py
+
+
+
+def error_message_to_alexey(request, message):
+    full_url = request.build_absolute_uri()
+    body_message = f"""<p><strong>{full_url}</strong></p>
+                       <p><strong>{str(message)}</strong></p>"""
+    SMailer.send_email(
+            ['alexey.suzdalenko@froxa.com'],
+            'Error App Informes',
+            body_message,
+            'none'
+        )

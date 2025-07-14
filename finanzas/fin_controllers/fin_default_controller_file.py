@@ -1,7 +1,9 @@
+import traceback
 from django.http import JsonResponse
 from finanzas.fin_repository.fin_list_expedientes_file import get_list_expdientes
 from finanzas.fin_repository.p_and_r_file import payments_and_receipts
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
+from produccion.utils.sent_email_file import error_message_to_alexey
 
 
 def fin_default_controller(request, action, entity, code, description): 
@@ -24,5 +26,8 @@ def fin_default_controller(request, action, entity, code, description):
         result = query_func()
         return JsonResponse({"status": 200, 'message': 'ok', "data": result})
     except Exception as e:
+        tb = traceback.TracebackException.from_exception(e)
+        error_str = ''.join(traceback.format_exception(e))
+        error_message_to_alexey(request, f"{e.__class__.__name__}: {e}\n{error_str}")
         SuzdalLogger.log(f"❌ Error en consulta: str{e} ❌")
         return JsonResponse({"status": 500,"message": "Ha ocurrido un error en el servidor.","error": str(e)}, status=500)

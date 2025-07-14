@@ -10,10 +10,11 @@ from froxa.utils.utilities.funcions_file import get_current_date, invoices_list_
 
 def payments_and_receipts(request):
     currentDate = get_current_date()
-    InvoicesSales.objects.all().delete()
-    with connection.cursor() as cursor:
-        cursor.execute("ALTER SEQUENCE finanzas_invoicessales_id_seq RESTART WITH 1;")
+    #   InvoicesSales.objects.all().delete()
+    #   with connection.cursor() as cursor:
+    #       cursor.execute("ALTER SEQUENCE finanzas_invoicessales_id_seq RESTART WITH 1;")
 
+    numInvoices = 0
     x = []
     oracle = OracleConnector()
     oracle.connect()
@@ -40,15 +41,6 @@ def payments_and_receipts(request):
                             ), 
                                 0
                         ) AS IMPORTE_COBRADO_2,
-
-                        NVL(
-                            (
-                                SELECT TO_NUMBER(SUM(hc.IMPORTE_COBRADO)) 
-                                FROM HISTORICO_COBROS hc
-                                WHERE hc.DOCUMENTO = fv.NUMERO_FRA_CONTA AND hc.CODIGO_CLIENTE = fv.CLIENTE AND hc.FECHA_FACTURA = fv.FECHA_FACTURA
-                            ), 
-                                0
-                            ) AS IMPORTE_COBRADO_X,
 
                         TO_CHAR(fv.FECHA_FACTURA, 'YYYY-MM-DD') AS FECHA_FACTURA,
                         TO_CHAR(fv.FECHA_FACTURA, 'YYYY') AS EJERCICIO,
@@ -84,34 +76,29 @@ def payments_and_receipts(request):
 
                        NVL(
                             (
-                                SELECT TO_CHAR(hc.FECHA_VENCIMIENTO, 'YYYY-MM-DD')
-                                FROM HISTORICO_COBROS hc
-                                WHERE hc.DOCUMENTO = fv.NUMERO_FRA_CONTA 
-                                  AND hc.CODIGO_CLIENTE = fv.CLIENTE 
-                                  AND hc.FECHA_FACTURA = fv.FECHA_FACTURA 
-                                  AND ROWNUM = 1
-                            ), 
-                            (
-                                SELECT TO_CHAR(FV_VCTOS.FECHA_VENCIMIENTO, 'YYYY-MM-DD')
+                                SELECT TO_CHAR(MAX(FV_VCTOS.FECHA_VENCIMIENTO), 'YYYY-MM-DD')
                                 FROM FACTURAS_VENTAS_VCTOS FV_VCTOS
                                 WHERE FV_VCTOS.NUMERO_SERIE = fv.NUMERO_SERIE
                                   AND FV_VCTOS.NUMERO_FACTURA = fv.NUMERO_FACTURA
                                   AND FV_VCTOS.CLIENTE = fv.CLIENTE
                                   AND FV_VCTOS.FORMA_COBRO = fv.FORMA_COBRO
-                                  AND ROWNUM = 1
+                            ),
+                            (
+                                SELECT TO_CHAR(MAX(hc.FECHA_VENCIMIENTO), 'YYYY-MM-DD')
+                                FROM HISTORICO_COBROS hc
+                                WHERE hc.DOCUMENTO = fv.NUMERO_FRA_CONTA 
+                                  AND hc.CODIGO_CLIENTE = fv.CLIENTE 
+                                  AND hc.FECHA_FACTURA = fv.FECHA_FACTURA 
                             )
                         ) AS FECHA_VENCIMIENTO,
 
-                        (SELECT hc.DOCUMENTO_VIVO
-                        FROM HISTORICO_COBROS hc
-                        WHERE hc.DOCUMENTO = fv.NUMERO_FRA_CONTA AND hc.CODIGO_CLIENTE = fv.CLIENTE AND hc.FECHA_FACTURA = fv.FECHA_FACTURA AND ROWNUM = 1
-                        ) AS DOCUMENTO_VIVO,
+                        'S' AS DOCUMENTO_VIVO,
 
                         NVL(
                             (
                                 SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
                                 FROM HISTORICO_DETALLADO_APUNTES ha
-                                WHERE ha.DOCUMENTO = fv.NUMERO_FRA_CONTA AND ha.EMPRESA = fv.EMPRESA AND ha.CODIGO_ENTIDAD = fv.CLIENTE AND ha.CODIGO_CONCEPTO in ('COB', 'REM') AND DIARIO = 'BANC' AND ha.ENTIDAD = 'CL' AND ROWNUM = 1
+                                WHERE ha.DOCUMENTO = fv.NUMERO_FRA_CONTA AND ha.EMPRESA = fv.EMPRESA AND ha.CODIGO_ENTIDAD = fv.CLIENTE AND ha.CODIGO_CONCEPTO in ('COB', 'REM') AND DIARIO = 'BANC' AND ha.ENTIDAD = 'CL'
                             ), 'dont_charged'
                         ) AS FECHA_ASIENTO_COBRO
 
@@ -125,7 +112,7 @@ def payments_and_receipts(request):
                         -- AND fv.CLIENTE NOT IN ('001204') 
 
                         -- AND fv.CLIENTE = '003146'       -- 003311 001918 004242 003341 - 000678 001819 004485
-                        -- AND fv.NUMERO_FRA_CONTA in ('FR1/001533')
+                        -- AND fv.NUMERO_FRA_CONTA in ('FN1/001369', 'FN1/001918')
                         
                     ORDER BY 
                         fv.FECHA_FACTURA, 
@@ -140,6 +127,18 @@ def payments_and_receipts(request):
             yearString      = str(invoice['EJERCICIO']).strip()
 
             if invoice['FECHA_ASIENTO_COBRO'] == 'dont_charged':
+                Factura_Viva = 'N'
+                if float(invoice['IMPORTE_COBRADO'] or 0) != float(invoice['LIQUIDO_FACTURA'] or 0):
+                    # damos por cobrada si ya no hay nada vivo
+                    sqlFactViva = """SELECT * FROM HISTORICO_COBROS hc WHERE hc.DOCUMENTO = :documentoString"""
+                    sqlFactViva = oracle.consult(sqlFactViva, {'documentoString':documentoString}) or []
+                    if len(sqlFactViva) > 0:
+                        for sqlF in sqlFactViva:
+                            if sqlF['DOCUMENTO_VIVO'] == 'S':
+                                Factura_Viva = 'S'
+                
+                invoice['DOCUMENTO_VIVO'] = Factura_Viva
+
                 # buscar numero agrupacion
                 agrupacionesSql = """select * from AGRUPACIONES_DESGLOSES WHERE DOCUMENTO = :documentoString"""
                 existeNumeroAgrupacion = oracle.consult(agrupacionesSql, {'documentoString':documentoString})
@@ -178,7 +177,7 @@ def payments_and_receipts(request):
                                                             ORDER BY hda.FECHA_ASIENTO DESC
                                                         """
                                             chargeInfo = oracle.consult(chargeSql, {'documentoDag':documentoDag})
-                                                      
+                      
                                             if chargeInfo is not None and len(chargeInfo) > 0:
                                                 invoice['fecha_cobro_dag_TOP'] = f"A COBRADO {documentoDag} {chargeInfo[0]['FECHA_COBRO']}"
                                                 save_line_invoice_line(saleLine, chargeInfo[0]['FECHA_COBRO'], currentDate, invoice, invoice['LIQUIDO_FACTURA'], invoice['IMPORTE_COBRADO'])
@@ -212,7 +211,7 @@ def payments_and_receipts(request):
             else:
 
                 saleLine, created = InvoicesSales.objects.get_or_create(documento=documentoString, ejercicio=yearString)
-                
+                # print(invoice)
 
                 # cobrado total para las facturas que se pagan en veces:
                 sqlCobradoTotal = """SELECT NVL(SUM(hc.IMPORTE_COBRADO), 0) AS IMPORTE_COBRADO FROM HISTORICO_COBROS hc WHERE hc.DOCUMENTO = :documentoString"""
@@ -263,6 +262,17 @@ def payments_and_receipts(request):
                 if len(sqlPorCuenta) > 0 and float(sqlPorCuenta[0]['IMPORTE_COBRADO_CUENTA'] or 0) >= float(invoice['LIQUIDO_FACTURA'] or 0):
                     invoice['IMPORTE_COBRADO'] = float(invoice['LIQUIDO_FACTURA'] or 0)          
 
+                Factura_Viva = 'N'
+                if float(invoice['IMPORTE_COBRADO'] or 0) != float(invoice['LIQUIDO_FACTURA'] or 0):
+                    # damos por cobrada si ya no hay nada vivo
+                    sqlFactViva = """SELECT * FROM HISTORICO_COBROS hc WHERE hc.DOCUMENTO = :documentoString"""
+                    sqlFactViva = oracle.consult(sqlFactViva, {'documentoString':documentoString}) or []
+                    if len(sqlFactViva) > 0:
+                        for sqlF in sqlFactViva:
+                            if sqlF['DOCUMENTO_VIVO'] == 'S':
+                                Factura_Viva = 'S'
+                
+                invoice['DOCUMENTO_VIVO'] = Factura_Viva
 
                 save_line_invoice_line(saleLine, invoice['FECHA_ASIENTO_COBRO'], currentDate, invoice, invoice['LIQUIDO_FACTURA'], invoice['IMPORTE_COBRADO'])
 
@@ -271,12 +281,12 @@ def payments_and_receipts(request):
 
 
             # x += [invoice]
-
+            numInvoices += 1
 
     
 
     oracle.close()
-    return x
+    return numInvoices
 
 
 
