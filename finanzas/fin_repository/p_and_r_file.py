@@ -19,7 +19,7 @@ def payments_and_receipts(request):
     oracle = OracleConnector()
     oracle.connect()
     
-    fechas_mes_a_mes = invoices_list_of_current_month('2025-01-01')
+    fechas_mes_a_mes = invoices_list_of_current_month()
     for start_month, end_month in fechas_mes_a_mes:
         sql2 = """SELECT 
                         FORMA_COBRO,
@@ -112,7 +112,7 @@ def payments_and_receipts(request):
                         -- AND fv.CLIENTE NOT IN ('001204') 
 
                         -- AND fv.CLIENTE = '003146'       -- 003311 001918 004242 003341 - 000678 001819 004485
-                        -- AND fv.NUMERO_FRA_CONTA in ('FN1/001369', 'FN1/001918')
+                        -- AND fv.NUMERO_FRA_CONTA in ('FR1/009116')
                         
                     ORDER BY 
                         fv.FECHA_FACTURA, 

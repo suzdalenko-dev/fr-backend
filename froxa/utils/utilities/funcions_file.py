@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 import json
 import os
 from django.forms import model_to_dict
@@ -66,26 +67,35 @@ def get_client_ip(request):
 
 
 
-def invoices_list_of_current_month(fecha_inicio_str):
-    fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d").date()
-    hoy = date.today()
-    listado = []
-    año = fecha_inicio.year
-    mes = fecha_inicio.month
-    while date(año, mes, 1) <= hoy:
-        primer_dia = date(año, mes, 1)
-        # calcular último día del mes
-        if mes == 12:
-            ultimo_dia = date(año, mes, 31)
+
+def invoices_list_of_current_month():
+    today = date.today()
+    start_date = today.replace(day=1) - relativedelta(months=12)  # hace 12 meses exactos
+
+    month_ranges = []
+    year = start_date.year
+    month = start_date.month
+
+    while date(year, month, 1) <= today:
+        first_day = date(year, month, 1)
+
+        # calculate last day of the month
+        if month == 12:
+            last_day = date(year, month, 31)
         else:
-            siguiente_mes = date(año, mes + 1, 1)
-            ultimo_dia = siguiente_mes - timedelta(days=1)
-        listado.append( (primer_dia.strftime('%Y-%m-%d'), ultimo_dia.strftime('%Y-%m-%d')) )
-        # avanzar al mes siguiente
-        if mes == 12:
-            mes = 1
-            año += 1
+            next_month = date(year, month + 1, 1)
+            last_day = next_month - timedelta(days=1)
+
+        month_ranges.append((first_day.strftime('%Y-%m-%d'), last_day.strftime('%Y-%m-%d')))
+
+        # move to next month
+        if month == 12:
+            month = 1
+            year += 1
         else:
-            mes += 1
-    return listado
+            month += 1
+
+    return month_ranges
+
+
 

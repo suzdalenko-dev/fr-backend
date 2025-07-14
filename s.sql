@@ -154,4 +154,9 @@ where DOCUMENTO in ( 'FN1/001369')
 
  SELECT TO_CHAR(MAX(ha.FECHA_ASIENTO), 'YYYY-MM-DD')
                                 FROM HISTORICO_DETALLADO_APUNTES ha
-                                WHERE ha.DOCUMENTO = 'FN1/001918' AND ha.CODIGO_CONCEPTO in ('COB', 'REM') AND DIARIO = 'BANC' AND ha.ENTIDAD = 'CL'
+                                WHERE ha.DOCUMENTO = 'FN1/001918' AND ha.CODIGO_CONCEPTO in ('COB', 'REM') AND DIARIO = 'BANC' AND ha.ENTIDAD = 'CL';
+
+/*
+en "/etc/apache2/apache2.conf:" he puesto: Timeout 888300
+
+*/
