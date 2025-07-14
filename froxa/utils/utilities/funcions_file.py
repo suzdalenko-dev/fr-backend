@@ -70,7 +70,7 @@ def get_client_ip(request):
 
 def invoices_list_of_current_month():
     today = date.today()
-    start_date = today.replace(day=1) - relativedelta(months=12)  # hace 12 meses exactos
+    start_date = today.replace(day=1) - relativedelta(months=12)
 
     month_ranges = []
     year = start_date.year
