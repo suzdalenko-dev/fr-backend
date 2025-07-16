@@ -13,6 +13,7 @@ def payments_and_receipts(request):
     #   InvoicesSales.objects.all().delete()
     #   with connection.cursor() as cursor:
     #       cursor.execute("ALTER SEQUENCE finanzas_invoicessales_id_seq RESTART WITH 1;")
+    #   return 1
 
     numInvoices = 0
     x = []
