@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from froxa.utils.utilities.funcions_file import get_short_date
+from froxa.utils.utilities.funcions_file import get_current_date, get_short_date
 
 def save_line_invoice_line(invoiceLine, chargeDate, currentDate, sqlRes, importe, importeCobrado):
-    invoiceLine.updated           = currentDate
+    invoiceLine.updated           = get_current_date()
     invoiceLine.codigo_cliente    = sqlRes['CLIENTE']
     invoiceLine.cliente           = sqlRes['NOMBRE_CLIENTE']
     invoiceLine.org_comercial     = sqlRes['DESCRIPCION_ORG_COMER']
