@@ -19,6 +19,68 @@ def of_detalle_function(of_id):
     oracle.connect()
     res[0]['OF'] = oracle.consult(sql, {"of_id": of_id})
     
+    sql_detail_packaged = """select orden_de_fabricacion,
+                                   codigo_articulo_subp,
+                                   d_codigo_articulo_subp,
+                                   codigo_presentacion_subp,
+                                   cantidad_tecnica,
+                                   cantidad_a_fabricar,
+                                   cantidad_tecnica_2,
+                                   unidad_medida_2,
+                                   valor_reparto,
+                                   rendimiento_real,
+                                   status_fabricacion,
+                                   status_consumo,
+                                   cantidad_a_fabricar2,
+                                   cantidad_aceptada,
+                                   cantidad_rechazada
+                              from (
+                               select ordenes_fabrica_multiproduc.*,
+                                      (
+                                         select a.descrip_comercial
+                                           from articulos a
+                                          where a.codigo_articulo = ordenes_fabrica_multiproduc.codigo_articulo_subp
+                                            and a.codigo_empresa = ordenes_fabrica_multiproduc.codigo_empresa
+                                      ) d_codigo_articulo_subp,
+                                      decode(
+                                         ordenes_fabrica_multiproduc.grupo_op_maquila,
+                                         null,
+                                         null,
+                                         (
+                                            select g.descripcion
+                                              from grupos_op_maquila_c g
+                                             where g.codigo = ordenes_fabrica_multiproduc.grupo_op_maquila
+                                               and g.codigo_org_planta = ordenes_fabrica_multiproduc.codigo_org_planta
+                                               and g.codigo_empresa = ordenes_fabrica_multiproduc.codigo_empresa
+                                         )
+                                      ) d_grupo_op_maquila,
+                                      (
+                                         select f.descripcion
+                                           from tarifas_maquila_filtros f
+                                          where f.filtro = ordenes_fabrica_multiproduc.grupo_op_maquila_filtro_mp
+                                            and f.codigo_empresa = ordenes_fabrica_multiproduc.codigo_empresa
+                                      ) d_grupo_op_maquila_filtro_mp,
+                                      (
+                                         select f.descripcion
+                                           from tarifas_maquila_filtros f
+                                          where f.filtro = ordenes_fabrica_multiproduc.grupo_op_maquila_filtro_pt
+                                            and f.codigo_empresa = ordenes_fabrica_multiproduc.codigo_empresa
+                                      ) d_grupo_op_maquila_filtro_pt,
+                                      (
+                                         select ar.unidad_codigo2
+                                           from articulos ar
+                                          where ar.codigo_articulo = ordenes_fabrica_multiproduc.codigo_articulo_subp
+                                            and ar.codigo_empresa = ordenes_fabrica_multiproduc.codigo_empresa
+                                      ) unidad_medida_2
+                                 from ordenes_fabrica_multiproduc
+                            ) ordenes_fabrica_multiproduc
+                             where ( codigo_empresa = '001' )
+                               and ( codigo_org_planta = '0' )
+                               and ( orden_de_fabricacion = :of_id )
+                             order by num_linea"""
+    
+    res[0]['MULTIPRODUCCION'] = oracle.consult(sql_detail_packaged, {"of_id": of_id}) or []
+
     # material pedido OF desde la vista 427
     material_ordered = """select orden_de_fabricacion,
                             codigo_componente,
