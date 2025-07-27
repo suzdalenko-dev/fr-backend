@@ -88,8 +88,11 @@ def recalculate_price_projections(request):
             percentage       = lineas_itemC['percentage'] or 0
             i = 0
             for infoItemC in lineas_itemC['consiste_de_alternativos']:
-                # caso sara si hay stock sin valora no hacemos nada
+                # case sara if there is stock without price we do nothing
                 if float(infoItemC[0]['stock'] or 0) > 0 and float(infoItemC[0]['precio'] or 0) == 0:
+                    continue
+                # case I found I, art 41139, when there are 2 items one only has price and the other price and stock to 0
+                if float(infoItemC[0]['stock'] or 0) == 0 and float(infoItemC[0]['precio'] or 0) == 0:
                     continue
                 i += 1
                 formula_top_ud += float(infoItemC[0]['stock'] or 0) * float(infoItemC[0]['precio'] or 0)
