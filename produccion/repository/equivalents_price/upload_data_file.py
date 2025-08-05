@@ -62,23 +62,23 @@ def generate_content_csv(table_name):
                     equivalentLineHead.fecha = list_dates[x]
 
                 if x == 0:
-                    # line += [tCSV(obj.kg_act or ""), tCSV(obj.price_act or "")]
+                    line += [tCSV(obj.kg_act or ""), tCSV(obj.price_act or "")]
                     equivalentLineHead.kg_act = obj.kg_act or 0
                     equivalentLineHead.price_act = obj.price_act or 0
                 if x == 1:
-                    # line += [tCSV(obj.kg0 or ""), tCSV(obj.price0 or "")]
+                    line += [tCSV(obj.kg0 or ""), tCSV(obj.price0 or "")]
                     equivalentLineHead.kg_act = obj.kg0 or 0
                     equivalentLineHead.price_act = obj.price0 or 0
                 if x == 2:
-                    # line += [tCSV(obj.kg1 or ""), tCSV(obj.price1 or "")]
+                    line += [tCSV(obj.kg1 or ""), tCSV(obj.price1 or "")]
                     equivalentLineHead.kg_act = obj.kg1 or 0
                     equivalentLineHead.price_act = obj.price1 or 0
                 if x == 3:
-                    # line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
+                    line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
                     equivalentLineHead.kg_act = obj.kg2 or 0
                     equivalentLineHead.price_act = obj.price2 or 0
                 if x == 4:
-                    # line += [tCSV(obj.kg3 or ""), tCSV(obj.price3 or "")]
+                    line += [tCSV(obj.kg3 or ""), tCSV(obj.price3 or "")]
                     equivalentLineHead.kg_act = obj.kg3 or 0
                     equivalentLineHead.price_act = obj.price3 or 0
     
@@ -119,19 +119,19 @@ def generate_content_csv(table_name):
 
                 line = [NAME, list_dates[x]]
                 if x == 0:
-                    # line += [tCSV(obj.precio_padre_mas_gastos or 0), tCSV(y), title]
+                    line += [tCSV(obj.precio_padre_mas_gastos or 0), tCSV(y), title]
                     projectionCostLine.price = obj.precio_padre_mas_gastos or 0
                 if x == 1:
-                    # line += [tCSV(obj.final_coste_act or 0), tCSV(y), title]
+                    line += [tCSV(obj.final_coste_act or 0), tCSV(y), title]
                     projectionCostLine.price = obj.final_coste_act or 0
                 if x == 2:
-                    # line += [tCSV(obj.final_coste_mas1 or 0), tCSV(y), title]
+                    line += [tCSV(obj.final_coste_mas1 or 0), tCSV(y), title]
                     projectionCostLine.price = obj.final_coste_mas1 or 0
                 if x == 3:
-                    # line += [tCSV(obj.final_coste_mas2 or 0), tCSV(y), title]
+                    line += [tCSV(obj.final_coste_mas2 or 0), tCSV(y), title]
                     projectionCostLine.price = obj.final_coste_mas2 or 0
                 if x == 4:
-                    # line += [tCSV(obj.final_coste_mas3 or 0), tCSV(y), title]
+                    line += [tCSV(obj.final_coste_mas3 or 0), tCSV(y), title]
                     projectionCostLine.price = obj.final_coste_mas3 or 0
 
                 projectionCostLine.y = y
