@@ -43,8 +43,7 @@ class ExcelLinesEditable(models.Model):
 
     precio_padre_act     = models.FloatField(null=True)
     precio_padre_mas_gastos = models.FloatField(null=True)
-
-    precio_estandar = models.FloatField(null=True)
+    precio_estandar      = models.FloatField(null=True)
 
 
 class EquivalentsHead(models.Model):
@@ -62,6 +61,7 @@ class EquivalentsHead(models.Model):
     price2 = models.FloatField(null=True)
     kg3    = models.FloatField(null=True)
     price3 = models.FloatField(null=True)
+    precio_estandar_equival = models.FloatField(null=True)
 
 
 class DetalleEntradasEquivCC(models.Model):

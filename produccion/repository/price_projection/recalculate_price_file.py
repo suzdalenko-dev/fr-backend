@@ -241,7 +241,7 @@ def recalculate_price_projections(request):
 
         todayDay = date.today()
         tomorrow = todayDay + timedelta(days=1)
-        # standart price, only recalcualte the last day of the month
+        # standart price, only recalculate the last day of the month
         if tomorrow.day == 1:
             eEditable.precio_estandar = (eEditable.precio_padre_act + eEditable.inicio_coste_mas1) / 2
        

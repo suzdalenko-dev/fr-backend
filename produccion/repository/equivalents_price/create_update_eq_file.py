@@ -5,7 +5,7 @@ from produccion.models import DetalleEntradasEquivCC, EquivalentsHead
 
 def create_update_equivalents(request, action, entity, code):
     if action == 'get':
-        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative', 'kg_act', 'price_act', 'kg0', 'price0', 'kg1', 'price1', 'kg2', 'price2', 'kg3', 'price3').order_by('id')
+        equi = EquivalentsHead.objects.all().values('id', 'article_name', 'alternative', 'kg_act', 'price_act', 'kg0', 'price0', 'kg1', 'price1', 'kg2', 'price2', 'kg3', 'price3', 'precio_estandar_equival').order_by('id')
         equi = list(equi)
         return equi
     

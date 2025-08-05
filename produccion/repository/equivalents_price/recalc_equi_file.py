@@ -1,7 +1,6 @@
 import calendar
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import json
-
 from django.db import connection
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import get_short_date
@@ -170,6 +169,12 @@ def recalculate_equiv_with_contaner(request):
             if rango['hasta'] == mes_mas3:
                eqArt.kg3    = float(rango['stock_final_rango'] or 0)
                eqArt.price3 = float(rango['precio_con_llegada'] or 0)
+
+        todayDay = date.today()
+        tomorrow = todayDay + timedelta(days=1)
+        # precio_estandar_equival price, only recalculate the last day of the month
+        if tomorrow.day == 1:
+            eqArt.precio_estandar_equival = (eqArt.price_act + eqArt.price1) / 2
 
         eqArt.save()  
 
