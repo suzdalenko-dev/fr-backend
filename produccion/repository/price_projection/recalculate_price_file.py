@@ -8,6 +8,7 @@ from produccion.repository.embarcado_con_sin_cont.embarcado_file import embarcad
 from produccion.repository.equivalents_price.recalc_equi_file import recalculate_equiv_with_contaner
 from produccion.utils.get_me_stock_file import consumo_pasado, get_last_changed_value, get_me_stock_now, obtener_dias_restantes_del_mes, obtener_rangos_meses, pedidos_pendientes, verificar_mes
 from datetime import datetime
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from produccion.utils.sent_email_file import aviso_expediente_sin_precio
@@ -30,6 +31,7 @@ def recalculate_price_projections(request):
     code = request.GET.get('code')
 
     if code and code.isdigit() and int(code) > 0:
+        # http://127.0.0.1:8000/produccion/get/0/0/recalculate_price_projections/?code=40141
         articulos_pardes = ArticleCostsHead.objects.filter(article_code=code).values('id', 'article_code','article_name')
     else:
         articulos_pardes = ArticleCostsHead.objects.all().values('id', 'article_code', 'article_name')
@@ -236,6 +238,13 @@ def recalculate_price_projections(request):
                         
 
             itemQ['costes_fecha'] += [{'fecha_tope': rango[1], 'inicio_coste_act': coste, 'composicion_precio': calculo }]
+
+        todayDay = date.today()
+        tomorrow = todayDay + timedelta(days=1)
+        # standart price, only recalcualte the last day of the month
+        if tomorrow.day == 1:
+            eEditable.precio_estandar = (eEditable.precio_padre_act + eEditable.inicio_coste_mas1) / 2
+       
 
         eEditable.save()   
 

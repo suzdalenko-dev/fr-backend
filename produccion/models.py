@@ -44,6 +44,8 @@ class ExcelLinesEditable(models.Model):
     precio_padre_act     = models.FloatField(null=True)
     precio_padre_mas_gastos = models.FloatField(null=True)
 
+    precio_estandar = models.FloatField(null=True)
+
 
 class EquivalentsHead(models.Model):
     article_name = models.TextField(unique=True)
