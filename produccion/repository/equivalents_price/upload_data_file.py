@@ -2,7 +2,8 @@ import io
 import json
 import requests, os
 from froxa.utils.utilities.funcions_file import end_of_month_dates, get_keys, tCSV
-from produccion.models import DetalleEntradasEquivCC, EmbarkedIndividualRatingDetail, EmbarkedIndividualRatingHorizontal, EquivalentsHead, ExcelLinesEditable
+from produccion.models import DetalleEntradasEquivCC, EmbarkedIndividualRatingDetail, EmbarkedIndividualRatingHorizontal, EquivalentItemsVPBI, EquivalentsHead, ExcelLinesEditable, ProjectionCostsVPBI
+from django.db import connection
 
 def upload_csv(table_name):
 
@@ -41,27 +42,56 @@ def generate_content_csv(table_name):
 
 
     if table_name == '2equivalents_head':
+        EquivalentItemsVPBI.objects.all().delete()
+        with connection.cursor() as cursor:
+            cursor.execute("ALTER SEQUENCE produccion_equivalentitemsvpbi_id_seq RESTART WITH 1;")
+        
         list_dates = end_of_month_dates()
         fields = ["article_name;fecha;kg_act;price_act;"]
         for obj in EquivalentsHead.objects.all():
             NAME = str(obj.article_name or "")
-            for x in [0, 1, 2, 3, 4]:
+
+            for x in [-1, 0, 1, 2, 3, 4]:
                 line = [NAME, list_dates[x]]
+                equivalentLineHead = EquivalentItemsVPBI()
+                equivalentLineHead.article_name = NAME
+                if x == -1:
+                    equivalentLineHead.fecha = 'Estándar €/Kg'
+                    equivalentLineHead.price_act = obj.precio_estandar_equival  
+                else:
+                    equivalentLineHead.fecha = list_dates[x]
+
                 if x == 0:
                     line += [tCSV(obj.kg_act or ""), tCSV(obj.price_act or "")]
+                    equivalentLineHead.kg_act = obj.kg_act or 0
+                    equivalentLineHead.price_act = obj.price_act or 0
                 if x == 1:
                     line += [tCSV(obj.kg0 or ""), tCSV(obj.price0 or "")]
+                    equivalentLineHead.kg_act = obj.kg0 or 0
+                    equivalentLineHead.price_act = obj.price0 or 0
                 if x == 2:
                     line += [tCSV(obj.kg1 or ""), tCSV(obj.price1 or "")]
+                    equivalentLineHead.kg_act = obj.kg1 or 0
+                    equivalentLineHead.price_act = obj.price1 or 0
                 if x == 3:
                     line += [tCSV(obj.kg2 or ""), tCSV(obj.price2 or "")]
+                    equivalentLineHead.kg_act = obj.kg2 or 0
+                    equivalentLineHead.price_act = obj.price2 or 0
                 if x == 4:
                     line += [tCSV(obj.kg3 or ""), tCSV(obj.price3 or "")]
+                    equivalentLineHead.kg_act = obj.kg3 or 0
+                    equivalentLineHead.price_act = obj.price3 or 0
     
                 fields.append(";".join(line)+';')
 
+                equivalentLineHead.save()
+
     
     if table_name == '3proyeccion-costes-con-contenedor':
+        ProjectionCostsVPBI.objects.all().delete()
+        with connection.cursor() as cursor:
+            cursor.execute("ALTER SEQUENCE produccion_projectioncostsvpbi_id_seq RESTART WITH 1;")
+
         list_dates = end_of_month_dates()
         fields = ["article_name;fecha;price;y;title;"]
         for obj in ExcelLinesEditable.objects.all():
@@ -77,18 +107,36 @@ def generate_content_csv(table_name):
             if y <= -0.099:
                 title = 'Precio baja'
 
-            for x in [0, 1, 2, 3, 4]:
+            for x in [-1, 0, 1, 2, 3, 4]:
+                projectionCostLine = ProjectionCostsVPBI()
+                projectionCostLine.article_name = NAME
+                if x == -1:
+                    projectionCostLine.fecha = 'Estándar €/Kg'
+                    projectionCostLine.price = obj.precio_estandar
+                else:
+                    projectionCostLine.fecha = list_dates[x]
+                
+
                 line = [NAME, list_dates[x]]
                 if x == 0:
                     line += [tCSV(obj.precio_padre_mas_gastos or 0), tCSV(y), title]
+                    projectionCostLine.price = obj.precio_padre_mas_gastos or 0
                 if x == 1:
                     line += [tCSV(obj.final_coste_act or 0), tCSV(y), title]
+                    projectionCostLine.price = obj.final_coste_act or 0
                 if x == 2:
                     line += [tCSV(obj.final_coste_mas1 or 0), tCSV(y), title]
+                    projectionCostLine.price = obj.final_coste_mas1 or 0
                 if x == 3:
                     line += [tCSV(obj.final_coste_mas2 or 0), tCSV(y), title]
+                    projectionCostLine.price = obj.final_coste_mas2 or 0
                 if x == 4:
                     line += [tCSV(obj.final_coste_mas3 or 0), tCSV(y), title]
+                    projectionCostLine.price = obj.final_coste_mas3 or 0
+
+                projectionCostLine.y = y
+                projectionCostLine.title = title
+                projectionCostLine.save()
 
                 fields.append(";".join(line)+';')
            

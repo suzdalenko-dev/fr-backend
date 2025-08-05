@@ -112,3 +112,18 @@ class EmbarkedIndividualRatingHorizontal(models.Model):
     fecha        = models.TextField(null=True)
     stock        = models.FloatField(null=True)
     precio       = models.FloatField(null=True)
+
+
+class ProjectionCostsVPBI(models.Model):
+    article_name = models.TextField(null=True)
+    fecha        = models.TextField(null=True)
+    price        = models.FloatField(null=True)
+    y            = models.FloatField(null=True)
+    title        = models.TextField(null=True)
+ 
+
+class EquivalentItemsVPBI(models.Model):
+    article_name = models.TextField(null=True)
+    fecha        = models.TextField(null=True)
+    kg_act       = models.FloatField(null=True)
+    price_act    = models.FloatField(null=True)
