@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'calidad',
     'produccion',
     'finanzas',
-    'froxa'
+    'froxa',
+    'logistica'
 ]
 
 MIDDLEWARE = [

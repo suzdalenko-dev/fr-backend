@@ -1,4 +1,9 @@
-yo                              real
-FR1/001074 004418 PENDIENTE     PENDIENTE PAGO TODO
-FR1/000499 001397 COBRADO       COBRADO 
-FR1/000817 000789 PARCIAL       COBRADO ?¿ 
+cliente: 004318 CABEZUELO FOODS, S.L
+
+pedido: 2025-ENT-26 importe: 19339,59
+
+albaran: ENT 21
+
+
+
+/var/www/froxa-backend/env

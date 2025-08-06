@@ -1,0 +1,21 @@
+select * 
+from PEDIDOS_VENTAS
+where numero_serie = 'ENT'
+    and NUMERO_PEDIDO = 26
+    and EJERCICIO = 2025
+;
+
+select * 
+from PEDIDOS_VENTAS_LIN
+where numero_serie = 'ENT'
+    and NUMERO_PEDIDO = 26
+    and EJERCICIO = 2025    
+;
+
+-- select ARTICULO, DESCRIPCION_ARTICULO, UNIDADES_SERVIDAS, UNI_SERALM, UNI_SERALM2, PRESENTACION_PEDIDO
+select *
+from ALBARAN_VENTAS_LIN
+where NUMERO_PEDIDO = 3578
+    AND NUMERO_SERIE_PEDIDO = 'PN'
+    AND EJERCICIO_PEDIDO = 2025
+;
