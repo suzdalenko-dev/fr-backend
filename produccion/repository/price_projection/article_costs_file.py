@@ -5,7 +5,7 @@ from produccion.models import ArticleCostsHead, ArticleCostsLines, ExcelLinesEdi
 
 
 def get_all_excel_editables_lines(request):
-    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'precio_padre_act', 'inicio_coste_act', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3', 'precio_padre_mas_gastos', 'precio_estandar').order_by('article_name')
+    excelLines = ExcelLinesEditable.objects.all().values('id', 'article_code', 'article_name', 'precio_padre_act', 'inicio_coste_act', 'rendimiento', 'precio_materia_prima', 'precio_aceite', 'precio_servicios', 'aditivos', 'mod', 'embalajes', 'amort_maq', 'moi', 'final_coste_act', 'final_coste_mas1', 'final_coste_mas2', 'final_coste_mas3', 'precio_padre_mas_gastos', 'precio_estandar', 'precio_estandar_con_gastos').order_by('article_name')
     excelLines = list(excelLines)
     return excelLines
 

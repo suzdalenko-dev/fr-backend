@@ -112,7 +112,7 @@ def generate_content_csv(table_name):
                 projectionCostLine.article_name = NAME
                 if x == -1:
                     projectionCostLine.fecha = ' Estándar €/Kg'
-                    projectionCostLine.price = obj.precio_estandar
+                    projectionCostLine.price = obj.precio_estandar_con_gastos
                 else:
                     projectionCostLine.fecha = list_dates[x]
                 
