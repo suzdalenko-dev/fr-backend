@@ -26,3 +26,9 @@ where NUMERO_PEDIDO = 3578
     AND NUMERO_SERIE_PEDIDO = 'PN'
     AND EJERCICIO_PEDIDO = 2025
 ;
+
+
+select CONVERS_U_DIS
+from CADENA_LOGISTICA
+where codigo_articulo = '40197'
+;

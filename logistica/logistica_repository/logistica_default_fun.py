@@ -71,23 +71,53 @@ def get_all_of_route(request, code, truck):
                 parts = str(id_order).strip().split("-")
                 if len(parts) == 3:
                     year, serie, number_code = parts
-                    sqlDetail = """select ARTICULO, DESCRIPCION_ARTICULO, UNIDADES_SERVIDAS, UNI_SERALM, PRESENTACION_PEDIDO, 
-                                        EJERCICIO_PEDIDO || '-' || NUMERO_SERIE_PEDIDO || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
-                                        EJERCICIO_PEDIDO || '-' || NUMERO_SERIE || '-' || NUMERO_ALBARAN AS ID_ALBARAN
-                                from ALBARAN_VENTAS_LIN
-                                where NUMERO_PEDIDO = :number_code
-                                    AND NUMERO_SERIE_PEDIDO = :serie
-                                    AND EJERCICIO_PEDIDO = :year
+                    sqlDetail = """SELECT 
+                                    avl.ARTICULO, 
+                                    avl.DESCRIPCION_ARTICULO, 
+                                    avl.UNIDADES_SERVIDAS, 
+                                    avl.UNI_SERALM, 
+                                    avl.PRESENTACION_PEDIDO, 
+                                    avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE_PEDIDO || '-' || avl.NUMERO_PEDIDO AS ID_PEDIDO,
+                                    avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE || '-' || avl.NUMERO_ALBARAN AS ID_ALBARAN,
+                                    CASE  
+                                        WHEN avl.PRESENTACION_PEDIDO = 'UND' THEN 
+                                            ROUND(
+                                                avl.UNIDADES_SERVIDAS / 
+                                                (SELECT MAX(CONVERS_U_DIS) 
+                                                 FROM CADENA_LOGISTICA 
+                                                 WHERE CODIGO_ARTICULO = avl.ARTICULO), 2)
+                                        ELSE avl.UNIDADES_SERVIDAS
+                                    END AS CAJAS_CALCULADAS
+                                FROM ALBARAN_VENTAS_LIN avl
+                                WHERE avl.NUMERO_PEDIDO = :number_code
+                                  AND avl.NUMERO_SERIE_PEDIDO = :serie
+                                  AND avl.EJERCICIO_PEDIDO = :year
+
                                 """
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     if len(rows_diario) == 0:
-                        sqlDetail = """select ARTICULO, DESCRIPCION_ARTICULO, CANTIDAD_PEDIDA AS UNIDADES_SERVIDAS, PRESENTACION_PEDIDO, UNI_PEDALM AS UNI_SERALM,
-                                        EJERCICIO || '-' || NUMERO_SERIE || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
-                                        ' ' AS ID_ALBARAN
-                                        from PEDIDOS_VENTAS_LIN
-                                        where numero_serie = :serie
-                                            and NUMERO_PEDIDO = :number_code
-                                            and EJERCICIO = :year  
+                        sqlDetail = """SELECT 
+                                            ARTICULO, 
+                                            DESCRIPCION_ARTICULO, 
+                                            CANTIDAD_PEDIDA AS UNIDADES_SERVIDAS, 
+                                            PRESENTACION_PEDIDO, 
+                                            UNI_PEDALM AS UNI_SERALM,
+                                            EJERCICIO || '-' || NUMERO_SERIE || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
+                                            ' ' AS ID_ALBARAN,
+                                            CASE  
+                                                WHEN PRESENTACION_PEDIDO = 'UND' THEN 
+                                                    ROUND(
+                                                        CANTIDAD_PEDIDA / 
+                                                        (SELECT MAX(CONVERS_U_DIS) 
+                                                         FROM CADENA_LOGISTICA 
+                                                         WHERE CODIGO_ARTICULO = PEDIDOS_VENTAS_LIN.ARTICULO), 2)
+                                                ELSE CANTIDAD_PEDIDA
+                                            END AS CAJAS_CALCULADAS
+
+                                        FROM PEDIDOS_VENTAS_LIN
+                                        WHERE numero_serie = :serie
+                                            AND NUMERO_PEDIDO = :number_code
+                                            AND EJERCICIO = :year
                                     """
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     clientB['detail'] += [rows_diario]
