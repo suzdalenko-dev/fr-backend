@@ -8,22 +8,33 @@ def get_belin_routes(request):
     conn.connect()
 
     sql = """SELECT * FROM recogida ORDER BY id DESC LIMIT 22"""
-    data = conn.consult(sql)
+    belin_routes = conn.consult(sql)
+
+    for routeA in belin_routes:
+        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0 ORDER BY __camion ASC"""
+        travel_list = conn.consult(sql, (routeA['id'],)) or []
+        routeA['travel_names'] = travel_list
+
     conn.close()
+    return belin_routes
 
-    return data
 
+def get_all_of_route(request, code, truck):
+    truck = int(truck)
 
-def get_all_of_route(request, code):
     oracle = OracleConnector()
     oracle.connect()
 
     conn = MySQLConn()
     conn.connect()
 
-    # travel list
-    sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0 ORDER BY __camion ASC"""
-    travel_list = conn.consult(sql, (code,))  
+    if truck > 0:
+        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion = %s ORDER BY id ASC"""
+        travel_list = conn.consult(sql, (code, truck, ))
+    else:
+        # travel list
+        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0 ORDER BY __camion ASC"""
+        travel_list = conn.consult(sql, (code,))  
     
     # list of travel orders
     for travel in travel_list:

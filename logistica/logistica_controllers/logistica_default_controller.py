@@ -17,7 +17,7 @@ def log_default_controller(request, action, entity, code, description):
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
         'get_belin_routes': lambda: get_belin_routes(request),        # http://127.0.0.1:8000/logistica/get/0/0/get_belin_routes/
-        'get_all_of_route': lambda: get_all_of_route(request, code),  # http://127.0.0.1:8000/logistica/get/0/0/get_all_of_route/
+        'get_all_of_route': lambda: get_all_of_route(request, code, entity),  # http://127.0.0.1:8000/logistica/get/1/259/get_all_of_route/
     }
 
     try:
