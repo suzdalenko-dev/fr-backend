@@ -7,8 +7,15 @@ where numero_serie = 'ENT'
 
 select * 
 from PEDIDOS_VENTAS_LIN
-where numero_serie = 'ENT'
-    and NUMERO_PEDIDO = 26
+where numero_serie = 'PN'
+    and NUMERO_PEDIDO = 4454
+    and EJERCICIO = 2025    
+;
+
+select ARTICULO, DESCRIPCION_ARTICULO, CANTIDAD_PEDIDA, PRESENTACION_PEDIDO, UNI_PEDALM
+from PEDIDOS_VENTAS_LIN
+where numero_serie = 'PN'
+    and NUMERO_PEDIDO = 4454
     and EJERCICIO = 2025    
 ;
 

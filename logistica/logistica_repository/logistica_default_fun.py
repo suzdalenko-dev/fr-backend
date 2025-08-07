@@ -18,7 +18,6 @@ def get_all_of_route(request, code):
     oracle = OracleConnector()
     oracle.connect()
 
-
     conn = MySQLConn()
     conn.connect()
 
@@ -61,7 +60,7 @@ def get_all_of_route(request, code):
                 parts = str(id_order).strip().split("-")
                 if len(parts) == 3:
                     year, serie, number_code = parts
-                    sqlDetail = """select ARTICULO, DESCRIPCION_ARTICULO, UNIDADES_SERVIDAS, UNI_SERALM, UNI_SERALM2, PRESENTACION_PEDIDO, 
+                    sqlDetail = """select ARTICULO, DESCRIPCION_ARTICULO, UNIDADES_SERVIDAS, UNI_SERALM, PRESENTACION_PEDIDO, 
                                         EJERCICIO_PEDIDO || '-' || NUMERO_SERIE_PEDIDO || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
                                         EJERCICIO_PEDIDO || '-' || NUMERO_SERIE || '-' || NUMERO_ALBARAN AS ID_ALBARAN
                                 from ALBARAN_VENTAS_LIN
@@ -69,7 +68,17 @@ def get_all_of_route(request, code):
                                     AND NUMERO_SERIE_PEDIDO = :serie
                                     AND EJERCICIO_PEDIDO = :year
                                 """
-                    rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year})
+                    rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
+                    if len(rows_diario) == 0:
+                        sqlDetail = """select ARTICULO, DESCRIPCION_ARTICULO, CANTIDAD_PEDIDA AS UNIDADES_SERVIDAS, PRESENTACION_PEDIDO, UNI_PEDALM AS UNI_SERALM,
+                                        EJERCICIO || '-' || NUMERO_SERIE || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
+                                        ' ' AS ID_ALBARAN
+                                        from PEDIDOS_VENTAS_LIN
+                                        where numero_serie = :serie
+                                            and NUMERO_PEDIDO = :number_code
+                                            and EJERCICIO = :year  
+                                    """
+                    rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     clientB['detail'] += [rows_diario]
 
             
