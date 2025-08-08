@@ -14,3 +14,4 @@ class TravelsClicked(models.Model):
     track_id             = models.IntegerField(null=True, db_index=True)
     number_all_order     = models.IntegerField(null=True)
     number_clicked_order = models.IntegerField(null=True)
+    palets               = models.FloatField(null=True)

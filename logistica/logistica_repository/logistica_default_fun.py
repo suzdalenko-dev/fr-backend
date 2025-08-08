@@ -81,6 +81,8 @@ def get_all_of_route(request, code, truck):
                     
 
     for travel in travel_list:
+        NUMBER_OF_ORDERS = 0
+
         for clientB in travel['res']:
             for id_order in clientB['orders']:
                 parts = str(id_order).strip().split("-")
@@ -88,57 +90,82 @@ def get_all_of_route(request, code, truck):
                     year, serie, number_code = parts
                     sqlDetail = """SELECT 
                                     avl.ARTICULO, 
-                                    avl.DESCRIPCION_ARTICULO, 
-                                    avl.UNIDADES_SERVIDAS, 
-                                    avl.UNI_SERALM, 
-                                    avl.PRESENTACION_PEDIDO, 
-                                    avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE_PEDIDO || '-' || avl.NUMERO_PEDIDO AS ID_PEDIDO,
-                                    avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE || '-' || avl.NUMERO_ALBARAN AS ID_ALBARAN,
-                                    CASE  
-                                        WHEN avl.PRESENTACION_PEDIDO = 'UND' THEN 
-                                            ROUND(
-                                                avl.UNIDADES_SERVIDAS / 
-                                                (SELECT MAX(CONVERS_U_DIS) 
-                                                 FROM CADENA_LOGISTICA 
-                                                 WHERE CODIGO_ARTICULO = avl.ARTICULO), 2)
-                                        ELSE avl.UNIDADES_SERVIDAS
-                                    END AS CAJAS_CALCULADAS
-                                FROM ALBARAN_VENTAS_LIN avl
-                                WHERE avl.NUMERO_PEDIDO = :number_code
-                                  AND avl.NUMERO_SERIE_PEDIDO = :serie
-                                  AND avl.EJERCICIO_PEDIDO = :year
-
+                                    MAX(avl.DESCRIPCION_ARTICULO) AS DESCRIPCION_ARTICULO, 
+                                    SUM(avl.UNIDADES_SERVIDAS) AS UNIDADES_SERVIDAS, 
+                                    SUM(avl.UNI_SERALM) AS UNI_SERALM, 
+                                    avl.ID_PEDIDO,
+                                    MAX(avl.ID_ALBARAN) AS ID_ALBARAN,
+                                    MAX(avl.PRESENTACION_PEDIDO) AS PRESENTACION_PEDIDO,
+                                    SUM(
+                                        CASE  
+                                            WHEN avl.PRESENTACION_PEDIDO = 'UND' THEN 
+                                                ROUND(
+                                                    avl.UNIDADES_SERVIDAS / 
+                                                    (SELECT MAX(CONVERS_U_DIS) 
+                                                     FROM CADENA_LOGISTICA 
+                                                     WHERE CODIGO_ARTICULO = avl.ARTICULO), 2)
+                                            ELSE avl.UNIDADES_SERVIDAS
+                                        END
+                                    ) AS CAJAS_CALCULADAS
+                                FROM (
+                                    SELECT 
+                                        avl.ARTICULO, 
+                                        avl.DESCRIPCION_ARTICULO, 
+                                        avl.UNIDADES_SERVIDAS, 
+                                        avl.UNI_SERALM, 
+                                        avl.PRESENTACION_PEDIDO, 
+                                        avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE_PEDIDO || '-' || avl.NUMERO_PEDIDO AS ID_PEDIDO,
+                                        avl.EJERCICIO_PEDIDO || '-' || avl.NUMERO_SERIE || '-' || avl.NUMERO_ALBARAN AS ID_ALBARAN
+                                    FROM ALBARAN_VENTAS_LIN avl
+                                    WHERE avl.NUMERO_PEDIDO = :number_code
+                                      AND avl.NUMERO_SERIE_PEDIDO = :serie
+                                      AND avl.EJERCICIO_PEDIDO = :year
+                                ) avl
+                                GROUP BY avl.ID_PEDIDO, avl.ARTICULO
                                 """
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     if len(rows_diario) == 0:
                         sqlDetail = """SELECT 
+                                        pvl.ARTICULO, 
+                                        MAX(pvl.DESCRIPCION_ARTICULO) AS DESCRIPCION_ARTICULO,
+                                        SUM(pvl.UNIDADES_SERVIDAS) AS UNIDADES_SERVIDAS, 
+                                        SUM(pvl.UNI_SERALM) AS UNI_SERALM, 
+                                        pvl.ID_PEDIDO,
+                                        MAX(pvl.ID_ALBARAN) AS ID_ALBARAN,
+                                        MAX(pvl.PRESENTACION_PEDIDO) AS PRESENTACION_PEDIDO,
+                                        SUM(
+                                            CASE  
+                                                WHEN pvl.PRESENTACION_PEDIDO = 'UND' THEN 
+                                                    ROUND(
+                                                        pvl.UNIDADES_SERVIDAS / 
+                                                        (SELECT MAX(CONVERS_U_DIS) 
+                                                         FROM CADENA_LOGISTICA 
+                                                         WHERE CODIGO_ARTICULO = pvl.ARTICULO), 2)
+                                                ELSE pvl.UNIDADES_SERVIDAS
+                                            END
+                                        ) AS CAJAS_CALCULADAS
+                                    FROM (
+                                        SELECT 
                                             ARTICULO, 
                                             DESCRIPCION_ARTICULO, 
                                             CANTIDAD_PEDIDA AS UNIDADES_SERVIDAS, 
-                                            PRESENTACION_PEDIDO, 
                                             UNI_PEDALM AS UNI_SERALM,
+                                            PRESENTACION_PEDIDO, 
                                             EJERCICIO || '-' || NUMERO_SERIE || '-' || NUMERO_PEDIDO AS ID_PEDIDO,
-                                            ' ' AS ID_ALBARAN,
-                                            CASE  
-                                                WHEN PRESENTACION_PEDIDO = 'UND' THEN 
-                                                    ROUND(
-                                                        CANTIDAD_PEDIDA / 
-                                                        (SELECT MAX(CONVERS_U_DIS) 
-                                                         FROM CADENA_LOGISTICA 
-                                                         WHERE CODIGO_ARTICULO = PEDIDOS_VENTAS_LIN.ARTICULO), 2)
-                                                ELSE CANTIDAD_PEDIDA
-                                            END AS CAJAS_CALCULADAS
-
+                                            ' ' AS ID_ALBARAN
                                         FROM PEDIDOS_VENTAS_LIN
                                         WHERE numero_serie = :serie
-                                            AND NUMERO_PEDIDO = :number_code
-                                            AND EJERCICIO = :year
+                                          AND NUMERO_PEDIDO = :number_code
+                                          AND EJERCICIO = :year
+                                    ) pvl
+                                    GROUP BY pvl.ID_PEDIDO, pvl.ARTICULO
                                     """
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     clientB['detail'] += [rows_diario]
+                    NUMBER_OF_ORDERS  += len(rows_diario)
 
         travelClicked, created             = TravelsClicked.objects.get_or_create(load_id=code, track_id=travel['__camion'])
-        travelClicked.number_all_order     = len(rows_diario)
+        travelClicked.number_all_order     = NUMBER_OF_ORDERS
         orders_clicked                     = ListOrdersInTheLoad.objects.filter(load_id=code, track_id=travel['__camion']) or []
         travelClicked.number_clicked_order = len(orders_clicked)
         travelClicked.save()
