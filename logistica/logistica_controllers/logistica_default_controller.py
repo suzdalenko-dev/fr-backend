@@ -1,7 +1,7 @@
 import traceback
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
-from logistica.logistica_repository.logistica_default_fun import get_all_of_route, get_belin_routes
+from logistica.logistica_repository.logistica_default_fun import click_actions, get_all_of_route, get_belin_routes
 from produccion.utils.sent_email_file import error_message_to_alexey
 
 
@@ -16,8 +16,9 @@ def log_default_controller(request, action, entity, code, description):
 
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
-        'get_belin_routes': lambda: get_belin_routes(request),        # http://127.0.0.1:8000/logistica/get/0/0/get_belin_routes/
+        'get_belin_routes': lambda: get_belin_routes(request),                # http://127.0.0.1:8000/logistica/get/0/0/get_belin_routes/
         'get_all_of_route': lambda: get_all_of_route(request, code, entity),  # http://127.0.0.1:8000/logistica/get/1/259/get_all_of_route/
+        'click_actions':    lambda: click_actions(request, action),           # http://127.0.0.1:8000/logistica/get/0/0/click_actions/ http://127.0.0.1:8000/logistica/put/0/0/click_actions/
     }
 
     try:

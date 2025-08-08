@@ -1,5 +1,6 @@
 from froxa.utils.connectors.erp_old_connector import MySQLConn
 from froxa.utils.connectors.libra_connector import OracleConnector
+from logistica.models import ListOrdersInTheLoad, TravelsClicked
 
 
 def get_belin_routes(request):
@@ -7,19 +8,29 @@ def get_belin_routes(request):
     conn = MySQLConn()
     conn.connect()
 
-    sql = """SELECT * FROM recogida ORDER BY id DESC LIMIT 22"""
+    sql = """SELECT * 
+             FROM recogida 
+             ORDER BY id DESC 
+             LIMIT 22"""
     belin_routes = conn.consult(sql)
 
     for routeA in belin_routes:
         sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0 ORDER BY __camion ASC"""
         travel_list = conn.consult(sql, (routeA['id'],)) or []
         routeA['travel_names'] = travel_list
+        travelClickeds = TravelsClicked.objects.filter(load_id=routeA['id']).values('load_id', 'track_id', 'number_all_order', 'number_clicked_order')
+        travelClickeds = list(travelClickeds)
+        routeA['travel_situation'] = travelClickeds
 
     conn.close()
     return belin_routes
 
 
+
 def get_all_of_route(request, code, truck):
+    list_orders = ListOrdersInTheLoad.objects.filter(load_id=code).values('id', 'track_id', 'order_id', 'article_id', 'state').order_by('id')
+    list_orders = list(list_orders)
+
     truck = int(truck)
 
     oracle = OracleConnector()
@@ -40,7 +51,11 @@ def get_all_of_route(request, code, truck):
     for travel in travel_list:
         sql         = """SELECT id, __recogida__id, __pedido__id, __cliente__id, __cliente__descripcion FROM lineaentrega WHERE __recogida__id = %s AND __camion =%s"""
         all_lines   = conn.consult(sql, (code, travel['__camion'],))  
-        travel['all_lines'] = all_lines
+        travel['all_lines']       = all_lines
+        travel['click_situation'] = list_orders
+
+        # travelClicked, created = TravelsClicked.objects.get_or_create(load_id=code, track_id=travel['__camion'])
+        
 
     # unique clients in travel
     for travel in travel_list:
@@ -122,7 +137,29 @@ def get_all_of_route(request, code, truck):
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
                     clientB['detail'] += [rows_diario]
 
+        travelClicked, created             = TravelsClicked.objects.get_or_create(load_id=code, track_id=travel['__camion'])
+        travelClicked.number_all_order     = len(rows_diario)
+        orders_clicked                     = ListOrdersInTheLoad.objects.filter(load_id=code, track_id=travel['__camion']) or []
+        travelClicked.number_clicked_order = len(orders_clicked)
+        travelClicked.save()
             
     oracle.close()
     conn.close() # sgonzalez  mju76TFC
     return travel_list
+
+
+
+def click_actions(request, action):
+    load_id    = request.GET.get('load_id')
+    track_id   = request.GET.get('track_id')
+    order_id   = request.GET.get('order_id')
+    article_id = request.GET.get('article_id')    
+
+    if action == 'put':
+        line_order, created = ListOrdersInTheLoad.objects.get_or_create(load_id=load_id, track_id=track_id, order_id=order_id, article_id=article_id)
+        if str(line_order.state) == 'clicked':
+            line_order.delete()
+        elif str(line_order.state) != 'clicked':
+            line_order.state = 'clicked'
+            line_order.save()
+        
