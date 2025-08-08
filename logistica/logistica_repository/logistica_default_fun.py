@@ -40,21 +40,21 @@ def get_all_of_route(request, code, truck):
     conn.connect()
 
     if truck > 0:
-        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion = %s ORDER BY id ASC"""
+        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion = %s"""
         travel_list = conn.consult(sql, (code, truck, ))
     else:
         # travel list
-        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0 ORDER BY __camion ASC"""
+        sql = """SELECT DISTINCT __camion, __nombre__camion FROM lineaentrega WHERE __recogida__id = %s AND __camion > 0"""
         travel_list = conn.consult(sql, (code,))  
     
     # list of travel orders
     for travel in travel_list:
-        sql         = """SELECT id, __recogida__id, __pedido__id, __cliente__id, __cliente__descripcion FROM lineaentrega WHERE __recogida__id = %s AND __camion =%s"""
+        sql         = """SELECT id, __recogida__id, __pedido__id, __cliente__id, __cliente__descripcion, __orden FROM lineaentrega WHERE __recogida__id = %s AND __camion =%s ORDER BY __orden DESC"""
         all_lines   = conn.consult(sql, (code, travel['__camion'],))  
         travel['all_lines']       = all_lines
         travel['click_situation'] = list_orders
 
-        # travelClicked, created = TravelsClicked.objects.get_or_create(load_id=code, track_id=travel['__camion'])
+
         
 
     # unique clients in travel
@@ -77,7 +77,7 @@ def get_all_of_route(request, code, truck):
             for line in travel['all_lines']:
                 cliente_name = str(line['__cliente__id']).strip() +" "+str(line['__cliente__descripcion']).strip()
                 if clientA['name'] == cliente_name:
-                    clientA['orders'] += [line['__pedido__id']]
+                    clientA['orders'] += [{'__pedido__id':line['__pedido__id'], '__orden':line['__orden']}]
                     
 
     for travel in travel_list:
@@ -85,7 +85,8 @@ def get_all_of_route(request, code, truck):
 
         for clientB in travel['res']:
             for id_order in clientB['orders']:
-                parts = str(id_order).strip().split("-")
+                pedido_id = str(id_order['__pedido__id']).strip()
+                parts = pedido_id.split("-")
                 if len(parts) == 3:
                     year, serie, number_code = parts
                     sqlDetail = """SELECT 
@@ -161,6 +162,7 @@ def get_all_of_route(request, code, truck):
                                     GROUP BY pvl.ID_PEDIDO, pvl.ARTICULO
                                     """
                     rows_diario  = oracle.consult(sqlDetail, {'number_code':number_code, 'serie':serie, 'year':year}) or []
+                    
                     clientB['detail'] += [rows_diario]
                     NUMBER_OF_ORDERS  += len(rows_diario)
 
