@@ -1,7 +1,7 @@
 import traceback
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
-from logistica.logistica_repository.logistica_default_fun import click_actions, get_all_of_route, get_belin_routes
+from logistica.logistica_repository.logistica_default_fun import change_palets, get_and_refresh_gema_routes, load_truck_details, order_clicked, refresh_gema_table
 from produccion.utils.sent_email_file import error_message_to_alexey
 
 
@@ -9,16 +9,19 @@ from produccion.utils.sent_email_file import error_message_to_alexey
 def log_default_controller(request, action, entity, code, description): 
 
     action      = str(action).strip().lower()   
-    entity      = str(entity).strip().lower()           
-    code        = str(code).strip().lower()
+    load_id     = str(entity).strip().lower()           
+    truck_id    = str(code).strip().lower()
     description = str(description).strip().lower()
     
 
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
-        'get_belin_routes': lambda: get_belin_routes(request),                # http://127.0.0.1:8000/logistica/get/0/0/get_belin_routes/
-        'get_all_of_route': lambda: get_all_of_route(request, code, entity),  # http://127.0.0.1:8000/logistica/get/1/259/get_all_of_route/
-        'click_actions':    lambda: click_actions(request, action),           # http://127.0.0.1:8000/logistica/get/0/0/click_actions/ http://127.0.0.1:8000/logistica/put/0/0/click_actions/
+
+        'get_and_refresh_gema_routes':  lambda: get_and_refresh_gema_routes(request),  # http://127.0.0.1:8000/logistica/get/0/0/get_and_refresh_gema_routes/
+        'refresh_gema':  lambda: refresh_gema_table(),                                 # http://127.0.0.1:8000/logistica/get/0/0/refresh_gema/ 
+        'load_truck_details': lambda: load_truck_details(request, load_id, truck_id),  # http://127.0.0.1:8000/logistica/get/259/5/load_truck_details/
+        'order_clicked': lambda: order_clicked(request, load_id),                      # http://127.0.0.1:8000/logistica/put/259/5/order_clicked/
+        'change_palets': lambda: change_palets(request, load_id, truck_id),            # http://127.0.0.1:8000/logistica/put/259/5/change_palets/
     }
 
     try:
