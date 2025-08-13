@@ -14,7 +14,7 @@ def get_and_refresh_gema_routes(request):
                         SUM(palets)    AS palets
                     FROM logistica_orderlistbelinloads 
                     GROUP BY load_id
-                    ORDER BY load_id DESC
+                    ORDER BY load_date DESC, load_id DESC
                     LIMIT 22""")
     rows    = cursor.fetchall()
     columns = [col[0] for col in cursor.description]
