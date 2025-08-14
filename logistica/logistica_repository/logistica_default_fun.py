@@ -344,7 +344,7 @@ def refresh_gema_table():
         lineBelin.client_name      = devolucion['__nombre__proveedor']
         lineBelin.orden            = 1111
         lineBelin.palets           = devolucion['__numero__palets']
-        lineBelin.articles         = json.dumps([{'ARTICULO':devolucion['id'], 'DESCRIPCION_ARTICULO':devolucion['__comment']}])
+        lineBelin.articles         = json.dumps([{'ARTICULO':devolucion['id'], 'DESCRIPCION_ARTICULO':devolucion['__comment'], 'UNIDADES_SERVIDAS': devolucion['__kg_value'], 'PRESENTACION_PEDIDO': 'KG', 'UNI_SERALM': devolucion['__kg_value']}])
         lineBelin.load_week        = ' '
 
         lineBelin.save()
