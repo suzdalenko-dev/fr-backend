@@ -60,6 +60,7 @@ def load_truck_details(request, load_id, truck_id):
         lines = OrderListBelinLoads.objects.filter(load_id=load_id, truck_id=truck_id).values('load_id', 'load_week', 'load_date', 'truck_id', 'truck_name', 'orden', 'client_id', 'client_name', 'palets', 'input_palets', 'clicked', 'articles', 'order_id', 'click_info').order_by('-orden')
     
     lines = list(lines)
+
  
     all_data  = []
     truck_ids = []
@@ -318,7 +319,40 @@ def refresh_gema_table():
         
         lineBelin.save()
 
-        
+
+
+    # traer las devoluciones
+    sql = """SELECT *
+            FROM lineadevolucion
+            ORDER BY id DESC
+            LIMIT 111
+        """
+    all_returns  = conn.consult(sql)
+    all_returns = list(all_returns)
+
+    for devolucion in all_returns:
+
+        if devolucion['id'] not in ORDERS_IN_USE:
+            ORDERS_IN_USE += [devolucion['id']]
+
+        lineBelin, created         = OrderListBelinLoads.objects.get_or_create(order_id=devolucion['id'])
+        lineBelin.load_id          = devolucion['__recodiga__id']
+        lineBelin.load_date        = ' '
+        lineBelin.truck_id         = devolucion['__camion__id']
+        lineBelin.truck_name       = devolucion['__nombre__camion']
+        lineBelin.client_id        = 'DEVOLUCION '+ devolucion['__codigo__proveedor']
+        lineBelin.client_name      = devolucion['__nombre__proveedor']
+        lineBelin.orden            = 1111
+        lineBelin.palets           = devolucion['__numero__palets']
+        lineBelin.articles         = json.dumps([{'ARTICULO':devolucion['id'], 'DESCRIPCION_ARTICULO':devolucion['__comment']}])
+        lineBelin.load_week        = ' '
+
+        lineBelin.save()
+
+
+
+
+
     # comprobar que pedidos sobran y borrar los que estan en DB_FROXA y no estan el lineasEtrega
     cursor = connection.cursor()
     cursor.execute("""
@@ -350,9 +384,12 @@ def refresh_gema_table():
             if ordenX['order_id'] not in ORDERS_IN_USE:
                 OrderListBelinLoads.objects.filter(order_id=ordenX['order_id']).delete()
         
+    
+
+   
 
     conn.close()
     oracle.close()
 
-    return belin_routes
+    return all_returns
 
