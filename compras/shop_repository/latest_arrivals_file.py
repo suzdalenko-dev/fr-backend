@@ -1,0 +1,35 @@
+from collections import defaultdict
+from compras.only_sql.latest_arrivals_sql import get_latest_arrivals
+from froxa.utils.connectors.libra_connector import OracleConnector
+
+
+def latest_arrivals(request):
+    oracle = OracleConnector()
+    oracle.connect()
+
+    res = get_latest_arrivals(request, oracle)
+    
+
+    no_cnt = [x for x in res if (x.get('CONTENEDOR') or '').upper() != 'CNT']
+    si_cnt = [x for x in res if (x.get('CONTENEDOR') or '').upper() == 'CNT']
+    ordered = no_cnt + si_cnt
+
+
+    out = []
+    contract_uniques = []
+
+    for row in ordered:
+        if row['D_DESCRIPCION_EXPEDIENTE'] not in contract_uniques:
+            contract_uniques += [row['D_DESCRIPCION_EXPEDIENTE']]
+            out += [{'id':row['D_DESCRIPCION_EXPEDIENTE'], 'lines': []}]
+
+    
+    for o in out:
+        for order in ordered:
+            if o['id'] == order['D_DESCRIPCION_EXPEDIENTE']:
+                o['lines'] += [order]
+
+
+    oracle.close()
+    
+    return out

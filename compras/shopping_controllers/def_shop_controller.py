@@ -1,7 +1,6 @@
 import traceback
 from django.http import JsonResponse
-
-from compras.shop_repository.test_file import test_function
+from compras.shop_repository.latest_arrivals_file import latest_arrivals
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
 from produccion.utils.sent_email_file import error_message_to_alexey
 
@@ -16,7 +15,7 @@ def defautl_shop_controller(request, action, entity, code, description):
 
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
-        'test_function': lambda: test_function(request),  # http://127.0.0.1:8000/compras/get/0/0/test_function/
+        'latest_arrivals': lambda: latest_arrivals(request),  # http://127.0.0.1:8000/compras/get/0/0/latest_arrivals/
     }
 
     try:
