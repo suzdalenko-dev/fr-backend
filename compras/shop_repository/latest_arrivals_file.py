@@ -19,17 +19,20 @@ def latest_arrivals(request):
     contract_uniques = []
 
     for row in ordered:
-        if row['D_DESCRIPCION_EXPEDIENTE'] not in contract_uniques:
-            contract_uniques += [row['D_DESCRIPCION_EXPEDIENTE']]
-            out += [{'id':row['D_DESCRIPCION_EXPEDIENTE'], 'lines': []}]
+        name = row['D_DESCRIPCION_EXPEDIENTE']+row['FECHA_PREV_LLEGADA']
+        if name not in contract_uniques:
+            contract_uniques += [name]
+            out += [{'id':name, 'lines': []}]
 
     
     for o in out:
         for order in ordered:
-            if o['id'] == order['D_DESCRIPCION_EXPEDIENTE']:
+            name = order['D_DESCRIPCION_EXPEDIENTE']+order['FECHA_PREV_LLEGADA']
+            if o['id'] == name:
                 o['lines'] += [order]
 
 
     oracle.close()
     
     return out
+

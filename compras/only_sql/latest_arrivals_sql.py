@@ -10,52 +10,8 @@ def get_latest_arrivals(request, conn):
                     expedientes_articulos_embarque.contenedor,
                     expedientes_imp.forma_envio,
                     expedientes_articulos_embarque.cantidad cantidad1,
-                    (CASE
-                        -- Si la situación logística es '00', se realiza la operación de resta
-              WHEN EXISTS (
-                SELECT 1 
-                FROM EXPEDIENTES_HOJAS_SEGUIM h3
-                WHERE expedientes_articulos_embarque.num_expediente = h3.num_expediente
-                  AND expedientes_articulos_embarque.num_hoja = h3.num_hoja
-                  AND h3.situacion_logistica = '00'
-              )
-              THEN
-              (
-                -- Suma de las cantidades de las hojas de seguimiento donde la situación es '00'
-                (
-                  SELECT SUM(h2.cantidad) 
-                  FROM expedientes_articulos_embarque h2
-                  WHERE expedientes_articulos_embarque.num_expediente = h2.num_expediente
-                    AND expedientes_articulos_embarque.articulo = h2.articulo
-                    AND EXISTS (
-                        SELECT 1 
-                        FROM EXPEDIENTES_HOJAS_SEGUIM h3
-                        WHERE h2.num_expediente = h3.num_expediente
-                          AND h2.num_hoja = h3.num_hoja
-                          AND h3.situacion_logistica = '00'
-                    )
-                )
-                -
-                (
-                  -- Resta de las cantidades de las hojas de seguimiento donde la situación no es '00'
-                  SELECT SUM(h2.cantidad) 
-                  FROM expedientes_articulos_embarque h2
-                  WHERE expedientes_articulos_embarque.num_expediente = h2.num_expediente
-                    AND expedientes_articulos_embarque.articulo = h2.articulo
-                    AND EXISTS (
-                        SELECT 1 
-                        FROM EXPEDIENTES_HOJAS_SEGUIM h3
-                        WHERE h2.num_expediente = h3.num_expediente
-                          AND h2.num_hoja = h3.num_hoja
-                          AND h3.situacion_logistica != '00'
-                    )
-                )
-              )
-              ELSE
-                -- Si la situación no es '00', se devuelve la cantidad de expedientes_articulos_embarque
-                expedientes_articulos_embarque.cantidad
-            END
-            ) cantidad2,
+                    expedientes_imp.LUGAR_EMBARQUE,
+                    expedientes_imp.LUGAR_DESEMBARQUE,
             expedientes_articulos_embarque.presentacion,
             expedientes_articulos_embarque.destino_especial,
             expedientes_articulos_embarque.deposito_aduanero,
@@ -74,8 +30,12 @@ def get_latest_arrivals(request, conn):
                     expedientes_imp.d_clave_arancel,
                     expedientes_hojas_seguim.d_situacion_logistica,
                     expedientes_hojas_seguim.documentacion_x_contenedor,
-                    expedientes_hojas_seguim.fecha_prev_llegada,
-                    expedientes_hojas_seguim.fecha_prev_embarque,
+                    
+                    -- expedientes_hojas_seguim.FECHA_PREV_EMBARQUE,
+                    -- expedientes_hojas_seguim.FECHA_EMBARQUE,
+                    COALESCE(expedientes_hojas_seguim.FECHA_EMBARQUE, expedientes_hojas_seguim.FECHA_PREV_EMBARQUE) FECHA_EMBARQUE,
+                    
+                    expedientes_hojas_seguim.FECHA_PREV_LLEGADA,
                     expedientes_imp.d_plantilla,
                     NVL(EXPEDIENTES_HOJAS_SEGUIM.PROVEEDOR,EXPEDIENTES_IMP.PROVEEDOR) PROVEEDOR,
                     expedientes_hojas_seguim.d_proveedor_hoja,
@@ -266,7 +226,8 @@ def get_latest_arrivals(request, conn):
             AND expedientes_hojas_seguim.fecha_prev_llegada >= TO_DATE(:first, 'YYYY-MM-DD') AND expedientes_hojas_seguim.fecha_prev_llegada <= TO_DATE(:second, 'YYYY-MM-DD')
             
             ORDER BY expedientes_hojas_seguim.fecha_prev_llegada ASC,
-                  expedientes_articulos_embarque.contenedor ASC
+                  expedientes_articulos_embarque.contenedor ASC,
+                  FECHA_EMBARQUE ASC
             """
     
 
