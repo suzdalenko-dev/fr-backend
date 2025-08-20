@@ -36,6 +36,9 @@ def get_latest_arrivals(request, conn):
                     COALESCE(expedientes_hojas_seguim.FECHA_EMBARQUE, expedientes_hojas_seguim.FECHA_PREV_EMBARQUE) FECHA_EMBARQUE,
                     
                     expedientes_hojas_seguim.FECHA_PREV_LLEGADA,
+
+                    expedientes_hojas_seguim.OBSERVACIONES,
+
                     expedientes_imp.d_plantilla,
                     NVL(EXPEDIENTES_HOJAS_SEGUIM.PROVEEDOR,EXPEDIENTES_IMP.PROVEEDOR) PROVEEDOR,
                     expedientes_hojas_seguim.d_proveedor_hoja,
