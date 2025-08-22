@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'finanzas',
     'froxa',
     'logistica',
-    'compras'
+    'compras',
+    'powerbi'
 ]
 
 MIDDLEWARE = [
