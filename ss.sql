@@ -1862,3 +1862,169 @@ AND (pv.numero_serie_fra='' OR '' IS NULL)
 AND NVL(pv.anulado, 'N') = 'N'))
 AND ('' is null or exists (select 1 from expedientes_imp_agentes ea where ea.numero_expediente = expedientes_imp.codigo and ea.agente = '' and ea.empresa = expedientes_imp.empresa)) AND (EXPEDIENTES_HOJAS_SEGUIM.STATUS NOT IN ('C'))) AND (articulos.codigo_empresa = '001') AND (expedientes_imp.empresa = '001') AND (expedientes_hojas_seguim.empresa = '001') AND (expedientes_articulos_embarque.EMPRESA='001') AND (expedientes_contenedores.empresa = '001') 
 AND expedientes_hojas_seguim.num_expediente = 65;
+
+
+
+
+SELECT DISTINCT ac.artcomp_codigo_proveedor AS codigo_proveedor
+FROM artcomp ac
+WHERE ac.artcomp_codigo_articulo = 40926;
+
+
+SELECT V_FECHA,V_CODIGO_PROVEEDOR,D_CODIGO_PROVEEDOR,V_NUMERO_LOTE_INT,V_NUMERO_DOC_EXT,V_NUMERO_DOC_INTERNO,V_CANTIDAD_ENTREGADA,V_UNIDADES_ALMACEN,SUM_UNID_ALM,V_PRESENTACION,V_PRECIO_PRESENTACION,V_DTO_1,V_DTO_2,V_DTO_3,V_IMPORTE_LIN_NETO,
+V_DIVISA,V_DESCRIPCION_ARTICULO,V_ORGANIZACION_COMPRAS,D_ORGANIZACION_COMPRAS,V_CODIGO_ALMACEN,V_CENTRO_CONTABLE,D_CODIGO_ALMACEN,D_CENTRO_CONTABLE,V_UNIDAD_ALMACEN2,SUM_UNID_ALM2,V_SERIE_PEDIDO,V_NUMERO_PEDIDO,V_FACTURADO,V_PRECIO_NETO,
+V_IMPORTE_PORTES,V_DEVOLUCION,V_USUARIO,V_DESCRIPCION_LOTE,V_DESCRIPCION_LOTE2,UNID_SUB,UNID_SOB,UNID_EXP,UNID_DIS,DEPOSITO_PROVEEDOR,HAY_REPLICACION_VTA,NUMERO_LINEA,CONTADOR_GESTION,V_CODIGO_ARTICULO,STATUS_ANULADO 
+
+FROM (SELECT  v.* ,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = v.centro_contable AND lvcc.empresa = v.codigo_empresa) D_CENTRO_CONTABLE,
+(SELECT lval.nombre FROM almacenes lval WHERE lval.almacen = v.codigo_almacen AND lval.codigo_empresa = v.codigo_empresa) D_CODIGO_ALMACEN,(SELECT prlv.nombre FROM proveedores prlv WHERE prlv.codigo_rapido = v.codigo_proveedor AND codigo_empresa = v.codigo_empresa) D_CODIGO_PROVEEDOR,(SELECT lvcpr.nombre FROM organizacion_compras lvcpr WHERE lvcpr.codigo_org_compras = v.organizacion_compras AND lvcpr.codigo_empresa = v.codigo_empresa) D_ORGANIZACION_COMPRAS,pkconsgen.hay_replicacion_com_vta(v.numero_doc_interno, v.codigo_empresa, v.numero_linea) HAY_REPLICACION_VTA,decode(status_anulado, 'S', 0, 'N', unidades_almacen) SUM_UNID_ALM,decode(status_anulado, 'S', 0, 'N', unidad_almacen2) SUM_UNID_ALM2,CANTIDAD_ENTREGADA V_CANTIDAD_ENTREGADA,CENTRO_CONTABLE V_CENTRO_CONTABLE,CODIGO_ALMACEN V_CODIGO_ALMACEN,CODIGO_ARTICULO V_CODIGO_ARTICULO,CODIGO_PROVEEDOR V_CODIGO_PROVEEDOR,DECODE(v.numero_lote_int,NULL,NULL,(SELECT lvhl.descripcion_lote FROM historico_lotes lvhl WHERE lvhl.numero_lote_int = v.numero_lote_int AND lvhl.codigo_articulo = v.codigo_articulo AND lvhl.codigo_empresa = v.codigo_empresa)) V_DESCRIPCION_LOTE,pkconsgen.f_get_status_devolucion(v.codigo_empresa, v.numero_doc_interno, v.numero_linea, v.status) V_DEVOLUCION,PKCONSGEN.DIVISA(divisa) V_DIVISA,dto_1 V_DTO_1,dto_2 V_DTO_2,dto_3 V_DTO_3,FACTURADO V_FACTURADO,FECHA V_FECHA,PKCONSGEN.IMPORTE_TXT(importe_lin_neto, importe_lin_neto_div, divisa, importe_lin_neto_div2) V_IMPORTE_LIN_NETO,NUMERO_DOC_EXT V_NUMERO_DOC_EXT,NUMERO_DOC_INTERNO V_NUMERO_DOC_INTERNO,pkconsgen.get_numero_lote_int_albcom(v.codigo_empresa, v.codigo_articulo, v.numero_doc_interno, v.numero_linea, v.numero_lote_int) V_NUMERO_LOTE_INT,NUMERO_PEDIDO V_NUMERO_PEDIDO,ORGANIZACION_COMPRAS V_ORGANIZACION_COMPRAS,PKCONSGEN.PRECIO_TXT(precio_neto * cambio, precio_neto, divisa, precio_neto * cambio * cambio_div2) V_PRECIO_NETO,PKCONSGEN.PRECIO_TXT(DECODE(tipo_precio, 'P', precio_presentacion, precio_bruto) * cambio, DECODE(tipo_precio, 'P', precio_presentacion, precio_bruto), divisa, DECODE(tipo_precio, 'P', precio_presentacion, precio_bruto) * cambio * cambio_div2) V_PRECIO_PRESENTACION,PRESENTACION V_PRESENTACION,SERIE_PEDIDO V_SERIE_PEDIDO,UNIDADES_ALMACEN V_UNIDADES_ALMACEN,UNIDAD_ALMACEN2 V_UNIDAD_ALMACEN2,USUARIO V_USUARIO,DESCRIPCION_ARTICULO V_DESCRIPCION_ARTICULO,DECODE(v.numero_lote_int,NULL,NULL,(SELECT lvhl.descripcion_lote2 FROM historico_lotes lvhl WHERE lvhl.numero_lote_int = v.numero_lote_int AND lvhl.codigo_articulo = v.codigo_articulo AND lvhl.codigo_empresa = v.codigo_empresa)) V_DESCRIPCION_LOTE2,PKCONSGEN.IMPORTE_TXT(importe_portes, importe_portes_div, divisa) V_IMPORTE_PORTES FROM (SELECT l.rowid, l.codigo_empresa, c.usuario, c.organizacion_compras, l.numero_doc_interno, l.unidad_almacen2, l.cantidad_entregada, l.presentacion, c.codigo_almacen, l.codigo_articulo, l.status, l.numero_linea, c.centro_contable, c.fecha, c.numero_doc_ext, DECODE(PKCONSGEN.VER_PRO_BLOQUEADOS, 'S', c.codigo_proveedor, DECODE(PKCONSGEN.PROVEEDOR_BLOQUEADO(c.codigo_empresa, c.codigo_proveedor), 'S', NULL, c.codigo_proveedor)) codigo_proveedor, l.divisa, l.tipo_precio, l.precio_bruto, l.precio_neto, l.dto_1, l.dto_2, l.dto_3, l.importe_lin_neto, l.importe_lin_neto_div, l.importe_portes, l.unidades_almacen, l.facturado, l.descripcion descripcion_articulo, l.cambio, l.importe_portes_div, l.precio_presentacion, c.deposito_proveedor, l.numero_pedido, l.serie_pedido, l.numero_lote_int, l.unid_exp, l.unid_dis, l.unid_sob, l.unid_sub,l.numero_linea_pedido, l.org_compras_pedido, c.contador_gestion, c.status_anulado,c.numero_expediente,l.expediente_importacion, l.importe_lin_neto_div2, l.cambio_div2 FROM albaran_compras_c c, albaran_compras_l l WHERE c.numero_doc_interno = l.numero_doc_interno AND c.codigo_empresa = l.codigo_empresa ORDER BY /*PKLBOB*/c.fecha/*PKLEOB*/) v)  v WHERE codigo_articulo = '40926' AND codigo_empresa = '001';
+
+
+
+
+SELECT DISTINCT l.codigo_articulo,
+       c.codigo_proveedor
+FROM albaran_compras_c c
+JOIN albaran_compras_l l
+  ON c.numero_doc_interno = l.numero_doc_interno
+ AND c.codigo_empresa = l.codigo_empresa
+WHERE 1=1 AND
+   l.codigo_articulo = '40926'
+  AND l.codigo_empresa = '001' AND ROWNUM = 1;
+
+
+select *
+from stocks_detallado
+;
+
+
+
+SELECT *
+FROM
+    STOCKS_DETALLADO s
+JOIN
+    CARACTERISTICAS_LOTES c ON s.CODIGO_ARTICULO = c.CODIGO_ARTICULO
+     AND s.CODIGO_EMPRESA  = c.CODIGO_EMPRESA
+     AND s.NUMERO_LOTE_INT = c.NUMERO_LOTE_INT
+WHERE
+    s.CANTIDAD_UNIDAD1 > 0 
+    -- AND s.CODIGO_ARTICULO = 40006
+;
+
+
+
+SELECT s.NUMERO_PALET, s.CODIGO_ARTICULO, s.NUMERO_LOTE_INT
+FROM
+    STOCKS_DETALLADO s
+JOIN
+    CARACTERISTICAS_LOTES c ON s.CODIGO_ARTICULO = c.CODIGO_ARTICULO
+     AND s.CODIGO_EMPRESA  = c.CODIGO_EMPRESA
+     AND s.NUMERO_LOTE_INT = c.NUMERO_LOTE_INT
+WHERE
+    s.CANTIDAD_UNIDAD1 > 0 AND
+    s.CODIGO_ARTICULO = 40006
+;
+
+
+
+select * 
+from STOCKS_DETALLADO
+where codigo_articulo = 40006
+   and CANTIDAD_UNIDAD1 > 0
+;
+
+-- 40006
+
+select * 
+from CARACTERISTICAS_LOTES
+;
+
+
+ and STOCKS_DETALLADO.NUMERO_LOTE_INT=CARACTERISTICAS_LOTES.NUMERO_LOTE_INT AND STOCKS_DETALLADO.CANTIDAD_UNIDAD1 > 0
+
+select * from articulos;
+
+
+
+SELECT stocks_detallado.numero_palet,
+      (SELECT DESCRIP_COMERCIAL FROM ARTICULOS WHERE CODIGO_ARTICULO = stocks_detallado.codigo_articulo AND ROWNUM = 1) AS DESCRIP_COMERCIAL,
+      caracteristicas_lotes.codigo_articulo,
+      caracteristicas_lotes.numero_lote_int,
+      caracteristicas_lotes.valor_alfa_1,
+      caracteristicas_lotes.d_valor_alfa_1,
+      caracteristicas_lotes.valor_alfa_2,
+      caracteristicas_lotes.d_valor_alfa_2,
+      caracteristicas_lotes.valor_alfa_3,
+      caracteristicas_lotes.d_valor_alfa_3,
+      caracteristicas_lotes.valor_alfa_4,
+      caracteristicas_lotes.d_valor_alfa_4,
+      caracteristicas_lotes.valor_alfa_5,
+      caracteristicas_lotes.d_valor_alfa_5,
+      caracteristicas_lotes.valor_alfa_6,
+      caracteristicas_lotes.d_valor_alfa_6,
+      caracteristicas_lotes.valor_alfa_7,
+      caracteristicas_lotes.d_valor_alfa_7,
+      caracteristicas_lotes.valor_alfa_8,
+      caracteristicas_lotes.d_valor_alfa_8,
+      caracteristicas_lotes.valor_alfa_9,
+      caracteristicas_lotes.d_valor_alfa_9,
+      caracteristicas_lotes.valor_alfa_10,
+      caracteristicas_lotes.d_valor_alfa_10
+FROM STOCKS_DETALLADO,
+   (SELECT CARACTERISTICAS_LOTES.*,
+   (SELECT NVL(lvpti.descripcion, lvtpd.descripcion) 
+      FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+         AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz 
+         AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_1 AND lvtpd.numero = 1 
+         AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+         AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_1,
+         (SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor AND lvpti.numero(+) = lvtpd.numero 
+         AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_2 AND lvtpd.numero = 2 
+         AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+         AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_2,
+         (SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor AND lvpti.numero(+) = lvtpd.numero 
+         AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_3 AND lvtpd.numero = 3 
+         AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+         AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_3,
+         (SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor AND lvpti.numero(+) = lvtpd.numero 
+         AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_4 AND lvtpd.numero = 4 
+         AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+         AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_4,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+         AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz  AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_5 
+         AND lvtpd.numero = 5 AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+         AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_5,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+         AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz  AND lvpti.empresa(+) = lvtpd.empresa 
+         AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_6 AND lvtpd.numero = 6 AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO 
+         AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_6,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) 
+         FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz 
+          AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_7 AND lvtpd.numero = 7 
+         AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA)
+          AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_7,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+          AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz  AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_8 
+          AND lvtpd.numero = 8 AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+          AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_8,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+          AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz  AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_9 
+          AND lvtpd.numero = 9 AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+          AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_9,(SELECT NVL(lvpti.descripcion, lvtpd.descripcion) FROM titulos_personaliz_des lvtpd, titulos_personaliz_des_idioma lvpti WHERE lvpti.valor(+) = lvtpd.valor 
+          AND lvpti.numero(+) = lvtpd.numero AND lvpti.codigo_personaliz(+) = lvtpd.codigo_personaliz  AND lvpti.empresa(+) = lvtpd.empresa AND lvtpd.valor = CARACTERISTICAS_LOTES.VALOR_ALFA_10 
+          AND lvtpd.numero = 10 AND lvtpd.codigo_personaliz = (SELECT AR.CODIGO_PERSONALIZ_LOTES FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO = CARACTERISTICAS_LOTES.CODIGO_ARTICULO AND AR.CODIGO_EMPRESA = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) 
+          AND lvtpd.empresa = CARACTERISTICAS_LOTES.CODIGO_EMPRESA) D_VALOR_ALFA_10 FROM CARACTERISTICAS_LOTES) CARACTERISTICAS_LOTES WHERE (STOCKS_DETALLADO.CODIGO_ARTICULO=CARACTERISTICAS_LOTES.CODIGO_ARTICULO 
+          and STOCKS_DETALLADO.CODIGO_EMPRESA=CARACTERISTICAS_LOTES.CODIGO_EMPRESA and STOCKS_DETALLADO.NUMERO_LOTE_INT=CARACTERISTICAS_LOTES.NUMERO_LOTE_INT AND STOCKS_DETALLADO.CANTIDAD_UNIDAD1 > 0) 
+          AND (stocks_detallado.codigo_empresa = '001') 
+          AND (stocks_detallado.numero_palet LIKE '000009785' AND caracteristicas_lotes.codigo_articulo = '40000' )
+          
+          ;
+
+
+
+select * from titulos_personaliz_des;
+
+
+
+familia pescados, subfamilia varios c.
+
+012 PESCADOS > 042 VARIOS PESCADOS
+
+365 BARRAMUNDI
+368 LENGUADO LIMON
+414 MERO
+nombre común > Mero 

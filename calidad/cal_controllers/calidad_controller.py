@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from calidad.cal_repository.caracteristicas_lote_file import caracteristicas_lote
 from calidad.cal_repository.informe_bloqueo_file import informe_bloqueo
 from calidad.cal_repository.of_trazabilidad_file import of_trazabilidad_function
 from calidad.cal_repository.ofs_list_calendar import get_list_ofs_calendar_func
@@ -18,6 +19,9 @@ def calidad_default_controller(request, action, entity, code, description):
         'of_trazabilidad': lambda: of_trazabilidad_function(request, code), # http://127.0.0.1:8000/calidad/get/of/381/of_trazabilidad/
     
         'informe_bloqueo': lambda: informe_bloqueo(request),                # http://127.0.0.1:8000/calidad/get/of/0/informe_bloqueo/
+        
+        'caracteristicas_lote': lambda: caracteristicas_lote(request),      # http://127.0.0.1:8000/calidad/get/of/0/caracteristicas_lote/
+        
     }
 
     try:

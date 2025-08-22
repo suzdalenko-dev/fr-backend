@@ -34,7 +34,9 @@ def production_default_controller(request, action, entity, code, description):
         'recalculate_equiv_with_contaner': lambda: recalculate_equiv_with_contaner(request),           # http://127.0.0.1:8000/produccion/get/0/0/recalculate_equiv_with_contaner/
         
         'embarcado_art_con_sin_cont': lambda: embarcado_art_con_sin_cont(request),                     # http://127.0.0.1:8000/produccion/get/0/0/embarcado_art_con_sin_cont/
-        'embarcado_get_all': lambda: embarcado_get_all(request),                                       # http://127.0.0.1:8000/produccion/get/0/0/embarcado_get_all/ 
+        'embarcado_get_all': lambda: embarcado_get_all(request),                                       # http://127.0.0.1:8000/produccion/get/0/0/embarcado_get_all/
+
+        
     }
 
     try:
