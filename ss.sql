@@ -2028,3 +2028,315 @@ familia pescados, subfamilia varios c.
 368 LENGUADO LIMON
 414 MERO
 nombre común > Mero 
+
+
+select * 
+from V_FROXA_CARACTERISTICAS_LOTES_PALET
+where numero_palet = '000025335'
+;
+
+SELECT text
+FROM user_views
+WHERE view_name = 'V_FROXA_CARACTERISTICAS_LOTES_PALET';
+
+
+SELECT sd.numero_palet, 
+      cl.codigo_articulo, 
+      cl.numero_lote_int, 
+      t.titulo_alfa_1, 
+      cl.valor_alfa_1 AS valor, 
+      NVL(tp.descripcion, cl.valor_alfa_1),
+      null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_1
+  AND tp.numero(+) = 1
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_2, cl.valor_alfa_2 AS valor, NVL(tp.descripcion, cl.valor_alfa_2),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_2
+  AND tp.numero(+) = 2
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_3, cl.valor_alfa_3 AS valor, NVL(tp.descripcion, cl.valor_alfa_3),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_3
+  AND tp.numero(+) = 3
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_4, cl.valor_alfa_4 AS valor, NVL(tp.descripcion, cl.valor_alfa_4),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_4
+  AND tp.numero(+) = 4
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_5, cl.valor_alfa_5 AS valor, NVL(tp.descripcion, cl.valor_alfa_5)
+,null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  --and sd.Codigo_Articulo = '41176'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_5
+  AND tp.numero(+) = 5
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_6, cl.valor_alfa_6 AS valor, NVL(tp.descripcion, cl.valor_alfa_6)
+,null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_6
+  AND tp.numero(+) = 6
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_7, cl.valor_alfa_7 AS valor, NVL(tp.descripcion, cl.valor_alfa_7),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_7
+  AND tp.numero(+) = 7
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_8, cl.valor_alfa_8 AS valor, NVL(tp.descripcion, cl.valor_alfa_8),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  --and sd.Codigo_Articulo = '41176'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_8
+  AND tp.numero(+) = 8
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_9, cl.valor_alfa_9 AS valor, NVL(tp.descripcion, cl.valor_alfa_9),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_9
+  AND tp.numero(+) = 9
+  AND sd.cantidad_unidad1 > 0
+
+UNION ALL
+
+SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int, t.titulo_alfa_10, cl.valor_alfa_10 AS valor, NVL(tp.descripcion, cl.valor_alfa_10),null
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a, TITULOS_PERSONALIZ_DES tp
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND tp.empresa(+) = t.codigo_empresa
+  AND tp.codigo_personaliz(+) = t.codigo_personaliz
+  AND tp.valor (+) = cl.valor_alfa_10
+  AND tp.numero(+) = 10
+  AND sd.cantidad_unidad1 > 0
+
+  union all
+
+  SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int,  'fecha congelación' AS tipo_fecha ,null,null, cl.valor_fecha_1 as fecha_valor
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND sd.cantidad_unidad1 > 0
+
+    union all
+
+  SELECT sd.numero_palet, cl.codigo_articulo, cl.numero_lote_int,  'Fecha Producción' AS tipo_fecha,null, null, cl.valor_fecha_2 AS fecha_valor
+FROM stocks_detallado sd, caracteristicas_lotes cl, TITULOS_PERSONALIZ t, articulos a
+WHERE sd.codigo_articulo = cl.codigo_articulo
+  AND sd.codigo_empresa = cl.codigo_empresa
+  AND sd.numero_lote_int = cl.numero_lote_int
+  AND sd.codigo_empresa = '001'
+  --AND sd.numero_palet LIKE '000006293%'
+  AND cl.codigo_empresa = a.codigo_empresa
+  AND cl.codigo_articulo = a.codigo_articulo
+  AND t.codigo_empresa = a.codigo_empresa
+  AND t.codigo_personaliz = a.codigo_personaliz_lotes
+  AND sd.cantidad_unidad1 > 0;
+
+
+------------------------------------------------------------------------------
+
+
+  SELECT clccl.valor_fecha_1 as fecha_congelacion
+   FROM stocks_detallado sdccl, caracteristicas_lotes clccl, TITULOS_PERSONALIZ tccl, articulos accl
+   WHERE sdccl.codigo_articulo = clccl.codigo_articulo
+     AND sdccl.codigo_empresa = clccl.codigo_empresa
+     AND sdccl.numero_lote_int = clccl.numero_lote_int
+     AND sdccl.codigo_empresa = '001'
+     AND sdccl.numero_palet = '000025367'
+     AND clccl.codigo_empresa = accl.codigo_empresa
+     AND clccl.codigo_articulo = accl.codigo_articulo
+     AND tccl.codigo_empresa = accl.codigo_empresa
+     AND tccl.codigo_personaliz = accl.codigo_personaliz_lotes
+     AND sdccl.cantidad_unidad1 > 0
+  ;
+
+select * 
+from caracteristicas_lotes;
+
+select * 
+from TITULOS_PERSONALIZ
+;
+
+select ORDEN_DE_FABRICACION
+from COSTES_ORDENES_FAB_MAT_CTD
+;
+
+select *
+from articulos
+;
+
+ dsn=LIBRA","
+     SELECT
+     ORDEN_DE_FABRICACION,
+  (SELECT descripcion 
+    FROM familias where numero_tabla = '7' AND codigo_familia = (
+      SELECT a.codigo_estad7 
+      FROM ARTICULOS a 
+      WHERE a.CODIGO_ARTICULO = c.CODIGO_ARTICULO_CONSUMIDO AND ROWNUM = 1
+    )) AS tipo_descr,
+  (SELECT TO_CHAR(OFB.FECHA_INI_FABRI, 'YYYY-MM-DD') FROM ORDENES_FABRICA_CAB OFB WHERE OFB.ORDEN_DE_FABRICACION = c.ORDEN_DE_FABRICACION) AS FECHA_INI_FABRI,
+  ((SELECT descrip_comercial FROM articulos artx WHERE artx.CODIGO_ARTICULO = c.CODIGO_ARTICULO_CONSUMIDO) || ' ' || CODIGO_ARTICULO_CONSUMIDO) AS NOMBRE_ARTICULO,  
+  (
+    SELECT ar.unidad_codigo1
+    FROM articulos ar
+    WHERE ar.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO AND ar.codigo_empresa = '001'
+  ) AS CODIGO_PRESENTACION_COMPO,
+  TO_NUMBER(c.CANTIDAD_UNIDAD1) AS CANTIDAD_UNIDAD1,
+  c.ORDEN_DE_FABRICACION,
+  (
+    SELECT f.descripcion
+    FROM familias f
+    WHERE f.numero_tabla = '1' AND f.codigo_empresa = '001'
+      AND f.codigo_familia = (
+        SELECT a.codigo_familia
+        FROM articulos a
+        WHERE a.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO
+          AND a.codigo_empresa = '001'
+      )
+  ) AS D_CODIGO_FAMILIA,
+  (
+    SELECT f2.descripcion
+    FROM familias f2
+    WHERE f2.numero_tabla = '2' AND f2.codigo_empresa = '001' AND f2.codigo_familia = (
+        SELECT a2.codigo_estad2
+        FROM articulos a2
+        WHERE a2.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO AND a2.codigo_empresa = '001'
+      )
+  ) AS SUBFAMILIA
+FROM COSTES_ORDENES_FAB_MAT_CTD c

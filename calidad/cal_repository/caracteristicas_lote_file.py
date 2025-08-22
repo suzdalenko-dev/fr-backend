@@ -19,7 +19,20 @@ def caracteristicas_lote(request):
     oracle = OracleConnector()
     oracle.connect()
 
-    sql = """SELECT stocks_detallado.numero_palet,
+    sql = """SELECT 
+                (SELECT clccl.valor_fecha_1
+                   FROM stocks_detallado sdccl, caracteristicas_lotes clccl, TITULOS_PERSONALIZ tccl, articulos accl
+                   WHERE sdccl.codigo_articulo = clccl.codigo_articulo
+                     AND sdccl.codigo_empresa = clccl.codigo_empresa
+                     AND sdccl.numero_lote_int = clccl.numero_lote_int
+                     AND sdccl.codigo_empresa = '001'
+                     AND sdccl.numero_palet = stocks_detallado.numero_palet
+                     AND clccl.codigo_empresa = accl.codigo_empresa
+                     AND clccl.codigo_articulo = accl.codigo_articulo
+                     AND tccl.codigo_empresa = accl.codigo_empresa
+                     AND tccl.codigo_personaliz = accl.codigo_personaliz_lotes
+                     AND sdccl.cantidad_unidad1 > 0) AS fecha_congelacion,
+                stocks_detallado.numero_palet,
                 (SELECT DESCRIP_COMERCIAL FROM ARTICULOS WHERE CODIGO_ARTICULO = stocks_detallado.codigo_articulo AND ROWNUM <= 1) AS DESCRIP_COMERCIAL,
                   caracteristicas_lotes.codigo_articulo,
                   caracteristicas_lotes.numero_lote_int,
