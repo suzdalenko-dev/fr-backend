@@ -22,3 +22,6 @@ class OrderListBelinLoads(models.Model):
     orden            = models.IntegerField(null=True)
 
     input_palets     = models.FloatField(null=True)
+
+    # city             = models.TextField(null=True)
+    # address          = models.TextField(null=True)

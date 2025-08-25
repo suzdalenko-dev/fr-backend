@@ -174,7 +174,7 @@ def refresh_gema_table():
     
     conn = MySQLConn()
     conn.connect()
-    sql = """SELECT r.id, l.__camion, l.__orden, r.__fecha, r.__semana, l.__pedido__id,  l.__nombre__camion, l.__cliente__id, l.__cliente__descripcion, l.__totalpaletas
+    sql = """SELECT r.id, l.__camion, l.__orden, r.__fecha, r.__semana, l.__pedido__id,  l.__nombre__camion, l.__cliente__id, l.__cliente__descripcion, l.__totalpaletas, l.__excel__city, l.__excel__direccion
             FROM (
                 SELECT id, __fecha, __semana
                 FROM recogida
@@ -310,7 +310,7 @@ def refresh_gema_table():
         lineBelin.truck_id         = orden['__camion']
         lineBelin.truck_name       = orden['__nombre__camion']
         lineBelin.client_id        = orden['__cliente__id']
-        lineBelin.client_name      = orden['__cliente__descripcion']
+        lineBelin.client_name      = orden['__cliente__descripcion']+' ('+orden['__excel__city']+' '+ orden['__excel__direccion']+')'
         lineBelin.orden            = orden['__orden']
         lineBelin.palets           = orden['__totalpaletas']
         lineBelin.articles         = json.dumps(orden['articles'])

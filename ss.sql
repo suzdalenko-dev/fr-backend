@@ -2339,4 +2339,16 @@ from articulos
         WHERE a2.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO AND a2.codigo_empresa = '001'
       )
   ) AS SUBFAMILIA
-FROM COSTES_ORDENES_FAB_MAT_CTD c
+FROM COSTES_ORDENES_FAB_MAT_CTD c;
+
+
+select *
+from temp_pedidos
+where NUMERO_SERIE not in ('PN', 'M', 'ENT', '')
+;
+
+SELECT *
+FROM all_tab_columns
+WHERE table_name = 'temp_pedidos'
+;
+

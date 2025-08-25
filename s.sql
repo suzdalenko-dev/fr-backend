@@ -260,3 +260,11 @@ AND expedientes_hojas_seguim.codigo_entrada IS NULL
 
 ORDER BY expedientes_hojas_seguim.fecha_prev_llegada ASC
 ;
+
+
+select *
+from ARTICULOS
+
+
+
+;
