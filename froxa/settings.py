@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from froxa.utils.utilities.load_config import load_app_config
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
@@ -120,3 +121,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
