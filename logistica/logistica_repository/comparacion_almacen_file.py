@@ -123,6 +123,8 @@ def comparacion_almacen_98(request):
 
 
 
+
+
 def aviso_diario_comp_98(request):
     oracle = OracleConnector()
     oracle.connect()
@@ -145,8 +147,7 @@ def aviso_diario_comp_98(request):
                         WHERE prlv.codigo_rapido = c.codigo_proveedor AND prlv.codigo_empresa = c.codigo_empresa) AS D_CODIGO_PROVEEDOR
     
             FROM ALBARAN_COMPRAS_C c
-            WHERE TRUNC(c.FECHA) >= DATE '2025-08-01'
-                AND c.CODIGO_EMPRESA = '001'
+            WHERE c.CODIGO_EMPRESA = '001'
                 AND c.ORGANIZACION_COMPRAS = '01'
                 AND c.CENTRO_CONTABLE IN (
                     SELECT DISTINCT gru.CODIGO_CENTRO
@@ -162,7 +163,7 @@ def aviso_diario_comp_98(request):
             ORDER BY FECHA DESC
             """
 
-    containers = oracle.consult(sql, {'current_day':current_day}) or []
+    containers = oracle.consult(sql, {'current_day': current_day}) or [] # '2024-06-10' current_day
     
     for r in containers:
         sql = """SELECT 
@@ -180,8 +181,7 @@ def aviso_diario_comp_98(request):
                         FROM proveedores prlv
                         WHERE prlv.codigo_rapido = albaran_compras_c.codigo_proveedor AND prlv.codigo_empresa = albaran_compras_c.codigo_empresa) AS D_CODIGO_PROVEEDOR
                 FROM ALBARAN_COMPRAS_C
-                WHERE FECHA >= TO_DATE('2025-08-01', 'YYYY-MM-DD')
-                    AND CODIGO_EMPRESA = '001'
+                WHERE CODIGO_EMPRESA = '001'
                     AND ORGANIZACION_COMPRAS = '01'
                     AND CENTRO_CONTABLE IN (
                             SELECT DISTINCT gru.CODIGO_CENTRO
@@ -214,8 +214,7 @@ def aviso_diario_comp_98(request):
                         FROM proveedores prlv
                         WHERE prlv.codigo_rapido = albaran_compras_c.codigo_proveedor AND prlv.codigo_empresa = albaran_compras_c.codigo_empresa) AS D_CODIGO_PROVEEDOR
                 FROM ALBARAN_COMPRAS_C
-                WHERE FECHA >= TO_DATE('2025-08-01', 'YYYY-MM-DD')
-                    AND CODIGO_EMPRESA = '001'
+                WHERE CODIGO_EMPRESA = '001'
                     AND ORGANIZACION_COMPRAS = '01'
                     AND CENTRO_CONTABLE IN (
                             SELECT DISTINCT gru.CODIGO_CENTRO
@@ -246,6 +245,7 @@ def aviso_diario_comp_98(request):
             message = ''
 
 
+    file_url = None
     if len(avisos)> 0:
         file_url = crear_excel_sin_pandas(avisos, '0', 'alm98')
 
@@ -256,7 +256,7 @@ def aviso_diario_comp_98(request):
             file_url[0]
         )
 
-    return {'file_url': file_url}
+    return {'avisos': avisos, 'file_url': file_url}
 
 
 
