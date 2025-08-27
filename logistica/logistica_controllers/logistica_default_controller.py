@@ -1,6 +1,7 @@
 import traceback
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
+from logistica.logistica_repository.comparacion_almacen_file import aviso_diario_comp_98, comparacion_almacen_98
 from logistica.logistica_repository.logistica_default_fun import change_palets, get_and_refresh_gema_routes, load_truck_details, order_clicked, refresh_gema_table
 from produccion.utils.sent_email_file import error_message_to_alexey
 
@@ -22,6 +23,9 @@ def log_default_controller(request, action, entity, code, description):
         'load_truck_details': lambda: load_truck_details(request, load_id, truck_id),  # http://127.0.0.1:8000/logistica/get/259/5/load_truck_details/
         'order_clicked': lambda: order_clicked(request, load_id),                      # http://127.0.0.1:8000/logistica/put/259/5/order_clicked/
         'change_palets': lambda: change_palets(request, load_id, truck_id),            # http://127.0.0.1:8000/logistica/put/259/5/change_palets/
+
+        'comparacion_almacen_98': lambda: comparacion_almacen_98(request),  # http://127.0.0.1:8000/logistica/recalculate/0/0/comparacion_almacen_98/
+        'aviso_diario_comp_98': lambda: aviso_diario_comp_98(request),      # http://127.0.0.1:8000/logistica/aviso/0/0/aviso_diario_comp_98/
     }
 
     try:

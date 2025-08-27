@@ -2352,3 +2352,72 @@ FROM all_tab_columns
 WHERE table_name = 'temp_pedidos'
 ;
 
+
+SELECT V_CODIGO_ALMACEN,
+                    D_CODIGO_ALMACEN,
+                    V_TIPO_SITUACION,
+                    V_CANTIDAD_PRESENTACION,
+                    V_PRESENTACION
+                FROM 
+                (
+                    SELECT  s.* , 
+                        CANTIDAD_PRESENTACION V_CANTIDAD_PRESENTACION,
+                        CODIGO_ALMACEN V_CODIGO_ALMACEN,
+                        PRESENTACION V_PRESENTACION,
+                        STOCK_UNIDAD1 V_STOCK_UNIDAD1,
+                        TIPO_SITUACION V_TIPO_SITUACION 
+                    FROM 
+                        (
+                            SELECT codigo_empresa, 
+                            codigo_almacen,
+                            (SELECT a.nombre FROM almacenes a WHERE a.almacen = s.codigo_almacen AND a.codigo_empresa = s.codigo_empresa) d_codigo_almacen, 
+                            codigo_articulo, 
+                            tipo_situacion, 
+                            presentacion, 
+                            SUM(c) stock_unidad1,
+                            SUM(NVL(cantidad_presentacion, 0)) cantidad_presentacion
+                            FROM stocks_detallado s  
+                            WHERE NOT EXISTS 
+                                (SELECT 1
+                                FROM almacenes_zonas az
+                                WHERE az.codigo_empresa = s.codigo_empresa
+                                       AND az.codigo_almacen = s.codigo_almacen
+                                       AND az.codigo_zona = s.codigo_zona
+                                       AND az.es_zona_reserva_virtual = 'S') 
+                                GROUP BY codigo_empresa, codigo_almacen, codigo_articulo, tipo_situacion, presentacion
+                        ) s 
+                )  s WHERE (NVL(stock_unidad1, 0) != 0) -- and CODIGO_ARTICULO=40079 
+                AND V_TIPO_SITUACION like '%EXPOR'
+                
+                order by codigo_almacen;
+
+
+select *
+from stocks_detallado
+where tipo_situacion like '%EXPOR'
+  and cantidad_unidad1 != 0
+
+;
+
+-- albaranes de compras
+
+select *
+from ALBARAN_COMPRAS_C
+where NUMERO_DOC_EXT IN ('214/2') 
+;
+
+select a.NOMBRE 
+from ALMACENES a 
+  WHERE a.ALMACEN = '25';
+
+
+SELECT PRECIO_CONSUMO
+FROM (
+    SELECT pls.PRECIO_CONSUMO
+    FROM PRECIOS_LISTAS pls
+    WHERE pls.CODIGO_ARTICULO = '40000'
+      AND pls.NUMERO_LISTA = 1
+      AND pls.ORGANIZACION_COMERCIAL = '01'
+    ORDER BY pls.FECHA_VALIDEZ DESC
+)
+WHERE ROWNUM = 1

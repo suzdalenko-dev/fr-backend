@@ -4,6 +4,12 @@ import json
 import os
 from django.forms import model_to_dict
 import calendar
+from urllib.parse import urljoin
+from django.conf import settings
+from openpyxl import Workbook
+
+
+
 
 def get_current_date():
     now = datetime.now()
@@ -98,4 +104,50 @@ def invoices_list_of_current_month():
     return month_ranges
 
 
+
+
+
+def crear_excel_sin_pandas(datos, folder_name, file_name):
+    """
+    Crea un Excel en MEDIA_ROOT/reports/0/ y devuelve ruta + URL.
+    :param datos: lista de diccionarios o lista de listas
+    :param nombre_archivo: nombre del archivo final (opcional)
+    :return: (ruta absoluta, url pública)
+    """
+
+    # 📂 Carpeta destino
+    carpeta = os.path.join(settings.MEDIA_ROOT, "reports", folder_name)
+    os.makedirs(carpeta, exist_ok=True)
+
+    # nombre de archivo por defecto con timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d__%H-%M-%S")
+    file_name = f"{file_name}_{timestamp}.xlsx"
+    ruta = os.path.join(carpeta, file_name)
+
+    # 📊 Crear Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Datos"
+
+    if not datos:
+        ws.append(["Sin datos"])
+    elif isinstance(datos, list) and isinstance(datos[0], dict):
+        # cabecera
+        ws.append(list(datos[0].keys()))
+        # filas
+        for fila in datos:
+            ws.append([fila.get(k, "") for k in datos[0].keys()])
+    else:
+        # lista de listas
+        for fila in datos:
+            ws.append(list(fila))
+
+    # 💾 Guardar archivo
+    wb.save(ruta)
+
+    # Construir URL pública a partir de MEDIA_URL
+    rel_path = os.path.relpath(ruta, settings.MEDIA_ROOT).replace(os.sep, "/")
+    file_url = urljoin(settings.MEDIA_URL, rel_path)
+
+    return ruta, file_url
 
