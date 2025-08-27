@@ -35,6 +35,8 @@ def save_line_invoice_line(invoiceLine, chargeDate, currentDate, sqlRes, importe
         fecha_factura_dt = datetime.strptime(invoiceLine.fecha_factura, '%Y-%m-%d')
         fecha_cobro_dt = datetime.strptime(invoiceLine.fecha_cobro, '%Y-%m-%d')
         invoiceLine.dias_real_pago = (fecha_cobro_dt - fecha_factura_dt).days
+        if invoiceLine.dias_real_pago < 0:
+            invoiceLine.dias_real_pago = 0
 
     if len(str(invoiceLine.fecha_vencimiento)) == 10 and len(str(invoiceLine.fecha_cobro)) == 10:
         fecha_factura_dt = datetime.strptime(invoiceLine.fecha_vencimiento, '%Y-%m-%d')
