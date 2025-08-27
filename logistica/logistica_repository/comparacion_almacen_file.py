@@ -1,9 +1,5 @@
 from froxa.utils.connectors.libra_connector import OracleConnector
 from froxa.utils.utilities.funcions_file import crear_excel_sin_pandas, get_short_date
-import os
-from openpyxl import Workbook
-from django.conf import settings
-
 from froxa.utils.utilities.smailer_file import SMailer
 
 
@@ -232,9 +228,6 @@ def aviso_diario_comp_98(request):
                     AND STATUS_ANULADO = 'N'
                     AND NUMERO_DOC_EXT = :num_doc_ext
                     AND CODIGO_ALMACEN IN ('00', '01', '02', 'E01', 'E02', 'E03', 'E04', 'E05')
-
-                    AND STATUS_ANULADO = 'BORRAR'
-
                 ORDER BY FECHA DESC
             """
         stock = oracle.consult(sql, {'num_doc_ext': r['NUMERO_DOC_EXT']}) or []
@@ -257,7 +250,7 @@ def aviso_diario_comp_98(request):
         file_url = crear_excel_sin_pandas(avisos, '0', 'alm98')
 
         SMailer.send_email(
-            ['almacen@froxa.com', 'alexey.suzdalenko@froxa.com'],
+            ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com'
             'Aviso Libra - Las compras del almacén 98 no coinciden - Consulta Albaranes de compra',
             'Las compras del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05 y 25',
             file_url[0]
