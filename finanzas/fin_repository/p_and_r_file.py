@@ -110,6 +110,7 @@ def payments_and_receipts(request):
                         AND fv.FECHA_FACTURA >= TO_DATE('2025-02-01', 'YYYY-MM-DD')
                         AND fv.FECHA_FACTURA >= TO_DATE(:start_month, 'YYYY-MM-DD') AND fv.FECHA_FACTURA <= TO_DATE(:end_month, 'YYYY-MM-DD')
                         AND fv.LIQUIDO_FACTURA > 0
+                        AND fv.CLIENTE NOT IN ('003146')
                         
                     ORDER BY 
                         fv.FECHA_FACTURA, 
