@@ -63,8 +63,8 @@ def payments_and_receipts(request):
                              AND cli.CODIGO_EMPRESA = org.CODIGO_EMPRESA
                             WHERE cli.CODIGO_RAPIDO = fv.CLIENTE
                               AND cli.CODIGO_EMPRESA = fv.EMPRESA
-                              AND org.NOMBRE NOT IN ('VENTA LOGISTICA FROXA', 'VENTA TIENDA CARTES FROXA')
-                              AND org.NOMBRE IS NOT NULL
+                              -- AND org.NOMBRE NOT IN ('VENTA LOGISTICA FROXA', 'VENTA TIENDA CARTES FROXA')
+                              -- AND org.NOMBRE IS NOT NULL
                               AND ROWNUM = 1
                         ) AS DESCRIPCION_ORG_COMER,
 
