@@ -109,7 +109,16 @@ def payments_and_receipts(request):
                         AND fv.FECHA_FACTURA >= TO_DATE(:start_month, 'YYYY-MM-DD') AND fv.FECHA_FACTURA <= TO_DATE(:end_month, 'YYYY-MM-DD')
                         AND fv.LIQUIDO_FACTURA > 0
                         AND fv.CLIENTE NOT IN ('003146')
-                        
+                        AND EXISTS (
+                            SELECT 1
+                            FROM VA_CLIENTES cli
+                            JOIN ORGANIZACION_COMERCIAL org
+                              ON org.CODIGO_ORG_COMER = cli.ORG_COMER
+                             AND org.CODIGO_EMPRESA   = cli.CODIGO_EMPRESA
+                            WHERE cli.CODIGO_RAPIDO   = fv.CLIENTE
+                              AND cli.CODIGO_EMPRESA  = fv.EMPRESA
+                              AND org.CODIGO_ORG_COMER IN ('01','02','03','04')  -- ← aquí
+                        )
                     ORDER BY 
                         fv.FECHA_FACTURA, 
                         fv.NUMERO_FRA_CONTA
