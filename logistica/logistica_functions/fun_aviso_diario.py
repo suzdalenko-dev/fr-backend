@@ -30,7 +30,7 @@ def get_containers_for_today(oracle):
                     WHERE li.NUMERO_DOC_INTERNO = c.NUMERO_DOC_INTERNO AND li.CODIGO_EMPRESA = c.CODIGO_EMPRESA)
                 AND c.STATUS_ANULADO = 'N'
                 AND c.CODIGO_ALMACEN = '98'
-                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') != :current_day          
+                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') = :current_day          
             ORDER BY c.FECHA DESC
             """
 
