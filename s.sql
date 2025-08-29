@@ -1,270 +1,48 @@
-SELECT  articulos.codigo_familia,
-        articulos.d_codigo_familia,
-        expedientes_articulos_embarque.articulo,
-        expedientes_articulos_embarque.d_articulo,
-        expedientes_hojas_seguim.num_expediente,
-        expedientes_hojas_seguim.num_hoja,
-        expedientes_articulos_embarque.contenedor,
-        expedientes_imp.forma_envio,
-        expedientes_articulos_embarque.cantidad cantidad1,
-        (CASE
-            -- Si la situación logística es '00', se realiza la operación de resta
-  WHEN EXISTS (
-    SELECT 1 
-    FROM EXPEDIENTES_HOJAS_SEGUIM h3
-    WHERE expedientes_articulos_embarque.num_expediente = h3.num_expediente
-      AND expedientes_articulos_embarque.num_hoja = h3.num_hoja
-      AND h3.situacion_logistica = '00'
-  )
-  THEN
-  (
-    -- Suma de las cantidades de las hojas de seguimiento donde la situación es '00'
-    (
-      SELECT SUM(h2.cantidad) 
-      FROM expedientes_articulos_embarque h2
-      WHERE expedientes_articulos_embarque.num_expediente = h2.num_expediente
-        AND expedientes_articulos_embarque.articulo = h2.articulo
-        AND EXISTS (
-            SELECT 1 
-            FROM EXPEDIENTES_HOJAS_SEGUIM h3
-            WHERE h2.num_expediente = h3.num_expediente
-              AND h2.num_hoja = h3.num_hoja
-              AND h3.situacion_logistica = '00'
-        )
-    )
-    -
-    (
-      -- Resta de las cantidades de las hojas de seguimiento donde la situación no es '00'
-      SELECT SUM(h2.cantidad) 
-      FROM expedientes_articulos_embarque h2
-      WHERE expedientes_articulos_embarque.num_expediente = h2.num_expediente
-        AND expedientes_articulos_embarque.articulo = h2.articulo
-        AND EXISTS (
-            SELECT 1 
-            FROM EXPEDIENTES_HOJAS_SEGUIM h3
-            WHERE h2.num_expediente = h3.num_expediente
-              AND h2.num_hoja = h3.num_hoja
-              AND h3.situacion_logistica != '00'
-        )
-    )
-  )
-  ELSE
-    -- Si la situación no es '00', se devuelve la cantidad de expedientes_articulos_embarque
-    expedientes_articulos_embarque.cantidad
-END
-) cantidad2,
-expedientes_articulos_embarque.presentacion,
-expedientes_articulos_embarque.destino_especial,
-expedientes_articulos_embarque.deposito_aduanero,
-expedientes_articulos_embarque.precio,
-expedientes_articulos_embarque.importe,
-DECODE(NVL(EXPEDIENTES_IMP.VALOR_CAMBIO,0) , 0, expedientes_articulos_embarque.precio , expedientes_articulos_embarque.precio * EXPEDIENTES_IMP.VALOR_CAMBIO) precio_por_valor_cambio,
-coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1) VALOR_CAMBIO,
-SUBSTR(expedientes_hojas_seguim.tipo_cambio, 1, 1) tipo_cambio,
-1 / coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1) VALOR_CAMBIO2,
-DECODE(coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1), 
-       0, expedientes_articulos_embarque.precio, 
-       expedientes_articulos_embarque.precio * coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1)) precio_por_valor_cambio2,
-       (((SELECT SUM(hs.importe_portes) FROM reparto_portes_hs hs WHERE hs.codigo_empresa = expedientes_hojas_seguim.empresa AND hs.numero_expediente = expedientes_hojas_seguim.num_expediente AND hs.hoja_seguimiento = expedientes_hojas_seguim.num_hoja 
-     and hs.codigo_articulo = expedientes_articulos_embarque.articulo) / DECODE(articulos.unidad_valoracion, 1, expedientes_articulos_embarque.cantidad_unidad1, 2, expedientes_articulos_embarque.cantidad_unidad2)) + (expedientes_articulos_embarque.precio *
-        DECODE(expedientes_hojas_seguim.tipo_cambio, 'E', DECODE(expedientes_imp.cambio_asegurado, 'S', expedientes_imp.valor_cambio, 'N', 1), 'S', expedientes_hojas_seguim.valor_cambio, 'N',coalesce(EXPEDIENTES_HOJAS_SEGUIM.VALOR_CAMBIO, EXPEDIENTES_IMP.VALOR_CAMBIO,1)))) precio_con_gastos,
-        expedientes_imp.d_clave_arancel,
-        expedientes_hojas_seguim.d_situacion_logistica,
-        expedientes_hojas_seguim.documentacion_x_contenedor,
-        expedientes_hojas_seguim.fecha_prev_llegada,
-        expedientes_hojas_seguim.fecha_prev_embarque,
-        expedientes_imp.d_plantilla,
-        NVL(EXPEDIENTES_HOJAS_SEGUIM.PROVEEDOR,EXPEDIENTES_IMP.PROVEEDOR) PROVEEDOR,
-        expedientes_hojas_seguim.d_proveedor_hoja,
-        expedientes_imp.d_descripcion_expediente,
-        expedientes_hojas_seguim.codigo_entrada,
-        expedientes_hojas_seguim.id_seguro_cambio,
-        (select nombre from bancos b, Seguros_cambio c
-            where b.codigo_rapido = c.banco
-            and b.empresa = c.empresa
-            and c.id = expedientes_hojas_seguim.id_seguro_cambio) id_seguro_cambio2,
-        (SELECT MAX(DOCUMENTO) FROM SEGUROS_CAMBIO c WHERE c.ID = expedientes_hojas_seguim.id_seguro_cambio) DOCUMENTO_SEGUROS_CAMBIO,
-        (select SUM(IMPORTE) from  Seguros_cambio c where  c.id = expedientes_hojas_seguim.id_seguro_cambio) importe_seguros_cambio,
-        expedientes_hojas_seguim.carta_credito,
-        (SELECT MAX(FECHA_VENCIMIENTO) FROM CARTAS_CREDITO C WHERE C.NUMERO_CARTA_CREDITO = expedientes_hojas_seguim.CARTA_CREDITO ) FECHA_VENCIMIENTO
-        FROM (SELECT ARTICULOS.*,DECODE(articulos.codigo_familia,NULL,NULL,(SELECT lvfm.descripcion FROM familias lvfm WHERE lvfm.codigo_familia = articulos.codigo_familia AND lvfm.numero_tabla = 1 AND lvfm.codigo_empresa = articulos.codigo_empresa)) D_CODIGO_FAMILIA FROM ARTICULOS) ARTICULOS,(SELECT EXPEDIENTES_IMP.*,DECODE(expedientes_imp.clave_arancel,NULL,NULL,(SELECT lvarimp.descripcion FROM aranceles_imp lvarimp WHERE lvarimp.clave_arancel = expedientes_imp.clave_arancel AND lvarimp.codigo_empresa = expedientes_imp.empresa)) D_CLAVE_ARANCEL,DECODE(expedientes_imp.plantilla,NULL,NULL,(SELECT lvpltimp.nombre FROM plantillas_impor lvpltimp WHERE lvpltimp.codigo = expedientes_imp.plantilla AND lvpltimp.empresa = expedientes_imp.empresa)) D_PLANTILLA,(SELECT lvexpc.descripcion FROM expedientes_cab lvexpc WHERE lvexpc.codigo = expedientes_imp.codigo AND lvexpc.empresa = expedientes_imp.empresa) D_DESCRIPCION_EXPEDIENTE FROM EXPEDIENTES_IMP) EXPEDIENTES_IMP,(SELECT EXPEDIENTES_HOJAS_SEGUIM.*,(SELECT DESCRIPCION FROM EXPEDIENTES_HOJAS_SITUACION WHERE CODIGO=EXPEDIENTES_HOJAS_SEGUIM.SITUACION_LOGISTICA) D_SITUACION_LOGISTICA,NVL((SELECT pr.nombre
- FROM proveedores pr
-WHERE pr.codigo_rapido = expedientes_hojas_seguim.proveedor
-AND pr.codigo_empresa = expedientes_hojas_seguim.empresa),(SELECT pr.nombre
-FROM proveedores pr, expedientes_imp ei
-WHERE ei.codigo = expedientes_hojas_seguim.num_expediente
-AND ei.empresa = expedientes_hojas_seguim.empresa
-AND pr.codigo_rapido = ei.proveedor
-AND pr.codigo_empresa = ei.empresa)) D_PROVEEDOR_HOJA,(SELECT LISTAGG(EC.NUM_CARTA_CREDITO, ',') within group (order by EC.NUM_CARTA_CREDITO)
-FROM EXPEDIENTES_HOJAS_SEGUIM_MOV EC
-WHERE EC.NUM_EXPEDIENTE = EXPEDIENTES_HOJAS_SEGUIM.NUM_EXPEDIENTE
-AND EC.NUM_HOJA = EXPEDIENTES_HOJAS_SEGUIM.NUM_HOJA
-AND  EC.EMPRESA = EXPEDIENTES_HOJAS_SEGUIM.EMPRESA) CARTA_CREDITO FROM EXPEDIENTES_HOJAS_SEGUIM) EXPEDIENTES_HOJAS_SEGUIM,(SELECT EXPEDIENTES_ARTICULOS_EMBARQUE.*,(SELECT (SELECT DECODE(usuarios.tipo_desc_art,'V',articulos.descrip_comercial, 'C',articulos.descrip_compra, 'T',articulos.descrip_tecnica,articulos.descrip_comercial) FROM usuarios WHERE usuarios.usuario=pkpantallas.usuario_validado) FROM articulos WHERE articulos.codigo_articulo = expedientes_articulos_embarque.articulo AND articulos.codigo_empresa  =expedientes_articulos_embarque.empresa) D_ARTICULO,(SELECT DECODE(AR.UNIDAD_PRECIO_COSTE,1,CANTIDAD_UNIDAD1*PRECIO,CANTIDAD_UNIDAD2*PRECIO) FROM ARTICULOS AR WHERE AR.CODIGO_ARTICULO =  EXPEDIENTES_ARTICULOS_EMBARQUE.ARTICULO AND AR.CODIGO_EMPRESA = EXPEDIENTES_ARTICULOS_EMBARQUE.EMPRESA) IMPORTE FROM EXPEDIENTES_ARTICULOS_EMBARQUE) EXPEDIENTES_ARTICULOS_EMBARQUE,EXPEDIENTES_CONTENEDORES WHERE (expedientes_contenedores.num_expediente=expedientes_articulos_embarque.num_expediente
-and expedientes_contenedores.num_hoja=expedientes_articulos_embarque.num_hoja
-and expedientes_contenedores.empresa=expedientes_articulos_embarque.empresa
-AND expedientes_contenedores.linea=expedientes_articulos_embarque.linea_contenedor
-and expedientes_hojas_seguim.num_expediente=expedientes_articulos_embarque.num_expediente
-and expedientes_hojas_seguim.num_hoja=expedientes_articulos_embarque.num_hoja
-and expedientes_hojas_seguim.empresa=expedientes_articulos_embarque.empresa
-and expedientes_imp.codigo=expedientes_hojas_seguim.num_expediente
-and expedientes_imp.empresa=expedientes_hojas_seguim.empresa
-and expedientes_articulos_embarque.empresa='001'
-AND articulos.codigo_articulo=expedientes_articulos_embarque.articulo
-AND articulos.codigo_empresa=expedientes_articulos_embarque.empresa
-AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_contenedores ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND contenedor LIKE '')) AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_contenedores ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND tipo='')) AND ('' IS NULL OR
-(EXISTS(SELECT 1
-FROM con_impor co,expedientes_hojas_seguim_con ec
-WHERE co.codigo=ec.concepto
-AND co.tipo='PO'
-AND co.codigo_empresa=ec.empresa
-AND ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND proveedor=''))) AND ('' IS NULL OR
-(EXISTS(SELECT 1
-FROM con_impor co,expedientes_hojas_seguim_con ec
-WHERE co.codigo=ec.concepto
-AND co.tipo='FL'
-AND ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND proveedor=''))) AND ('' IS NULL OR
-(EXISTS(SELECT 1
-FROM con_impor co,expedientes_hojas_seguim_con ec
-WHERE co.codigo=ec.concepto
-AND co.tipo='DE'
-AND co.codigo_empresa=ec.empresa
-AND ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND proveedor=''))) AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND num_carta_credito LIKE '')) AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND num_bill_lading LIKE '')) AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_articulos_embarque ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND ec.lote LIKE ''))
-AND ('' IS NULL OR
-EXISTS(SELECT 1 FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND numero_booking LIKE ''))
-AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND banco LIKE ''))
-AND ('' IS NULL OR expedientes_hojas_seguim.numero_dua LIKE '' OR
-(EXISTS(SELECT 1
-FROM expedientes_contenedores_docs ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja =expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND codigo_dua LIKE '') OR expedientes_imp.numero_dua LIKE ''))
-AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND ec.cod_movimiento
-IN (SELECT col_value FROM TABLE(pktmp_select_in.split_cadena_vch2('')))
-)) AND ('' IS NULL OR
-NOT EXISTS(SELECT 1
-FROM expedientes_hojas_seguim_mov ec
-WHERE ec.num_expediente=expedientes_hojas_seguim.num_expediente
-AND ec.num_hoja=expedientes_hojas_seguim.num_hoja
-AND ec.empresa=expedientes_hojas_seguim.empresa
-AND ec.cod_movimiento IN (SELECT col_value FROM TABLE(pktmp_select_in.split_cadena_vch2(''))))) AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM albaran_compras_c ac
-WHERE ac.numero_expediente=expedientes_hojas_seguim.num_expediente
-AND ac.codigo_EMPRESA=expedientes_hojas_seguim.EMPRESA
-AND (ac.hoja_seguimiento IS NULL OR ac.hoja_seguimiento=expedientes_hojas_seguim.num_hoja)
-AND ac.numero_doc_interno=''))
-AND ('' IS NULL OR
-EXISTS(SELECT 1
-FROM facturas_compras_lin fc,albaran_compras_l al,albaran_compras_c ac
-WHERE ac.numero_expediente=expedientes_hojas_seguim.num_expediente
-AND ac.codigo_empresa=expedientes_hojas_seguim.empresa
-AND (ac.hoja_seguimiento IS NULL OR ac.hoja_seguimiento=expedientes_hojas_seguim.num_hoja)
-AND al.numero_doc_interno=ac.numero_doc_interno
-AND al.codigo_empresa=ac.codigo_empresa
-AND fc.num_albaran_int=al.numero_doc_interno
-AND fc.linea_albaran=al.numero_linea
-AND fc.numero_factura=''
-AND fc.codigo_empresa=al.codigo_empresa))
-AND ('' IS NULL OR NVL(expedientes_hojas_seguim.proveedor,(SELECT ei.proveedor FROM expedientes_imp ei WHERE ei.codigo=expedientes_hojas_seguim.num_expediente AND ei.empresa=expedientes_hojas_seguim.empresa))='')
-AND (('' IS NULL AND '' IS NULL AND '' IS NULL AND '' IS NULL) OR
-EXISTS (SELECT 1
-FROM pedidos_ventas pv
-WHERE pv.empresa=expedientes_hojas_seguim.empresa
-AND pv.numero_expediente=expedientes_hojas_seguim.num_expediente
-AND (pv.hoja_seguimiento IS NULL OR pv.hoja_seguimiento=expedientes_hojas_seguim.num_hoja)
-AND (pv.organizacion_comercial= '' OR '' IS NULL)
-AND (pv.ejercicio= '' OR '' IS NULL)
-AND (pv.numero_pedido= '' OR '' IS NULL)
-AND (pv.numero_serie= '' OR '' IS NULL)
-AND NVL(pv.anulado, 'N') = 'N'))
-AND (('' IS NULL AND '' IS NULL AND '' IS NULL AND '' IS NULL) OR
-EXISTS (SELECT 1
-FROM albaran_ventas pv
-WHERE pv.empresa=expedientes_hojas_seguim.empresa
-AND pv.numero_expediente=expedientes_hojas_seguim.num_expediente
-AND (pv.hoja_seguimiento IS NULL OR pv.hoja_seguimiento=expedientes_hojas_seguim.num_hoja)
-AND (pv.organizacion_comercial= '' OR '' IS NULL)
-AND (pv.ejercicio= '' OR '' IS NULL)
-AND (pv.numero_albaran= '' OR '' IS NULL)
-AND (pv.numero_serie= '' OR '' IS NULL)
-AND NVL(pv.anulado, 'N') = 'N'))
-AND (('' IS NULL AND '' IS NULL AND '' IS NULL) OR
-EXISTS (SELECT 1
-FROM albaran_ventas pv
-WHERE pv.empresa=expedientes_hojas_seguim.empresa
-AND pv.numero_expediente=expedientes_hojas_seguim.num_expediente
-AND (pv.hoja_seguimiento IS NULL OR pv.hoja_seguimiento=expedientes_hojas_seguim.num_hoja)
-AND (pv.ejercicio_factura='' OR '' IS NULL)
-AND (pv.numero_factura='' OR '' IS NULL)
-AND (pv.numero_serie_fra='' OR '' IS NULL)
-AND NVL(pv.anulado, 'N') = 'N'))
-AND ('' is null or exists (select 1 from expedientes_imp_agentes ea where ea.numero_expediente = expedientes_imp.codigo and ea.agente = '' and ea.empresa = expedientes_imp.empresa)) AND (EXPEDIENTES_HOJAS_SEGUIM.STATUS NOT IN ('C'))) AND (articulos.codigo_empresa = '001') AND (expedientes_imp.empresa = '001') AND (expedientes_hojas_seguim.empresa = '001') AND (expedientes_articulos_embarque.EMPRESA='001') AND (expedientes_contenedores.empresa = '001') 
--- AND expedientes_hojas_seguim.num_expediente = 309
-AND expedientes_hojas_seguim.codigo_entrada IS NULL
-
-ORDER BY expedientes_hojas_seguim.fecha_prev_llegada ASC
-;
-
-
 select *
 from ARTICULOS
-
-
-
 ;
+
+-- lineas albaran compras alm. 90
+SELECT SUM(nvl(importe_lin_neto_div,importe_lin_neto) IMPORTE), MIN(DIVISA)
+FROM albaran_compras_l
+WHERE NUMERO_DOC_INTERNO = '5468' AND CODIGO_EMPRESA = '001'
+;
+
+-- LINEAS ALBARAN alm. 00
+SELECT CODIGO_ARTICULO, nvl(importe_lin_neto_div,importe_lin_neto) IMPORTE, DIVISA
+FROM albaran_compras_l
+WHERE NUMERO_DOC_INTERNO = '5582' AND CODIGO_EMPRESA = '001'
+;
+
+-- LINEAS ALBARAN alm. 25 DE GASTO EUR
+SELECT CODIGO_ARTICULO, nvl(importe_lin_neto_div,importe_lin_neto) IMPORTE, DIVISA
+FROM albaran_compras_l
+WHERE NUMERO_DOC_INTERNO = '5451' AND CODIGO_EMPRESA = '001'
+;
+
+SELECT DIVISA_ORIGEN, 
+        DIVISA_DESTINO, 
+        FECHA_VALOR,
+        VALOR_COMPRA,
+        VALOR_VENTA
+        FROM (SELECT cambio_divisas.* ,(SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_destino) D_DIVISA_DESTINO,(SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_origen) D_DIVISA_ORIGEN FROM cambio_divisas) cambio_divisas 
+        where fecha_valor >= '01/02/2025' 
+        order by fecha_valor asc;
+
+
+SELECT GC1,D_GC1,GC2, GN1 FROM (SELECT EMPRESA GC1,DECODE(froxa_seguros_cambio.empresa,NULL,NULL,(SELECT lvemp.nombre FROM empresas_conta lvemp WHERE lvemp.codigo = froxa_seguros_cambio.empresa)) D_GC1,PERIODO GC2,CAMBIO GN1,NULL GN2,NULL GN3,NULL GN4,NULL GN5,NULL GN6,NULL GN7,NULL GN8,NULL GN9,NULL GN10,NULL GN11,NULL GN12,NULL GN13,NULL GN14,NULL GN15,NULL GN16,NULL GN17,NULL GN18,NULL GN19,NULL GN20,NULL GN21,NULL GN22,NULL GN23,NULL GN24,NULL GN25,NULL GC3,NULL GC4,NULL GC5,NULL GC6,NULL GC7,NULL GC8,NULL GC9,NULL GC10,NULL GC11,NULL GC12,NULL GC13,NULL GC14,NULL GC15,NULL GC16,NULL GC17,NULL GC18,NULL GC19,NULL GC20,NULL GC21,NULL GC22,NULL GC23,NULL GC24,NULL GC25,NULL GD1,NULL GD2,NULL GD3,NULL GD4,NULL GD5,NULL GD6,NULL GD7,NULL GD8,NULL GD9,NULL GD10,NULL GD11,NULL GD12,NULL GD13,NULL GD14,NULL GD15,NULL GD16,NULL GD17,NULL GD18,NULL GD19,NULL GD20,NULL GD21,NULL GD22,NULL GD23,NULL GD24,NULL GD25,NULL GCHECK1,NULL GCHECK2,NULL GCHECK3,NULL GCHECK4,NULL GCHECK5,NULL GCHECK6,NULL GCHECK7,NULL GCHECK8,NULL GCHECK9,NULL GCHECK10,NULL GCHECK11,NULL GCHECK12,NULL GCHECK13,NULL GCHECK14,NULL GCHECK15,NULL GCHECK16,NULL GCHECK17,NULL GCHECK18,NULL GCHECK19,NULL GCHECK20,NULL GCHECK21,NULL GCHECK22,NULL GCHECK23,NULL GCHECK24,NULL GCHECK25,NULL N1,NULL N2,NULL N3,NULL N4,NULL N5,NULL N6,NULL N7,NULL N8,NULL N9,NULL N10,NULL N11,NULL N12,NULL N13,NULL N14,NULL N15,NULL N16,NULL N17,NULL N18,NULL N19,NULL N20,NULL N21,NULL N22,NULL N23,NULL N24,NULL N25,NULL N26,NULL N27,NULL N28,NULL N29,NULL N30,NULL C1,NULL C2,NULL C3,NULL C4,NULL C5,NULL C6,NULL C7,NULL C8,NULL C9,NULL C10,NULL C11,NULL C12,NULL C13,NULL C14,NULL C15,NULL C16,NULL C17,NULL C18,NULL C19,NULL C20,NULL C21,NULL C22,NULL C23,NULL C24,NULL C25,NULL C26,NULL C27,NULL C28,NULL C29,NULL C30,NULL D1,NULL D2,NULL D3,NULL D4,NULL D5,NULL D6,NULL D7,NULL D8,NULL D9,NULL D10,NULL D11,NULL D12,NULL D13,NULL D14,NULL D15,NULL D16,NULL D17,NULL D18,NULL D19,NULL D20,NULL D21,NULL D22,NULL D23,NULL D24,NULL D25,NULL D26,NULL D27,NULL D28,NULL D29,NULL D30,NULL CHECK1,NULL CHECK2,NULL CHECK3,NULL CHECK4,NULL CHECK5,NULL CHECK6,NULL CHECK7,NULL CHECK8,NULL CHECK9,NULL CHECK10,NULL CHECK11,NULL CHECK12,NULL CHECK13,NULL CHECK14,NULL CHECK15,NULL CHECK16,NULL CHECK17,NULL CHECK18,NULL CHECK19,NULL CHECK20,NULL CHECK21,NULL CHECK22,NULL CHECK23,NULL CHECK24,NULL CHECK25,NULL CHECK26,NULL CHECK27,NULL CHECK28,NULL CHECK29,NULL CHECK30,NULL LIST1,NULL LIST2,NULL LIST3,NULL LIST4,NULL LIST5,NULL LIST6,NULL LIST7,NULL LIST8,NULL LIST9,NULL LIST10,NULL TEXTAREA1,NULL TEXTAREA2,NULL D_GC2,NULL D_GC3,NULL D_GC4,NULL D_GC5,NULL D_GC6,NULL D_GC7,NULL D_GC8,NULL D_GC9,NULL D_GC10,NULL D_GC11,NULL D_GC12,NULL D_GC13,NULL D_GC14,NULL D_GC15,NULL D_GC16,NULL D_GC17,NULL D_GC18,NULL D_GC19,NULL D_GC20,NULL D_GC21,NULL D_GC22,NULL D_GC23,NULL D_GC24,NULL D_GC25,NULL D_GN0,NULL D_GN1,NULL D_GN2,NULL D_GN3,NULL D_GN4,NULL D_GN5,NULL D_GN6,NULL D_GN7,NULL D_GN8,NULL D_GN9,NULL D_GN10,NULL D_GN11,NULL D_GN12,NULL D_GN13,NULL D_GN14,NULL D_GN15,NULL D_GN16,NULL D_GN17,NULL D_GN18,NULL D_GN19,NULL D_GN20,NULL D_GN21,NULL D_GN22,NULL D_GN23,NULL D_GN24,NULL D_GN25,NULL D_C1,NULL D_C2,NULL D_C3,NULL D_C4,NULL D_C5,NULL D_C6,NULL D_C7,NULL D_C8,NULL D_C9,NULL D_C10,NULL D_C11,NULL D_C12,NULL D_C13,NULL D_C14,NULL D_C15,NULL D_C16,NULL D_C17,NULL D_C18,NULL D_C19,NULL D_C20,NULL D_C21,NULL D_C22,NULL D_C23,NULL D_C24,NULL D_C25,NULL D_C26,NULL D_C27,NULL D_C28,NULL D_C29,NULL D_C30,NULL D_N1,NULL D_N2,NULL D_N3,NULL D_N4,NULL D_N5,NULL D_N6,NULL D_N7,NULL D_N8,NULL D_N9,NULL D_N10,NULL D_N11,NULL D_N12,NULL D_N13,NULL D_N14,NULL D_N15,NULL D_N16,NULL D_N17,NULL D_N18,NULL D_N19,NULL D_N20,NULL D_N21,NULL D_N22,NULL D_N23,NULL D_N24,NULL D_N25,NULL D_N26,NULL D_N27,NULL D_N28,NULL D_N29,NULL D_N30,NULL GN0,NULL GD0,rowid int_rowid FROM FROXA_SEGUROS_CAMBIO) FROXA_SEGUROS_CAMBIO WHERE 8=8 order by GC2 DESC;
+
+
+SELECT GC1 EMPRESA, D_GC1 NOMBRE, GC2 FECHA, GN1 VALOR_CAMBIO
+FROM (
+    SELECT EMPRESA GC1,
+           DECODE(froxa_seguros_cambio.empresa,NULL,NULL,
+                  (SELECT lvemp.nombre 
+                     FROM empresas_conta lvemp 
+                    WHERE lvemp.codigo = froxa_seguros_cambio.empresa)) D_GC1,
+           PERIODO GC2,
+           CAMBIO GN1
+    FROM FROXA_SEGUROS_CAMBIO
+    ORDER BY PERIODO DESC
+)
+WHERE ROWNUM = 1;

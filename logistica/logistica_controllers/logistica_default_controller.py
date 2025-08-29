@@ -1,7 +1,8 @@
 import traceback
 from django.http import JsonResponse
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
-from logistica.logistica_repository.comparacion_almacen_file import aviso_diario_comp_98, comparacion_almacen_98
+from logistica.logistica_repository.aviso_diario_rep import aviso_diario_comp_98
+from logistica.logistica_repository.comparacion_almacen_file import comparacion_almacen_98
 from logistica.logistica_repository.logistica_default_fun import change_palets, get_and_refresh_gema_routes, load_truck_details, order_clicked, refresh_gema_table
 from produccion.utils.sent_email_file import error_message_to_alexey
 
