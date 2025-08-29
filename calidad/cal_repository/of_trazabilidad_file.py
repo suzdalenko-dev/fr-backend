@@ -61,18 +61,40 @@ def of_trazabilidad_function(request, of_id):
  
     res[0]['MATERIAL_PEDIDO'] = oracle.consult(material_ordered, {"of_id": of_id})
 
-    material_consumed = """select ORDEN_DE_FABRICACION,
-                            CODIGO_ARTICULO_PRODUCIDO,
-                            NUMERO_LOTE_INT_PRODUCIDO,
-                            CODIGO_ARTICULO_CONSUMIDO,
-                            (select DESCRIP_COMERCIAL from articulos where codigo_articulo = CODIGO_ARTICULO_CONSUMIDO) AS DESCRIP_CONSUMIDO,
-                            (select unidad_codigo1 from  articulos where codigo_articulo = CODIGO_ARTICULO_CONSUMIDO) AS CODIGO_PRESENTACION,
-                            NUMERO_LOTE_INT_CONSUMIDO,
-                            CANTIDAD_UNIDAD1,
-                            (select MAX(FECHA_CREACION) from historico_lotes where NUMERO_LOTE_INT  = NUMERO_LOTE_INT_CONSUMIDO and CODIGO_ARTICULO =  CODIGO_ARTICULO_CONSUMIDO) AS FECHA_CREACION,
-                            (select MAX(FECHA_CADUCIDAD) from historico_lotes where NUMERO_LOTE_INT = NUMERO_LOTE_INT_CONSUMIDO and CODIGO_ARTICULO =  CODIGO_ARTICULO_CONSUMIDO) AS FECHA_CADUCIDAD
-                        from COSTES_ORDENES_FAB_MAT_CTD
-                        where ORDEN_DE_FABRICACION = :of_id"""
+    # por alguan razon en esta tabla no estan los consumos de articulos fantasmas
+    # material_consumed = """select ORDEN_DE_FABRICACION,
+    #                         CODIGO_ARTICULO_PRODUCIDO,
+    #                         NUMERO_LOTE_INT_PRODUCIDO,
+    #                         CODIGO_ARTICULO_CONSUMIDO,
+    #                         (select DESCRIP_COMERCIAL from articulos where codigo_articulo = CODIGO_ARTICULO_CONSUMIDO) AS DESCRIP_CONSUMIDO,
+    #                         (select unidad_codigo1 from  articulos where codigo_articulo = CODIGO_ARTICULO_CONSUMIDO) AS CODIGO_PRESENTACION,
+    #                         NUMERO_LOTE_INT_CONSUMIDO,
+    #                         CANTIDAD_UNIDAD1,
+    #                         (select MAX(FECHA_CREACION) from historico_lotes where NUMERO_LOTE_INT  = NUMERO_LOTE_INT_CONSUMIDO and CODIGO_ARTICULO =  CODIGO_ARTICULO_CONSUMIDO) AS FECHA_CREACION,
+    #                         (select MAX(FECHA_CADUCIDAD) from historico_lotes where NUMERO_LOTE_INT = NUMERO_LOTE_INT_CONSUMIDO and CODIGO_ARTICULO =  CODIGO_ARTICULO_CONSUMIDO) AS FECHA_CADUCIDAD
+    #                     from COSTES_ORDENES_FAB_MAT_CTD
+    #                     where ORDEN_DE_FABRICACION = :of_id"""
+    # res[0]['MATERIAL_CONSUMIDO'] = oracle.consult(material_consumed, {"of_id": of_id})
+
+    material_consumed = """SELECT
+                              MAX(om.ORDEN_DE_FABRICACION)                 AS ORDEN_DE_FABRICACION,
+                              om.CODIGO_COMPONENTE                         AS CODIGO_ARTICULO_CONSUMIDO,
+                              MAX(om.DESC_ARTICULO)                        AS DESCRIP_CONSUMIDO,
+                              MAX(om.CODIGO_PRESENTACION_COMPO)            AS CODIGO_PRESENTACION,
+                              om.NUMERO_LOTE_INT                           AS NUMERO_LOTE_INT_CONSUMIDO,
+                              SUM(NVL(om.CANT_REAL_CONSUMO_UNIDAD1,0)) AS CANTIDAD_UNIDAD1,
+                              MAX(hl.FECHA_CREACION)                       AS FECHA_CREACION,
+                              MAX(hl.FECHA_CADUCIDAD)                      AS FECHA_CADUCIDAD
+                            FROM OF_MATERIALES_UTILIZADOS om
+                            LEFT JOIN HISTORICO_LOTES hl
+                              ON hl.NUMERO_LOTE_INT = om.NUMERO_LOTE_INT
+                             AND hl.CODIGO_ARTICULO = om.CODIGO_COMPONENTE
+                            WHERE om.ORDEN_DE_FABRICACION = :of_id
+                            GROUP BY
+                              om.CODIGO_COMPONENTE,
+                              om.NUMERO_LOTE_INT
+                            ORDER BY om.CODIGO_COMPONENTE, om.NUMERO_LOTE_INT
+                        """
     res[0]['MATERIAL_CONSUMIDO'] = oracle.consult(material_consumed, {"of_id": of_id})
 
     material_produced = """select h.CODIGO_ARTICULO,
