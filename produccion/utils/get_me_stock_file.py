@@ -349,28 +349,57 @@ def consumo_pasado(oracle, arr_codigos_erp, r_fechas):
     consumo_data = []
 
     for codigo_erp in arr_codigos_erp:
+        # sql_of = """SELECT 
+        #                 ofc.FECHA_ENTREGA_PREVISTA,
+        #                 cofmc.ORDEN_DE_FABRICACION,
+        #                 cofmc.CODIGO_ARTICULO_CONSUMIDO,
+        #                 a.DESCRIP_COMERCIAL AS DESCRIP_CONSUMIDO,
+        #                 a.unidad_codigo1 AS CODIGO_PRESENTACION,
+        #                 TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) AS CANTIDAD,
+        #                 'OFS_CONSUMO' AS CONSUMO
+        #             FROM 
+        #                 COSTES_ORDENES_FAB_MAT_CTD cofmc
+        #             JOIN 
+        #                 ORDENES_FABRICA_CAB ofc ON ofc.ORDEN_DE_FABRICACION = cofmc.ORDEN_DE_FABRICACION
+        #             JOIN 
+        #                 articulos a ON a.codigo_articulo = cofmc.CODIGO_ARTICULO_CONSUMIDO
+        #             WHERE 
+        #                 ofc.FECHA_ENTREGA_PREVISTA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') 
+        #                 AND ofc.FECHA_ENTREGA_PREVISTA <= TO_DATE(:fechaHasta, 'YYYY-MM-DD')
+        #                 AND codigo_articulo_consumido = :codigo_erp
+        #                 AND TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) != 0
+        #             ORDER BY ofc.FECHA_ENTREGA_PREVISTA ASC
+        #                 
+        # """
         sql_of = """SELECT 
                         ofc.FECHA_ENTREGA_PREVISTA,
-                        cofmc.ORDEN_DE_FABRICACION,
-                        cofmc.CODIGO_ARTICULO_CONSUMIDO,
-                        a.DESCRIP_COMERCIAL AS DESCRIP_CONSUMIDO,
-                        a.unidad_codigo1 AS CODIGO_PRESENTACION,
-                        TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) AS CANTIDAD,
-                        'OFS_CONSUMO' AS CONSUMO
+                        om.ORDEN_DE_FABRICACION,
+                        om.CODIGO_COMPONENTE AS CODIGO_ARTICULO_CONSUMIDO,
+                        a.UNIDAD_CODIGO1     AS CODIGO_PRESENTACION,
+                        SUM(NVL(om.CANT_REAL_CONSUMO_UNIDAD1, 0)) AS CANTIDAD,
+                        'OFS_CONSUMO'        AS CONSUMO
                     FROM 
-                        COSTES_ORDENES_FAB_MAT_CTD cofmc
+                        OF_MATERIALES_UTILIZADOS om
                     JOIN 
-                        ORDENES_FABRICA_CAB ofc ON ofc.ORDEN_DE_FABRICACION = cofmc.ORDEN_DE_FABRICACION
+                        ORDENES_FABRICA_CAB ofc 
+                            ON ofc.ORDEN_DE_FABRICACION = om.ORDEN_DE_FABRICACION
                     JOIN 
-                        articulos a ON a.codigo_articulo = cofmc.CODIGO_ARTICULO_CONSUMIDO
+                        ARTICULOS a 
+                            ON a.CODIGO_ARTICULO = om.CODIGO_COMPONENTE
                     WHERE 
                         ofc.FECHA_ENTREGA_PREVISTA >= TO_DATE(:fechaDesde, 'YYYY-MM-DD') 
                         AND ofc.FECHA_ENTREGA_PREVISTA <= TO_DATE(:fechaHasta, 'YYYY-MM-DD')
-                        AND codigo_articulo_consumido = :codigo_erp
-                        AND TO_NUMBER(cofmc.CANTIDAD_UNIDAD1) != 0
-                    ORDER BY ofc.FECHA_ENTREGA_PREVISTA ASC
-                        
-        """
+                        AND om.CODIGO_COMPONENTE = :codigo_erp
+                    GROUP BY
+                        ofc.FECHA_ENTREGA_PREVISTA,
+                        om.ORDEN_DE_FABRICACION,
+                        om.CODIGO_COMPONENTE,
+                        a.UNIDAD_CODIGO1
+                    HAVING 
+                        SUM(NVL(om.CANT_REAL_CONSUMO_UNIDAD1, 0)) <> 0
+                    ORDER BY 
+                        ofc.FECHA_ENTREGA_PREVISTA ASC"""
+
         res = oracle.consult(sql_of, { 'codigo_erp': codigo_erp, 'fechaDesde': fechaDesde, 'fechaHasta': fechaHasta })
         if res:
             consumo_data.extend(res)

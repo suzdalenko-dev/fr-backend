@@ -46,3 +46,85 @@ FROM (
     ORDER BY PERIODO DESC
 )
 WHERE ROWNUM = 1;
+
+
+
+SELECT
+  (SELECT fam.descripcion 
+    FROM familias fam where fam.numero_tabla = '7' AND fam.codigo_familia = (
+      SELECT artic.codigo_estad7  FROM ARTICULOS artic WHERE artic.CODIGO_ARTICULO =  om.CODIGO_COMPONENTE  AND ROWNUM = 1 )) AS tipo_descr,
+  (SELECT TO_CHAR(OFB.FECHA_INI_FABRI, 'YYYY-MM-DD') FROM ORDENES_FABRICA_CAB OFB WHERE OFB.ORDEN_DE_FABRICACION = om.ORDEN_DE_FABRICACION) AS FECHA_INI_FABRI,
+  ((SELECT descrip_comercial FROM articulos artx WHERE artx.CODIGO_ARTICULO = om.CODIGO_COMPONENTE)  || ' ' || om.CODIGO_COMPONENTE) AS NOMBRE_ARTICULO,      
+  om.CODIGO_PRESENTACION_COMPO,
+  TO_NUMBER(om.CANT_REAL_CONSUMO_UNIDAD1) CANTIDAD_UNIDAD1,
+  om.ORDEN_DE_FABRICACION,
+  (SELECT f.descripcion FROM familias f WHERE f.numero_tabla = '1' AND f.codigo_empresa = '001' AND f.codigo_familia = (
+       SELECT a.codigo_familia FROM articulos a WHERE a.codigo_articulo = om.CODIGO_COMPONENTE AND a.codigo_empresa = '001')
+  ) AS D_CODIGO_FAMILIA,
+  (SELECT f2.descripcion FROM familias f2 WHERE f2.numero_tabla = '2' AND f2.codigo_empresa = '001' AND f2.codigo_familia = (
+       SELECT a2.codigo_estad2 FROM articulos a2 WHERE a2.codigo_articulo = om.CODIGO_COMPONENTE AND a2.codigo_empresa = '001')
+  ) AS SUBFAMILIA
+FROM OF_MATERIALES_UTILIZADOS om;
+
+
+
+-- viejo
+
+ SELECT
+  (SELECT descripcion 
+    FROM familias where numero_tabla = '7' AND codigo_familia = (
+      SELECT a.codigo_estad7 
+      FROM ARTICULOS a 
+      WHERE a.CODIGO_ARTICULO = c.CODIGO_ARTICULO_CONSUMIDO AND ROWNUM = 1
+    )) AS tipo_descr,
+  (SELECT TO_CHAR(OFB.FECHA_INI_FABRI, 'YYYY-MM-DD') FROM ORDENES_FABRICA_CAB OFB WHERE OFB.ORDEN_DE_FABRICACION = c.ORDEN_DE_FABRICACION) AS FECHA_INI_FABRI,
+  ((SELECT descrip_comercial FROM articulos artx WHERE artx.CODIGO_ARTICULO = c.CODIGO_ARTICULO_CONSUMIDO) || ' ' || CODIGO_ARTICULO_CONSUMIDO) AS NOMBRE_ARTICULO,  
+  (
+    SELECT ar.unidad_codigo1
+    FROM articulos ar
+    WHERE ar.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO AND ar.codigo_empresa = '001'
+  ) AS CODIGO_PRESENTACION_COMPO,
+  TO_NUMBER(c.CANTIDAD_UNIDAD1) AS CANTIDAD_UNIDAD1,
+  c.ORDEN_DE_FABRICACION,
+  (
+    SELECT f.descripcion
+    FROM familias f
+    WHERE f.numero_tabla = '1' AND f.codigo_empresa = '001'
+      AND f.codigo_familia = (
+        SELECT a.codigo_familia
+        FROM articulos a
+        WHERE a.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO
+          AND a.codigo_empresa = '001'
+      )
+  ) AS D_CODIGO_FAMILIA,
+  (
+    SELECT f2.descripcion
+    FROM familias f2
+    WHERE f2.numero_tabla = '2' AND f2.codigo_empresa = '001' AND f2.codigo_familia = (
+        SELECT a2.codigo_estad2
+        FROM articulos a2
+        WHERE a2.codigo_articulo = c.CODIGO_ARTICULO_CONSUMIDO AND a2.codigo_empresa = '001'
+      )
+  ) AS SUBFAMILIA
+FROM COSTES_ORDENES_FAB_MAT_CTD c;
+
+
+select *
+from ORDENES_FABRICA_CAB;
+
+select COSTES_ORDENES_FAB_MAT_CTD.ORDEN_DE_FABRICACION, CANTIDAD_UNIDAD1 -- 27000
+from COSTES_ORDENES_FAB_MAT_CTD
+join ORDENES_FABRICA_CAB ofc on ofc.ORDEN_DE_FABRICACION = COSTES_ORDENES_FAB_MAT_CTD.ORDEN_DE_FABRICACION
+where ofc.FECHA_INI_FABRI >= to_date('2025-07-01','YYYY-MM-DD')
+and ofc.FECHA_INI_FABRI <= to_date('2025-07-31','YYYY-MM-DD')
+and COSTES_ORDENES_FAB_MAT_CTD.CODIGO_ARTICULO_CONSUMIDO = '40095'
+;
+
+
+select ORDEN_DE_FABRICACION,  SUM(CANT_REAL_CONSUMO_UNIDAD1) 
+from OF_MATERIALES_UTILIZADOS
+where CODIGO_COMPONENTE = '40095'
+and fecha_fabricacion >= to_date('2025-07-01','YYYY-MM-DD')
+and fecha_fabricacion <= to_date('2025-07-31','YYYY-MM-DD')
+GROUP BY ORDEN_DE_FABRICACION
+; 
