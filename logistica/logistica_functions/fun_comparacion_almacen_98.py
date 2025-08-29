@@ -57,7 +57,7 @@ def get_expediente_almacen_98(request, oracle, valor_cambio):
                 AND c.CODIGO_ALMACEN = '98'
                 AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') >= :current_day
 
-                AND c.NUMERO_DOC_EXT = '266/3'
+                -- -- --AND c.NUMERO_DOC_EXT = '266/3'
           
             ORDER BY c.FECHA DESC
             """
