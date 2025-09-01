@@ -22,6 +22,7 @@ def get_me_stock_now(erp_code, oracle):
             D_CODIGO_ALMACEN,
             V_TIPO_SITUACION,
             V_CANTIDAD_PRESENTACION,
+            V_STOCK_UNIDAD2,
             V_PRESENTACION,
             CODIGO_ARTICULO
             FROM 
@@ -30,7 +31,6 @@ def get_me_stock_now(erp_code, oracle):
                 CANTIDAD_PRESENTACION V_CANTIDAD_PRESENTACION,
                 CODIGO_ALMACEN V_CODIGO_ALMACEN,
                 PRESENTACION V_PRESENTACION,
-                STOCK_BARRAS V_STOCK_BARRAS,
                 STOCK_UNIDAD1 V_STOCK_UNIDAD1,
                 STOCK_UNIDAD2 V_STOCK_UNIDAD2,
                 TIPO_SITUACION V_TIPO_SITUACION 
@@ -44,8 +44,7 @@ def get_me_stock_now(erp_code, oracle):
                     presentacion, 
                     SUM(cantidad_unidad1) stock_unidad1, 
                     SUM(NVL(cantidad_unidad2, 0)) stock_unidad2, 
-                    SUM(NVL(cantidad_presentacion, 0)) cantidad_presentacion, 
-                    SUM(/*AL*/0/*FAL*/) stock_barras 
+                    SUM(NVL(cantidad_presentacion, 0)) cantidad_presentacion
                     FROM stocks_detallado s  
                     WHERE NOT EXISTS 
                         (SELECT 1
