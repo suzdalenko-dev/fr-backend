@@ -16,10 +16,18 @@ def stock_calculation(request):
 
 
 """
+1. solo me interesa el DISPG DISPONIBLE GENERAL situacion del STOCK
+pero no quite que muestre el select con C       AJUSTE STOCKS COMPRAS
+                                        CADUC   CADUCADO
+                                        CALID   CALIDAD / RETENIDO / SANIDAD
+                                        DEPA    DEPOSITO ADUANERO
+                                        DISPG   DISPONIBLE GENERAL !!!!
+                                        FINAL
 
-edi de 001393 COVIRAN configurar EDI
-
-
+2. MERCADO 10 NACIONAL, 30 COMPARTIDO
+3. TIPO MATERIAL 010 MATERIA PRIMA, 
+                 030 PRODUCTO FABRICADO, 
+                 040 PRODUCTO COMERCIAL
 """
 
 

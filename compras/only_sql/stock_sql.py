@@ -34,6 +34,7 @@ def get_stok_data_sql(request, oracle):
             where sd.codigo_articulo = t.codigo_articulo
               and sd.codigo_empresa  = '001'
               {wh_filter_sd}
+              and sd.TIPO_SITUACION in ('DISPG')
               and not exists (
                     select 1
                       from almacenes_zonas az
@@ -59,6 +60,7 @@ def get_stok_data_sql(request, oracle):
             where sd.codigo_articulo = t.codigo_articulo
               and sd.codigo_empresa  = '001'
               {wh_filter_sd}
+              and sd.TIPO_SITUACION in ('DISPG')
               and not exists (
                     select 1
                       from almacenes_zonas az
@@ -92,6 +94,8 @@ def get_stok_data_sql(request, oracle):
 
     from (
         select a.codigo_articulo,
+               a.CODIGO_ESTAD7 TIPO_ARTICULO,
+               a.CODIGO_ESTAD8 MERCADO,
                a.descrip_comercial,
                a.codigo_familia as familia,
                (select f.descripcion
@@ -152,6 +156,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
+                      and s.TIPO_SITUACION in ('DISPG')
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -169,6 +174,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
+                      and s.TIPO_SITUACION in ('DISPG')
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -185,6 +191,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
+                      and s.TIPO_SITUACION in ('DISPG')
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -197,7 +204,9 @@ def get_stok_data_sql(request, oracle):
 
         from articulos a
         where a.codigo_empresa = '001'
-          and a.codigo_familia not in ('001','006','007','011','013','015','016','017')
+            and a.codigo_familia NOT IN ('001', '015', '016', '017')          -- '006','007','011','013','015','016','017'
+            and a.CODIGO_ESTAD7 IN ('010', '030', '040')                      -- 010 MATERIA PRIMA 030 PRODUCTO FABRICADO 040 PRODUCTO COMERCIAL
+            and a.CODIGO_ESTAD8 IN ('10', '30')                               -- 10 NACIONAL 30 COMPARTIDO
           -- opcional: filtrar un artículo concreto
           -- and a.codigo_articulo = '40000'
     ) t
@@ -207,4 +216,3 @@ def get_stok_data_sql(request, oracle):
 
     # Si tu wrapper acepta binds dict (como usaste antes), pásalos aquí:
     return oracle.consult(sql, binds) if binds else oracle.consult(sql)
-
