@@ -7,5 +7,36 @@ def stock_calculation(request):
     oracle     = OracleConnector()
     oracle.connect()
 
-    stock = get_stok_data_sql(oracle)
+    stock = get_stok_data_sql(request, oracle)
     return {'stock': stock}
+
+
+
+
+
+
+"""
+
+edi de 001393 COVIRAN configurar EDI
+
+
+"""
+
+
+
+
+
+
+
+
+
+"""
+a las 11 de la noche aviso almacen@froxa.com
+
+aviso a Gema de los palets que hay:
+    Desde almacen: 90 PRODUCCION / FABRICA 
+    Hasta almacen: 90 PRODUCCION / FABRICA
+
+    Desde Codigo Entrada: PRODUCCION CODIGO ENTRADA MAQUILA FM
+    Hasta cod. Entrada:   PRODUCCION CODIGO ENTRADA MAQUILA FM
+"""
