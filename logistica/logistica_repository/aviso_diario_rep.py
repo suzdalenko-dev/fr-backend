@@ -10,6 +10,8 @@ from logistica.logistica_functions.fun_comparacion_almacen_98 import get_stock, 
 
 
 def aviso_diario_comp_98(request):
+    # aviso diario de los albaranes en el caso que el albaran 98 no tiene al menos 1 albaran correspondiente de almacen y 1 de gastos
+
     oracle = OracleConnector()
     oracle.connect()
     avisos = []
@@ -41,7 +43,7 @@ def aviso_diario_comp_98(request):
         file_url = crear_excel_sin_pandas(avisos, '0', 'alm98')
 
         message_info = SMailer.send_email(
-            ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' 'almacen@froxa.com', probar en produccion haber si llega el mensaje
+            ['almacen@froxa.com', 'alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' 'almacen@froxa.com', probar en produccion haber si llega el mensaje
             'Aviso Libra - Las compras del almacén 98 no coinciden - Consulta Albaranes de compra',
             'Las compras del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05, E06 y 25 <br><br> <a href="http://informes/dashboard/#almacen-importacion-vs-resto">almacen-importacion-vs-resto</a>',
             file_url[0]
