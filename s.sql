@@ -248,8 +248,26 @@ select *
 from V_FROXA_STOCKS_NACIONAL
 ;
 
-select SUM(CANTIDAD_UNIDAD1)
+-- FINAL (CONTINGENTE)        => valoracion almacen 00
+-- DISPG (disponible general) => valoracion 00 almacen
+-- DEPA (deposito aduanero)   => valoracion 02 almacen (ejemplo 40176)
+
+select SUM(CANTIDAD_UNIDAD1) stock, codigo_articulo
 from stocks_detallado
-where TIPO_SITUACION in ('DISPG')
- and CANTIDAD_UNIDAD1 <> 0 
+where TIPO_SITUACION in ('DEPA')
+ and CANTIDAD_UNIDAD1 <> 0
+GROUP BY codigo_articulo
+
 ;
+
+-- 40315 FINAL 00
+-- 40176 DEPA (02 SANTANDER. DEPA.)
+
+/*
+
+DEPC de santander a cartes
+
+Noelia 2LOGISTICA
+Sara   2LOGISTICA
+
+*/

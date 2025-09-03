@@ -1,9 +1,8 @@
 def get_stok_data_sql(request, oracle):
-    # Leer y normalizar el parámetro ?warehouse=00,01,E03,34
+    # ===== Warehouses (opcionales) =====
     raw = (request.GET.get('warehouse') or '').strip()
     wh_list = [w.strip() for w in raw.split(',') if w.strip()]
 
-    # Filtros dinámicos para usar en los subqueries (alias sd y s)
     wh_filter_sd = ''
     wh_filter_s  = ''
     binds = {}
@@ -15,11 +14,20 @@ def get_stok_data_sql(request, oracle):
         for i, w in enumerate(wh_list):
             binds[f'wh{i}'] = w
 
+    # ===== Situación y almacén de valoración =====
+    stock_situacion = (request.GET.get('stock_situacion') or 'DISPG').strip().upper()
+    if stock_situacion not in ('DISPG', 'DEPA', 'FINAL'):
+        stock_situacion = 'DISPG'
+
+    precio_almacen = '00' if stock_situacion in ('DISPG', 'FINAL') else '02'
+    binds['situ'] = stock_situacion
+    binds['precio_almacen'] = precio_almacen
+
     sql = f"""
     select
         t.*,
 
-        /* Lista de almacenes (CODIGO + nombre) con stock != 0 (respetando filtro de almacenes) */
+        /* Lista de almacenes (CODIGO + nombre) con stock != 0 (respetando filtros) */
         (
           select listagg(g.codigo_almacen || ' ' || g.nombre_alm, '; ')
                    within group (order by g.codigo_almacen)
@@ -34,7 +42,7 @@ def get_stok_data_sql(request, oracle):
             where sd.codigo_articulo = t.codigo_articulo
               and sd.codigo_empresa  = '001'
               {wh_filter_sd}
-              and sd.TIPO_SITUACION in ('DISPG')
+              and sd.TIPO_SITUACION  = :situ
               and not exists (
                     select 1
                       from almacenes_zonas az
@@ -50,7 +58,7 @@ def get_stok_data_sql(request, oracle):
           ) g
         ) as ALMACENES_TXT,
 
-        /* Misma lista pero solo CÓDIGOS (respetando filtro de almacenes) */
+        /* Misma lista pero solo CÓDIGOS (respetando filtros) */
         (
           select listagg(g.codigo_almacen, ';')
                    within group (order by g.codigo_almacen)
@@ -60,7 +68,7 @@ def get_stok_data_sql(request, oracle):
             where sd.codigo_articulo = t.codigo_articulo
               and sd.codigo_empresa  = '001'
               {wh_filter_sd}
-              and sd.TIPO_SITUACION in ('DISPG')
+              and sd.TIPO_SITUACION  = :situ
               and not exists (
                     select 1
                       from almacenes_zonas az
@@ -76,7 +84,7 @@ def get_stok_data_sql(request, oracle):
           ) g
         ) as ALMACENES_CODE,
 
-        /*  Unidades derivadas de las CAJAS (UND = cajas * unidades_por_caja) */
+        /*  Unidades derivadas de CAJAS (UND = cajas * unidades_por_caja) */
         round(
             nvl(t.stock_unidad2, 0) *
             nvl( (select max(convers_u_dis)
@@ -84,7 +92,7 @@ def get_stok_data_sql(request, oracle):
                    where codigo_articulo = t.codigo_articulo), 1 )
         , 2) as UND_DESDE_CAJAS,
 
-        /*  Unidades derivadas de los KG (UND = kg / kg_por_unidad) */
+        /*  Unidades derivadas de KG (UND = kg / kg_por_unidad) */
         round(
             nvl(t.stock_unidad1, 0) /
             nvl( nullif( (select max(convers_u_sob)
@@ -94,8 +102,8 @@ def get_stok_data_sql(request, oracle):
 
     from (
         select a.codigo_articulo,
-               a.CODIGO_ESTAD7 TIPO_ARTICULO,
-               a.CODIGO_ESTAD8 MERCADO,
+               a.CODIGO_ESTAD7 as TIPO_ARTICULO,
+               a.CODIGO_ESTAD8 as MERCADO,
                a.descrip_comercial,
                a.codigo_familia as familia,
                (select f.descripcion
@@ -132,21 +140,21 @@ def get_stok_data_sql(request, oracle):
                        from ARTICULOS_VALORACION avv
                       where avv.CODIGO_ARTICULO = a.codigo_articulo
                         and avv.CODIGO_DIVISA   = 'EUR'
-                        and avv.CODIGO_ALMACEN  = '00'
+                        and avv.CODIGO_ALMACEN  = :precio_almacen
                         and avv.CODIGO_EMPRESA  = '001'), 0) as PMP,
 
                nvl( (select avv.ULTIMO_PRECIO_COMPRA
                        from ARTICULOS_VALORACION avv
                       where avv.CODIGO_ARTICULO = a.codigo_articulo
                         and avv.CODIGO_DIVISA   = 'EUR'
-                        and avv.CODIGO_ALMACEN  = '00'
+                        and avv.CODIGO_ALMACEN  = :precio_almacen
                         and avv.CODIGO_EMPRESA  = '001'), 0) as UPC,
 
                nvl( (select avv.PRECIO_STANDARD
                        from ARTICULOS_VALORACION avv
                       where avv.CODIGO_ARTICULO = a.codigo_articulo
                         and avv.CODIGO_DIVISA   = 'EUR'
-                        and avv.CODIGO_ALMACEN  = '00'
+                        and avv.CODIGO_ALMACEN  = :precio_almacen
                         and avv.CODIGO_EMPRESA  = '001'), 0) as PRECIO_STANDARD,
 
                /* KG (unidad1) */
@@ -156,7 +164,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
-                      and s.TIPO_SITUACION in ('DISPG')
+                      and s.TIPO_SITUACION  = :situ
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -174,7 +182,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
-                      and s.TIPO_SITUACION in ('DISPG')
+                      and s.TIPO_SITUACION  = :situ
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -191,7 +199,7 @@ def get_stok_data_sql(request, oracle):
                     where s.codigo_articulo = a.codigo_articulo
                       and s.codigo_empresa  = a.codigo_empresa
                       {wh_filter_s}
-                      and s.TIPO_SITUACION in ('DISPG')
+                      and s.TIPO_SITUACION  = :situ
                       and not exists (
                           select 1
                             from almacenes_zonas az
@@ -204,15 +212,12 @@ def get_stok_data_sql(request, oracle):
 
         from articulos a
         where a.codigo_empresa = '001'
-            and a.codigo_familia NOT IN ('001', '015', '016', '017')          -- '006','007','011','013','015','016','017'
-            and a.CODIGO_ESTAD7 IN ('010', '030', '040')                      -- 010 MATERIA PRIMA 030 PRODUCTO FABRICADO 040 PRODUCTO COMERCIAL
-            and a.CODIGO_ESTAD8 IN ('10', '30')                               -- 10 NACIONAL 30 COMPARTIDO
-          -- opcional: filtrar un artículo concreto
-          -- and a.codigo_articulo = '40000'
+          and a.codigo_familia NOT IN ('001', '015', '016', '017')  -- excluidas
+          and a.CODIGO_ESTAD7 IN ('010', '030', '040')              -- tipo material
+          and a.CODIGO_ESTAD8 IN ('10', '30')                       -- mercado
     ) t
     where (t.stock_unidad1 <> 0 or t.stock_unidad2 <> 0)
     order by t.d_codigo_familia, t.d_codigo_subfamilia, t.descrip_comercial
     """
 
-    # Si tu wrapper acepta binds dict (como usaste antes), pásalos aquí:
-    return oracle.consult(sql, binds) if binds else oracle.consult(sql)
+    return oracle.consult(sql, binds)
