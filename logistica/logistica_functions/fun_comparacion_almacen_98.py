@@ -21,7 +21,9 @@ def get_valor_cambio(request, oracle):
 
 
 def get_expediente_almacen_98(request, oracle, valor_cambio):
-    current_day = request.GET.get('day')
+    from_day = request.GET.get('from')
+    to_day   = request.GET.get('to')
+
     sql = """SELECT c.NUMERO_DOC_EXT,
                     c.NUMERO_DOC_INTERNO,
                     TO_CHAR(c.FECHA, 'YYYY-MM-DD') AS FECHA_SUPERVISION,
@@ -55,13 +57,14 @@ def get_expediente_almacen_98(request, oracle, valor_cambio):
                     WHERE li.NUMERO_DOC_INTERNO = c.NUMERO_DOC_INTERNO AND li.CODIGO_EMPRESA = c.CODIGO_EMPRESA)
                 AND c.STATUS_ANULADO = 'N'
                 AND c.CODIGO_ALMACEN = '98'
-                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') >= :current_day
-
+                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') >= :from_day
+                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') <= :to_day
+                
                 -- -- --AND c.NUMERO_DOC_EXT = '266/3'
           
             ORDER BY c.FECHA DESC
             """
-    res = oracle.consult(sql, {'current_day':current_day}) or []
+    res = oracle.consult(sql, {'from_day':from_day, 'to_day': to_day}) or []
 
     for r in res:
         r['VALOR_CAMBIO'] = valor_cambio
