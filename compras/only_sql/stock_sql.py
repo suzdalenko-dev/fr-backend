@@ -212,9 +212,16 @@ def get_stok_data_sql(request, oracle):
 
         from articulos a
         where a.codigo_empresa = '001'
-          and a.codigo_familia NOT IN ('001', '015', '016', '017')  -- excluidas
-          and a.CODIGO_ESTAD7 IN ('010', '030', '040')              -- tipo material
-          and a.CODIGO_ESTAD8 IN ('10', '30')                       -- mercado
+          and a.codigo_familia NOT IN ('001', '017')                -- excluidas      001 AUXILIARES, 017 GRANELES Y VARIOS.
+          and a.CODIGO_ESTAD7 IN ('010', '030', '040')              -- tipo material  10 NACIONAL, 30 COMPARTIDO
+          and a.CODIGO_ESTAD8 IN ('10', '30')                       -- mercado        010 MATERIA PRIMA, 030 PRODUCTO FABRICADO, 040 PRODUCTO COMERCIAL
+          and not exists (
+            select 1
+            from va_articulos vaa
+            where vaa.codigo_empresa  = a.codigo_empresa
+              and vaa.codigo_articulo = a.codigo_articulo
+              and vaa.auxiliar_16 = '013'
+          )
     ) t
     where (t.stock_unidad1 <> 0 or t.stock_unidad2 <> 0)
     order by t.d_codigo_familia, t.d_codigo_subfamilia, t.descrip_comercial

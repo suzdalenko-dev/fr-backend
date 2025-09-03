@@ -271,3 +271,26 @@ Noelia 2LOGISTICA
 Sara   2LOGISTICA
 
 */
+
+select AUXILIAR_16
+from articulos
+;
+
+
+SELECT a.codigo_articulo,
+       a.auxiliar_16,
+       fa.descripcion AS d_auxiliar_16
+FROM   va_articulos a
+       LEFT JOIN froxa_familias_art fa
+         ON fa.codigo_familia = a.auxiliar_16
+        AND fa.numero_tabla   = 16
+        AND fa.codigo_empresa = a.codigo_empresa
+WHERE  a.codigo_empresa = '001'
+  AND  a.codigo_articulo = '41521';
+
+
+
+select vaa.auxiliar_16
+from va_articulos vaa
+where vaa.codigo_articulo = '41497'
+;
