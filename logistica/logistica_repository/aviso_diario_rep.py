@@ -3,7 +3,7 @@
 
 
 from froxa.utils.connectors.libra_connector import OracleConnector
-from froxa.utils.utilities.funcions_file import crear_excel_sin_pandas, get_short_date
+from froxa.utils.utilities.funcions_file import crear_excel_sin_pandas, get_short_date, notify_logger
 from froxa.utils.utilities.smailer_file import SMailer
 from logistica.logistica_functions.fun_aviso_diario import get_containers_for_today
 from logistica.logistica_functions.fun_comparacion_almacen_98 import get_stock, get_textos
@@ -40,11 +40,13 @@ def aviso_diario_comp_98(request):
     if len(avisos)> 0:
         file_url = crear_excel_sin_pandas(avisos, '0', 'alm98')
 
-        SMailer.send_email(
-            ['almacen@froxa.com', 'alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com'
+        message_info = SMailer.send_email(
+            ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' 'almacen@froxa.com', probar en produccion haber si llega el mensaje
             'Aviso Libra - Las compras del almacén 98 no coinciden - Consulta Albaranes de compra',
-            'Las compras del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05, E06 y 25',
+            'Las compras del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05, E06 y 25 <br><br> <a href="http://informes/dashboard/#almacen-importacion-vs-resto">almacen-importacion-vs-resto</a>',
             file_url[0]
         )
+
+        notify_logger(message_info)
 
     return {'avisos': avisos, 'file_url': file_url}

@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 from django.conf import settings
 from openpyxl import Workbook
 
+from froxa.models import Notify
+
 
 
 
@@ -151,3 +153,17 @@ def crear_excel_sin_pandas(datos, folder_name, file_name):
 
     return ruta, file_url
 
+
+
+
+
+
+def notify_logger(data): # {'email': email_name, 'sent': 0, 'message': subject, 'file': str(file_path)}
+    for d in data:
+        n = Notify()
+        n.email    = d['email']
+        n.sent     = str(d['sent'])
+        n.message  = str(d['message'])
+        n.file     = str(d['file'])
+        n.time_log = get_current_date()
+        n.save()

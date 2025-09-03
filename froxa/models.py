@@ -12,3 +12,12 @@ class Userfroxa(models.Model):
     ip          = models.TextField(null=True)
 
     action_pass = models.TextField(null=True)
+
+
+
+class Notify(models.Model):
+    email    = models.TextField(null=True)
+    sent     = models.TextField(null=True)
+    message  = models.TextField(null=True)
+    file     = models.TextField(null=True)
+    time_log = models.TextField(null=True)

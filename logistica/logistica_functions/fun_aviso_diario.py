@@ -34,5 +34,5 @@ def get_containers_for_today(oracle):
             ORDER BY c.FECHA DESC
             """
 
-    containers = oracle.consult(sql, {'current_day': current_day}) or [] 
+    containers = oracle.consult(sql, {'current_day': current_day}) or []
     return containers   
