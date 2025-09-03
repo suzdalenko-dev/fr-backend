@@ -18,7 +18,7 @@ def get_list_palets_prod(request, oracle):
               FROM stocks_deposito_cli s
               WHERE s.codigo_empresa  = '001' AND s.cantidad_con <> 0
             ) s
-            WHERE s.lote = 'PRODUCCION' AND s.codigo_almacen != '90'"""
+            WHERE s.lote = 'PRODUCCION' AND s.codigo_almacen = '90'"""
     
     res = oracle.consult(sql)
     
