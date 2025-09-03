@@ -5,13 +5,15 @@ from logistica.logistica_functions.fun_aviso_pal_prod import get_list_palets_pro
 
 
 def aviso_diario_paleta_produccion(request):
+    # aviso diario sobre palets que pueden quedar en produccion
+
     oracle = OracleConnector()
     oracle.connect()
     palets = get_list_palets_prod(request, oracle)
 
     oracle.close()
 
-    file_url = crear_excel_sin_pandas(palets, '1', 'aviso-palets-prod')
+    file_url = crear_excel_sin_pandas(palets, '0', 'aviso-palets-prod')
 
     message_info = SMailer.send_email(
         ['alexey.suzdalenko@froxa.com', 'alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' probar en produccion haber si llega el mensaje y haber si encuentro PALETAS EN PRODUCCION !!!
