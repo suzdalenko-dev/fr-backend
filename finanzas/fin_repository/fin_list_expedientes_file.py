@@ -8,16 +8,19 @@ def get_list_expdientes(request):
 
     # 1. cambio del dia a la hora de generarse el documento !!!
     sql_diario = """SELECT DIVISA_ORIGEN, 
-        DIVISA_DESTINO, 
-        FECHA_VALOR,
-        VALOR_COMPRA,
-        VALOR_VENTA
-        FROM (SELECT cambio_divisas.* ,(SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_destino) D_DIVISA_DESTINO,(SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_origen) D_DIVISA_ORIGEN FROM cambio_divisas) cambio_divisas 
-        where fecha_valor >= '01/02/2025' 
-        order by fecha_valor asc"""
+                    DIVISA_DESTINO, 
+                    FECHA_VALOR,
+                    VALOR_COMPRA,
+                    VALOR_VENTA
+                    FROM (SELECT cambio_divisas.* ,
+                    (SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_destino) D_DIVISA_DESTINO,
+                    (SELECT lvdiv.nombre FROM divisas lvdiv WHERE lvdiv.codigo = cambio_divisas.divisa_origen) D_DIVISA_ORIGEN FROM cambio_divisas) cambio_divisas 
+                    where fecha_valor >= '01/02/2025' 
+                    order by fecha_valor asc"""
 
 
     rows_diario  = oracle.consult(sql_diario)
+
 
     cambios_diario = []
     for record in rows_diario:
@@ -54,14 +57,15 @@ def get_list_expdientes(request):
         where divisa = 'USD' and FECHA_EXPEDIENTE >= :dateFrom and FECHA_EXPEDIENTE <= :dateTo
         order by CODIGO desc"""
 
-    dateFrom = request.GET.get('dateFrom')
+    dateFrom = '2025-01-01' # request.GET.get('dateFrom')
     dateFrom = date_obj = datetime.strptime(dateFrom, "%Y-%m-%d")
     dateFrom = date_obj.strftime("%d/%m/%Y")
-    dateTo = request.GET.get('dateTo')
+    dateTo   = '2035-01-01' # request.GET.get('dateTo')
     dateTo   = date_obj = datetime.strptime(dateTo, "%Y-%m-%d")
     dateTo   = date_obj.strftime("%d/%m/%Y")
 
     rows_exp = oracle.consult(sql_exp, {'dateFrom':dateFrom, 'dateTo':dateTo})
+    
 
     expedientes = []
     for record in rows_exp:
@@ -87,5 +91,25 @@ def get_list_expdientes(request):
 
     oracle.close()
 
-    return expedientes
+    fecha_factura_desde = request.GET.get('dateFrom')
+    fecha_factura_hasta = request.GET.get('dateTo')
+
+    # return {'fecha_factura_desde': fecha_factura_desde, 'fecha_factura_hasta': fecha_factura_hasta}
+
+    # filtro las facturas obtenidas al final por las fechas de usuario
+
+    exped_con_factura = []
+    for exp in expedientes:
+        addThisExpediente = 0
+        if len(exp['FACTURAS']) > 0:
+            list_albaranes_facturados = exp['ALB_FACTURADOS']
+            for albaran in list_albaranes_facturados:
+                if albaran['V_FECHA'] >= fecha_factura_desde and albaran['V_FECHA'] <= fecha_factura_hasta:
+                    addThisExpediente = 1
+
+        if addThisExpediente == 1:
+            exped_con_factura += [exp]
+
+
+    return exped_con_factura
 
