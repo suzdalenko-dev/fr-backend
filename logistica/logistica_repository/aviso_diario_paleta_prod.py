@@ -9,19 +9,21 @@ def aviso_diario_paleta_produccion(request):
 
     oracle = OracleConnector()
     oracle.connect()
-    palets = get_list_palets_prod(request, oracle)
+    palets = get_list_palets_prod(request, oracle) or []
 
     oracle.close()
 
-    file_url = crear_excel_sin_pandas(palets, '0', 'aviso-palets-prod')
+    if len(palets) > 0:
 
-    message_info = SMailer.send_email(
-        ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' probar en produccion haber si llega el mensaje y haber si encuentro PALETAS EN PRODUCCION !!!
-        'Aviso Libra - Existen paletas en PRODUCCIÓN sin ubicar ',
-        'Aviso Libra - Paletas en producción.',
-        file_url[0]
-    )
+        file_url = crear_excel_sin_pandas(palets, '0', 'aviso-palets-prod')
 
-    notify_logger(message_info)
+        message_info = SMailer.send_email(
+            ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' probar en produccion haber si llega el mensaje y haber si encuentro PALETAS EN PRODUCCION !!!
+            'Aviso Libra - Existen paletas en PRODUCCIÓN sin ubicar ',
+            'Aviso Libra - Paletas en producción.',
+            file_url[0]
+        )
 
-    return {'x': [], 'file_url': file_url, 'message_info': message_info}
+        notify_logger(message_info)
+
+    return {'x': [], 'palets': palets}

@@ -20,6 +20,6 @@ def get_list_palets_prod(request, oracle):
             ) s
             WHERE s.lote = 'PRODUCCION' AND s.codigo_almacen = '90'"""
     
-    res = oracle.consult(sql)
+    res = oracle.consult(sql) or []
     
     return res
