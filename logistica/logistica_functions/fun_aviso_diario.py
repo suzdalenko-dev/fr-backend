@@ -1,8 +1,7 @@
-from froxa.utils.utilities.funcions_file import get_short_date
+from datetime import date, timedelta
 
 
 def get_containers_for_today(oracle):
-    current_day = get_short_date()
     
     sql = """SELECT c.NUMERO_DOC_EXT,
                     c.NUMERO_DOC_INTERNO,
@@ -30,9 +29,10 @@ def get_containers_for_today(oracle):
                     WHERE li.NUMERO_DOC_INTERNO = c.NUMERO_DOC_INTERNO AND li.CODIGO_EMPRESA = c.CODIGO_EMPRESA)
                 AND c.STATUS_ANULADO = 'N'
                 AND c.CODIGO_ALMACEN = '98'
-                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') = :current_day          
+                AND c.FECHA >= TRUNC(SYSDATE) - 3
+                AND c.FECHA <  TRUNC(SYSDATE) + 1       
             ORDER BY c.FECHA DESC
             """
 
-    containers = oracle.consult(sql, {'current_day': current_day}) or []
+    containers = oracle.consult(sql) or []
     return containers   
