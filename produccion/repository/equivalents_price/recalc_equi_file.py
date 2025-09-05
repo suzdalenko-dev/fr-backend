@@ -146,6 +146,10 @@ def recalculate_equiv_with_contaner(request):
     mes_mas1   = ((today + relativedelta(months=1)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     mes_mas2   = ((today + relativedelta(months=2)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
     mes_mas3   = ((today + relativedelta(months=3)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas4   = ((today + relativedelta(months=4)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas5   = ((today + relativedelta(months=5)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas6   = ((today + relativedelta(months=6)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
+    mes_mas7   = ((today + relativedelta(months=7)).replace(day=1) + relativedelta(months=1, days=-1)).strftime("%Y-%m-%d")
 
     for itemQ in equiv_data:
         
@@ -169,6 +173,22 @@ def recalculate_equiv_with_contaner(request):
             if rango['hasta'] == mes_mas3:
                eqArt.kg3    = float(rango['stock_final_rango'] or 0)
                eqArt.price3 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas4:
+               eqArt.kg4    = float(rango['stock_final_rango'] or 0)
+               eqArt.price4 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas5:
+               eqArt.kg5    = float(rango['stock_final_rango'] or 0)
+               eqArt.price5 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas6:
+               eqArt.kg6    = float(rango['stock_final_rango'] or 0)
+               eqArt.price6 = float(rango['precio_con_llegada'] or 0)
+
+            if rango['hasta'] == mes_mas7:
+               eqArt.kg7    = float(rango['stock_final_rango'] or 0)
+               eqArt.price7 = float(rango['precio_con_llegada'] or 0)
 
         todayDay = date.today()
         tomorrow = todayDay + timedelta(days=1)

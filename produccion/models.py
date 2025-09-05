@@ -64,6 +64,14 @@ class EquivalentsHead(models.Model):
     price3 = models.FloatField(null=True)
     precio_estandar_equival = models.FloatField(null=True)
 
+    kg4    = models.FloatField(null=True)
+    price4 = models.FloatField(null=True)
+    kg5    = models.FloatField(null=True)
+    price5 = models.FloatField(null=True)
+    kg6    = models.FloatField(null=True)
+    price6 = models.FloatField(null=True)
+
+
 
 class DetalleEntradasEquivCC(models.Model):
     name         = models.TextField(null=True)
