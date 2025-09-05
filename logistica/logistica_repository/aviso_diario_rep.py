@@ -44,8 +44,8 @@ def aviso_diario_comp_98(request):
 
         message_info = SMailer.send_email(
             ['almacen@froxa.com', 'alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' 'almacen@froxa.com', probar en produccion haber si llega el mensaje 'almacen@froxa.com',
-            'Aviso Libra - Las compras del almacén 98 no coinciden - Consulta Albaranes de compra',
-            'Las compras del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05, E06 y 25 <br><br> <a href="http://informes/dashboard/#almacen-importacion-vs-resto">almacen-importacion-vs-resto</a>',
+            'Aviso Libra - Consulta Albaranes de compra',
+            'Los albaranes de entrada del almacén 98 no coinciden con los albaranes de compra de los almacenes 00, 01, 02, E01, E02, E03, E04, E05, E06 y 25 <br><br> <a href="http://informes/dashboard/#almacen-importacion-vs-resto">almacen-importacion-vs-resto</a>',
             file_url[0]
         )
 

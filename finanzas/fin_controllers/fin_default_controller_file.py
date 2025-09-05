@@ -1,5 +1,6 @@
 import traceback
 from django.http import JsonResponse
+from finanzas.fin_repository.albaranes_vs_facturas_file import albaranes_vs_facturas
 from finanzas.fin_repository.fin_list_expedientes_file import get_list_expdientes
 from finanzas.fin_repository.p_and_r_file import payments_and_receipts
 from froxa.utils.utilities.suzdal_logger import SuzdalLogger
@@ -16,9 +17,11 @@ def fin_default_controller(request, action, entity, code, description):
 
     # <str:action>/<str:entity>/<str:code>/<str:description>/
     switch_query = {
-        'expedientes_importacion': lambda: get_list_expdientes(request),  # http://127.0.0.1:8000/finanzas/get/0/0/expedientes_importacion/
+        'expedientes_importacion': lambda: get_list_expdientes(request),  # http://127.0.0.1:8000/finanzas/get/0/0/expedientes_importacion/ <- no funciona correctamente
         
         'payments_and_receipts': lambda: payments_and_receipts(request),  # http://127.0.0.1:8000/finanzas/get/0/0/payments_and_receipts/
+
+        'albaranes_vs_facturas': lambda: albaranes_vs_facturas(request),  # http://127.0.0.1:8000/finanzas/get/0/0/albaranes_vs_facturas/
     }
 
     try:

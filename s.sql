@@ -1,384 +1,194 @@
-SELECT CENTRO_CONTABLE,ALMACEN,D_CENTRO_CONTABLE,D_ALMACEN,ZONA_ALMACEN,D_ZONA_ALMACEN,LOTE_EXT,NUMERO_LOTE_INT_ANTERIOR,TIPO_SITUACION,CLIENTE,D_CLIENTE,D_CLIENTE_MIRROR,CODIGO_PROVEEDOR,D_CODIGO_PROVEEDOR,LOTE,LOTE_AUX,NUMERO_LOTE_INT,NUMERO_LOTE_INT_AUX,DESCRIPCION_ARTICULO_MIRROR,CODIGO_ARTICULO,DESCRIPCION_PARTIDA_MIRROR,UBICACION,SSCC,PALET,MAREA,D_MAREA,BARCO_LOTE,D_BARCO_LOTE,BUQUE,D_BUQUE,CANTIDAD_CON,PRECIO_COSTE,CANTIDAD_SUB,CANTIDAD_SOB,CANTIDAD_DIS,CANTIDAD_EXP,CANTIDAD_ALMACEN1,UNIDAD_CODIGO1,CANTIDAD_ALMACEN2,UNIDAD_CODIGO2,CANTIDAD_ALMACEN12,CANTIDAD_ALMACEN22,DESCARGA_FINALIZADA,CANTIDAD_CON2,CANTIDAD_SUB2,CANTIDAD_SOB2,CANTIDAD_DIS2,CANTIDAD_EXP2,COSTE,D_TIPO_SITUACION,D_NUMERO_LOTE_INT,DESCRIPCION_ARTICULO,CODIGO_ARTICULO_MIRROR,TIPO_PALET,D_TIPO_PALET,FECHA_FIN_FACT_FRIO_CLI_ORIGEN,FECHA_SIGUIENTE_FACT_FRIO,NUMERO_AUTORIZACION_CLIENTE,NUMERO_TRANSPORTE,TARA_CON,TARA_SUB,TARA_SOB,TARA_DIS,TARA_EXP,EMPRESA,CANTIDAD_PEND_RECI,CODIGO_VALOR_INVENT,UNIDAD_VALORACION,CANTIDAD_PRECIO,INCLUIR_GTOS_GENER_INVENT,CLIENTE_FACTURACION_FRIO,D_CLIENTE_FACTURACION_FRIO,CENTRO_CONTABLE_FRIO,D_CENTRO_CONTABLE_FRIO,CODIGO_FAMILIA,D_CODIGO_FAMILIA,CODIGO_ESTAD2,D_CODIGO_ESTAD2,CODIGO_ESTAD3,D_CODIGO_ESTAD3,CODIGO_ESTAD4,D_CODIGO_ESTAD4,CODIGO_ESTAD5,D_CODIGO_ESTAD5,CODIGO_ESTAD6,D_CODIGO_ESTAD6,CODIGO_ESTAD7,D_CODIGO_ESTAD7,CODIGO_ESTAD8,D_CODIGO_ESTAD8,CODIGO_ESTAD9,D_CODIGO_ESTAD9,CODIGO_ESTAD10,D_CODIGO_ESTAD10,CODIGO_ESTAD11,D_CODIGO_ESTAD11,CODIGO_ESTAD12,D_CODIGO_ESTAD12,CODIGO_ESTAD13,D_CODIGO_ESTAD13,CODIGO_ESTAD14,D_CODIGO_ESTAD14,CODIGO_ESTAD15,D_CODIGO_ESTAD15,CODIGO_ESTAD16,D_CODIGO_ESTAD16,CODIGO_ESTAD17,D_CODIGO_ESTAD17,CODIGO_ESTAD18,D_CODIGO_ESTAD18,CODIGO_ESTAD19,D_CODIGO_ESTAD19,CODIGO_ESTAD20,D_CODIGO_ESTAD20,VALOR_ALFA_1,VALOR_ALFA_2,VALOR_ALFA_3,VALOR_ALFA_4,VALOR_ALFA_5,VALOR_ALFA_6,VALOR_ALFA_7,VALOR_ALFA_8,VALOR_ALFA_9,VALOR_ALFA_10,VALOR_NUM_1,VALOR_NUM_2,VALOR_NUM_3,VALOR_NUM_4,VALOR_NUM_5,VALOR_NUM_6,VALOR_NUM_7,VALOR_NUM_8,VALOR_NUM_9,VALOR_NUM_10,VALOR_FECHA_1,VALOR_FECHA_2,VALOR_FECHA_3,D_VALOR_ALFA_1,D_VALOR_ALFA_2,D_VALOR_ALFA_3,D_VALOR_ALFA_4,D_VALOR_ALFA_5,D_VALOR_ALFA_6,D_VALOR_ALFA_7,D_VALOR_ALFA_8,D_VALOR_ALFA_9,D_VALOR_ALFA_10,CODIGO_SUBREFERENCIA,ALFA3_FAO,NOMBRE_CIENTIFICO,PARTIDA_ARANCELARIA,D_PARTIDA_ARANCELARIA,REGISTRO_SANITARIO,D_REGISTRO_SANITARIO,D_LOTE_AUX,FECHA_CADUCIDAD,FECHA_CREACION,TITULO_ALFA_1,TITULO_ALFA_2,TITULO_ALFA_3,TITULO_ALFA_4,TITULO_ALFA_5,TITULO_ALFA_6,TITULO_ALFA_7,TITULO_ALFA_8,TITULO_ALFA_9,TITULO_ALFA_10,TITULO_NUM_1,TITULO_NUM_2,TITULO_NUM_3,TITULO_NUM_4,TITULO_NUM_5,TITULO_NUM_6,TITULO_NUM_7,TITULO_NUM_8,TITULO_NUM_9,TITULO_NUM_10,TITULO_FECHA_1,TITULO_FECHA_2,TITULO_FECHA_3,STOCK_DISPONIBLE,D_ALMACEN_MIRROR,CODIGO_DVD,NUMERO_DIP,FECHA_LIBERACION_DIP,ESTADO_DVD,NUMERO_DVCE,ALMACEN_MIRROR,CLIENTE_MIRROR,NUMERO_LOTE_PRO,RESERVADOA01,RESERVADOA02,RESERVADOA03,RESERVADOA04,RECIPIENTE,TIPO_RECIPIENTE,D_TIPO_RECIPIENTE,OBS_HIST_PALETS,FAO_MAREA,DOCUMENTO_ENTRADA,TIPO_DOC_ENTRADA,D_TIPO_DOC_ENTRADA,ARTICULO_MIRROR,D_ARTICULO_MIRROR,ID_DIGITAL,D_NUMERO_TRANSPORTE,CANTIDAD_NOTAS_PESCA FROM (SELECT DATOS.* ,almacen ALMACEN_MIRROR,codigo_articulo ARTICULO_MIRROR,(SELECT SUM(pl.cantidad_unidad1)
-   FROM articulos ar, barcos ba, lotes lo,mareas ma, nota_pesca pc, nota_pesca_lin pl
-  WHERE pc.empresa = pl.empresa
-    AND pc.codigo = pl.codigo
-    AND pc.marea = pl.marea
-    AND ba.codigo = ma.barco
-    AND ba.empresa = ma.empresa
-and lo.lote = ma.codigo_entrada
-and lo.empresa = ma.empresa
-and lo.descarga_finalizada='N'
-    AND ar.codigo_articulo = pl.articulo
-    AND ar.codigo_empresa = pl.empresa
-    AND ma.empresa = pl.empresa
-    AND ma.codigo = pl.marea
-and pl.articulo = datos.codigo_articulo
-    AND pl.empresa = datos.empresa
-and ma.situacion='1000') CANTIDAD_NOTAS_PESCA,(select sum(PL.UNIDADES_PEDIDAS - PL.UNIDADES_ENTREGADAS)
-FROM PARAM_COMPRAS p, articulos a, pedidos_compras pc, pedidos_compras_lin pl
-         WHERE     PL.CODIGO_EMPRESA = PC.CODIGO_EMPRESA
-               AND PL.ORGANIZACION_COMPRAS = PC.ORGANIZACION_COMPRAS
-               AND PL.SERIE_NUMERACION = PC.SERIE_NUMERACION
-               AND PL.NUMERO_PEDIDO = PC.NUMERO_PEDIDO
-               AND A.CODIGO_EMPRESA = PL.CODIGO_EMPRESA
-               AND A.CODIGO_ARTICULO = PL.CODIGO_ARTICULO
-               and p.CODIGO_EMPRESA = pc.codigo_empresa
-               and p.ORGANIZACION_COMPRAS = PC.ORGANIZACION_COMPRAS
-               AND PL.STATUS_CIERRE = 'E'
-               AND pl.codigo_articulo = DATOS.CODIGO_ARTICULO
-      and (P.ALMACEN_DISTINTO = 'S' or (P.ALMACEN_DISTINTO = 'N' AND PC.CODIGO_ALMACEN = DATOS.ALMACEN))
-     AND PL.UNIDADES_PEDIDAS - nvl(PL.UNIDADES_ENTREGADAS, 0) > 0
- AND pc.codigo_empresa = datos.empresa) CANTIDAD_PEND_RECI,cliente CLIENTE_MIRROR,CODIGO_ARTICULO_AUX CODIGO_ARTICULO_MIRROR,DESCRIPCION_ARTICULO DESCRIPCION_ARTICULO_MIRROR,(SELECT h.descripcion_lote FROM historico_lotes h WHERE h.numero_lote_int = NVL(datos.numero_lote_int_aux, datos.numero_lote_int)AND h.codigo_articulo = datos.codigo_articulo AND h.codigo_empresa = datos.empresa) DESCRIPCION_PARTIDA_MIRROR,(SELECT lval.nombre FROM almacenes lval WHERE lval.almacen = datos.almacen AND lval.codigo_empresa = datos.empresa) D_ALMACEN,datos.almacen D_ALMACEN_MIRROR,DESCRIPCION_ARTICULO D_ARTICULO_MIRROR,(SELECT lvb.nombre FROM barcos lvb WHERE lvb.codigo = datos.barco_lote AND lvb.empresa = datos.empresa ) D_BARCO_LOTE,(Select lvb.nombre from buques lvb where lvb.codigo = datos.buque and lvb.empresa =datos.empresa) D_BUQUE,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = datos.centro_contable AND lvcc.empresa = datos.empresa) D_CENTRO_CONTABLE,(select ca.nombre from caracteres_asiento ca where ca.empresa=datos.empresa and ca.codigo=datos.centro_contable_frio) D_CENTRO_CONTABLE_FRIO,(SELECT c.nombre FROM clientes c WHERE c.codigo_rapido = datos.cliente AND c.codigo_empresa = datos.empresa) D_CLIENTE,(SELECT c.nombre FROM clientes c WHERE c.codigo_rapido = datos.cliente_facturacion_frio AND c.codigo_empresa = datos.empresa) D_CLIENTE_FACTURACION_FRIO,datos.cliente D_CLIENTE_MIRROR,(SELECT prlv.nombre FROM proveedores prlv WHERE prlv.codigo_rapido = datos.codigo_proveedor AND codigo_empresa = datos.empresa) D_CODIGO_PROVEEDOR,(SELECT lvlot.descripcion FROM lotes lvlot WHERE lvlot.lote = datos.lote_aux AND lvlot.empresa = datos.empresa) D_LOTE_AUX,(SELECT lvm.descripcion FROM mareas lvm WHERE lvm.codigo = datos.marea AND lvm.empresa = datos.empresa) D_MAREA,(SELECT lvrs.descripcion FROM registros_sanitarios lvrs where lvrs.numero_registro = datos.registro_sanitario and lvrs.empresa = datos.empresa) D_REGISTRO_SANITARIO,(SELECT lvtpm.descripcion FROM tipos_movimiento lvtpm WHERE lvtpm.codigo = datos.tipo_doc_entrada) D_TIPO_DOC_ENTRADA,(SELECT lvtp.descripcion FROM tipos_palet lvtp WHERE lvtp.codigo = datos.tipo_palet AND lvtp.empresa = datos.empresa) D_TIPO_PALET,(SELECT lvtp.descripcion FROM tipos_palet lvtp WHERE lvtp.codigo = datos.tipo_recipiente AND lvtp.empresa = datos.empresa) D_TIPO_RECIPIENTE,(SELECT lvts.descripcion FROM tipos_situacion lvts WHERE lvts.tipo_situacion = datos.tipo_situacion AND lvts.codigo_empresa = datos.empresa) D_TIPO_SITUACION,(SELECT lvaz.descripcion FROM almacenes_zonas lvaz WHERE lvaz.codigo_zona = datos.zona_almacen AND lvaz.codigo_almacen = datos.almacen AND lvaz.codigo_empresa = datos.empresa) D_ZONA_ALMACEN,(select NVL(id_digital, 0) from lotes l where l.empresa = DATOS.EMPRESA and l.lote = DATOS.LOTE) ID_DIGITAL,DECODE(UNID_VALORACION,  0, 0,  COSTE / UNID_VALORACION) PRECIO_COSTE,recipiente RECIPIENTE_MIRROR,NULL RESERVADOA01,NULL RESERVADOA02,NULL RESERVADOA03,NULL RESERVADOA04 FROM (SELECT m.codigo_almacen almacen,  NULL zona_almacen, m.tipo_situacion ,s.stock_disponible  ,m.numero_lote_int,   h.numero_lote_pro ,m.numero_lote_int numero_lote_int_aux, m.codigo_articulo, m.codigo_articulo codigo_articulo_aux, h.documento_entrada, h.codigo_creacion tipo_doc_entrada,  l.descarga_finalizada descarga_finalizada, ma.codigo marea, l.barco barco_lote, l.buque, ma.zona_fao fao_marea, COALESCE(alm.centro_contable, l.centro_contable_fact_frio, l.centro_contable) centro_contable_frio,  NULL coste,  NULL unid_valoracion,  NULL recipiente, NULL tipo_recipiente, NULL Obs_Hist_Palets, NULL sscc,  m.cantidad_con, m.cantidad_sub, m.cantidad_sob, m.cantidad_dis, m.cantidad_exp, DECODE(s.stock_disponible, 'N', 0, m.cantidad_con -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CON', l.centro_contable,m.tipo_situacion) ) cantidad_con2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_sub -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'SUB', l.centro_contable,m.tipo_situacion) ) cantidad_sub2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_sob -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'SOB', l.centro_contable,m.tipo_situacion) ) cantidad_sob2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_dis -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'DIS', l.centro_contable,m.tipo_situacion) ) cantidad_dis2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_exp -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'EXP', l.centro_contable,m.tipo_situacion) ) cantidad_exp2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_unidad1 -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CT1', l.centro_contable,m.tipo_situacion) ) cantidad_almacen12,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_unidad2 -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CT2', l.centro_contable,m.tipo_situacion) ) cantidad_almacen22, l.lote_ext, m.cantidad_unidad1 cantidad_almacen1,m.cantidad_unidad2 cantidad_almacen2, m.codigo_empresa empresa,  h.descripcion_lote2 lote,  h.descripcion_lote2 lote_aux, DECODE('V','V',a.descrip_comercial,'T',a.descrip_tecnica,'C',a.descrip_compra,a.descrip_comercial) descripcion_articulo,DECODE('V','V',a.descrip_comercial,'T',a.descrip_tecnica,'C',a.descrip_compra,a.descrip_comercial) descripcion_articulo_aux,  a.unidad_Codigo1,a.unidad_codigo2,a.codigo_valor_invent,a.unidad_valoracion,a.cantidad_precio,a.incluir_gtos_gener_invent,
-       a.codigo_familia,(select descripcion from familias where numero_tabla = '1' AND codigo_familia = a.codigo_familia AND codigo_empresa = '001') d_codigo_familia,
-       a.codigo_estad2,(select descripcion from familias where numero_tabla = '2' AND codigo_familia = a.codigo_estad2 AND codigo_empresa = '001') d_codigo_estad2,
-       a.codigo_estad3,(select descripcion from familias where numero_tabla = '3' AND codigo_familia = a.codigo_estad3 AND codigo_empresa = '001') d_codigo_estad3,
-       a.codigo_estad4,(select descripcion from familias where numero_tabla = '4' AND codigo_familia = a.codigo_estad4 AND codigo_empresa = '001') d_codigo_estad4,
-       a.codigo_estad5,(select descripcion from familias where numero_tabla = '5' AND codigo_familia = a.codigo_estad5 AND codigo_empresa = '001') d_codigo_estad5,
-       a.codigo_estad6,(select descripcion from familias where numero_tabla = '6' AND codigo_familia = a.codigo_estad6 AND codigo_empresa = '001') d_codigo_estad6,
-       a.codigo_estad7,(select descripcion from familias where numero_tabla = '7' AND codigo_familia = a.codigo_estad7 AND codigo_empresa = '001') d_codigo_estad7,
-       a.codigo_estad8,(select descripcion from familias where numero_tabla = '8' AND codigo_familia = a.codigo_estad8 AND codigo_empresa = '001') d_codigo_estad8,
-       a.codigo_estad9,(select descripcion from familias where numero_tabla = '9' AND codigo_familia = a.codigo_estad9 AND codigo_empresa = '001') d_codigo_estad9,
-       a.codigo_estad10,(select descripcion from familias where numero_tabla = '10' AND codigo_familia = a.codigo_estad10 AND codigo_empresa = '001') d_codigo_estad10, 
-       a.codigo_estad11,(select descripcion from familias where numero_tabla = '11' AND codigo_familia = a.codigo_estad11 AND codigo_empresa = '001') d_codigo_estad11, 
-       a.codigo_estad12,(select descripcion from familias where numero_tabla = '12' AND codigo_familia = a.codigo_estad12 AND codigo_empresa = '001') d_codigo_estad12, 
-       a.codigo_estad13,(select descripcion from familias where numero_tabla = '13' AND codigo_familia = a.codigo_estad13 AND codigo_empresa = '001') d_codigo_estad13, 
-       a.codigo_estad14,(select descripcion from familias where numero_tabla = '14' AND codigo_familia = a.codigo_estad14 AND codigo_empresa = '001') d_codigo_estad14, 
-       a.codigo_estad15,(select descripcion from familias where numero_tabla = '15' AND codigo_familia = a.codigo_estad15 AND codigo_empresa = '001') d_codigo_estad15, 
-       a.codigo_estad16,(select descripcion from familias where numero_tabla = '16' AND codigo_familia = a.codigo_estad16 AND codigo_empresa = '001') d_codigo_estad16, 
-       a.codigo_estad17,(select descripcion from familias where numero_tabla = '17' AND codigo_familia = a.codigo_estad17 AND codigo_empresa = '001') d_codigo_estad17, 
-       a.codigo_estad18,(select descripcion from familias where numero_tabla = '18' AND codigo_familia = a.codigo_estad18 AND codigo_empresa = '001') d_codigo_estad18, 
-       a.codigo_estad19,(select descripcion from familias where numero_tabla = '19' AND codigo_familia = a.codigo_estad19 AND codigo_empresa = '001') d_codigo_estad19, 
-       a.codigo_estad20,(select descripcion from familias where numero_tabla = '20' AND codigo_familia = a.codigo_estad20 AND codigo_empresa = '001') d_codigo_estad20, 
-       t.titulo_alfa_1, t.titulo_alfa_2, t.titulo_alfa_3, t.titulo_alfa_4, t.titulo_alfa_5, t.titulo_alfa_6, t.titulo_alfa_7, t.titulo_alfa_8, t.titulo_alfa_9, t.titulo_alfa_10,
-     t.titulo_num_1, t.titulo_num_2, t.titulo_num_3, t.titulo_num_4, t.titulo_num_5, t.titulo_num_6, t.titulo_num_7, t.titulo_num_8, t.titulo_num_9, t.titulo_num_10,
-     t.titulo_fecha_1, t.titulo_fecha_2, t.titulo_fecha_3,
-     c.valor_alfa_1, c.valor_alfa_2, c.valor_alfa_3, c.valor_alfa_4, c.valor_alfa_5, c.valor_alfa_6, c.valor_alfa_7, c.valor_alfa_8, c.valor_alfa_9, c.valor_alfa_10,  (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_1 AND numero=1 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_1, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_2 AND numero=2 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_2, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_3 AND numero=3 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_3, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_4 AND numero=4 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_4, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_5 AND numero=5 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_5, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_6 AND numero=6 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_6, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_7 AND numero=7 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_7, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_8 AND numero=8 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_8, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_9 AND numero=9 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_9, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_10 AND numero=10 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_10, (SELECT registro_sanitario FROM titulos_personaliz_des WHERE valor=decode(t.valor_alfa_registro,'1',c.valor_alfa_1,'2',c.valor_alfa_2,'3',c.valor_alfa_3,'4',c.valor_alfa_4,
-      '5',c.valor_alfa_5,'6',c.valor_alfa_6,'7',c.valor_alfa_7,'8',c.valor_alfa_8,'9',c.valor_alfa_9,'10',
-      c.valor_alfa_10) AND numero=t.valor_alfa_registro AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') registro_Sanitario,
-     c.valor_num_1, c.valor_num_2, c.valor_num_3, c.valor_num_4, c.valor_num_5, c.valor_num_6, c.valor_num_7, c.valor_num_8, c.valor_num_9, c.valor_num_10,
-     c.valor_fecha_1, c.valor_fecha_2, c.valor_fecha_3,
-       (SELECT numero_autorizacion_cliente FROM DOCUMENTO_VINCULACION_DEPOSITO D 
-       WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_autorizacion_cliente,
-       (SELECT numero_dip FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_dip,
-       (SELECT fecha_liberacion_dip FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) fecha_liberacion_dip,
-    (SELECT numero_dvce FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_dvce,
-     (SELECT e.nombre FROM documento_vinculacion_deposito d, aduanas a, estados e WHERE a.codigo = d.aduana_registro 
-     AND e.codigo = a.estado AND d.codigo = h.codigo_dvd AND d.empresa = h.codigo_empresa) estado_dvd,   
-       h.tara_con, h.tara_sub, h.tara_sob, h.tara_dis, 
-       h.tara_exp,  h.codigo_dvd codigo_dvd, h.codigo_proveedor,h.FECHA_FIN_FACT_FRIO_CLI_ORIGEN,h.cliente_facturacion_frio,h.fecha_siguiente_fact_frio, h.descripcion_lote d_numero_lote_int,h.descripcion_lote d_numero_lote_int_aux, null codigo_subreferencia,  h.fecha_caducidad, h.fecha_creacion, h.numero_lote_int_anterior,  a.alfa3_fao, a.partida_arancelaria partida_arancelaria, (SELECT nc.nombre_cientifico FROM nombres_cientificos nc WHERE nc.codigo = a.alfa3_fao) nombre_cientifico, (SELECT nc.descripcion FROM partidas_arancelarias nc WHERE nc.empresa = m.codigo_empresa AND nc.codigo = a.partida_arancelaria) d_partida_arancelaria,  m.codigo_cliente cliente, NULL palet, null numero_transporte, NULL d_numero_transporte, NULL ubicacion,  l.centro_contable,  NULL tipo_palet  FROM tipos_situacion s, almacenes alm,  caracteristicas_lotes c, titulos_personaliz t,lotes l, articulos a, historico_lotes h,  mareas ma,  stocks_deposito_cli m  WHERE h.numero_lote_int = m.numero_lote_int
-   AND h.codigo_articulo = m.codigo_articulo
-   AND h.codigo_empresa = m.codigo_empresa 
-   AND l.lote(+) = h.descripcion_lote2
-   AND l.empresa(+) = h.codigo_empresa  
-   and ma.codigo(+) = l.marea
-   and ma.empresa(+) = l.empresa 
-   AND a.codigo_articulo = m.codigo_articulo
-   AND a.codigo_empresa = m.codigo_empresa
-   AND s.tipo_situacion = m.tipo_situacion
-   AND s.codigo_empresa = m.codigo_empresa 
-   AND alm.almacen = m.codigo_almacen
-   AND alm.codigo_empresa = m.codigo_empresa  AND t.codigo_personaliz(+) = a.codigo_personaliz_lotes
-     AND t.codigo_empresa(+) = a.codigo_empresa
-     AND c.codigo_articulo(+) = m.codigo_articulo
-     AND c.numero_lote_int(+) = m.numero_lote_int
-     AND c.codigo_empresa(+) = m.codigo_empresa AND m.codigo_empresa = '001' AND m.codigo_almacen = '90' AND h.descripcion_lote2 >= 'PRODUCCION' AND h.descripcion_lote2 <= 'PRODUCCION' AND m.cantidad_CON != 0  ORDER BY cliente, lote, numero_lote_int) datos) d WHERE 1=1;
+     SELECT A.CODIGO_EMPRESA    
+    , A.CODIGO_ARTICULO||'_'||A.CODIGO_EMPRESA AS PRIMARY_KEY_ARTICULO    
+    , A.CODIGO_ALMACEN||'_'||A.CODIGO_EMPRESA AS PRIMARY_KEY_ALMACEN    
+    , A.CODIGO_ZONA||'_'||A.CODIGO_ALMACEN||'_'||A.CODIGO_EMPRESA AS PRIMARY_KEY_ALM_ZONA    
+    , A.TIPO_SITUACION||'_'||A.CODIGO_EMPRESA AS PRIMARY_KEY_TIP_SITUACION    
+    , C.CODIGO_FAMILIA||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_FAMILIA    
+    , C.CODIGO_ESTAD2||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_SUBFAMILIA  
+    , C.CODIGO_ESTAD3||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_CLASIFICACION 
+    , C.CODIGO_ESTAD4||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_PRESENTACION  
+    , C.CODIGO_ESTAD5||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_NOMBRE_COMUN
+    , C.CODIGO_ESTAD6||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_PROPIEDAD_DESTINO
+    , C.CODIGO_ESTAD7||'_'||C.CODIGO_EMPRESA AS PRIMARY_KEY_TIPO_MATERIAL 
+    , A.CODIGO_ALMACEN    
+    , A.CODIGO_ARTICULO    
+    , A.TIPO_SITUACION    
+    , A.EJERCICIO    
+    , A.NUMERO_PERIODO --, A.NUMERO_PERIODO||'-'||A.EJERCICIO AS PK_PERIODO_FECHA    
+    , TO_CHAR(TO_DATE('01/' || A.NUMERO_PERIODO || '/' || A.EJERCICIO, 'DD/MM/YYYY'),'DD/MM/YYYY') AS FECHA    
+    , A.CODIGO_ZONA    
+    , A.PRESENTACION   
+    , SUM(A.STOCK_PRESENTACION) AS STOCK_PRESENTACION    
+    , SUM(A.STOCK_UNIDAD1) AS STOCK_UNIDAD1    
+    , SUM(A.STOCK_UNIDAD2) AS STOCK_UNIDAD2    
+    , SUM(B.PRECIO_MEDIO_PONDERADO) AS PRECIO_MEDIO_PONDERADO    
+    , SUM(A.STOCK_PRESENTACION) * SUM(B.PRECIO_MEDIO_PONDERADO) AS IMPORTE  
+    ,C.CODIGO_FAMILIA
+    ,C.CODIGO_ESTAD2
+    , C.CODIGO_ESTAD3
+    ,C.CODIGO_ESTAD4
+    ,C.CODIGO_ESTAD5
+    ,C.CODIGO_ESTAD6
+    ,C.CODIGO_ESTAD7
+    FROM HISTORICO_STOCKS A     
+    LEFT JOIN HISTORICO_VALORACION B        
+    ON A.CODIGO_aRTICULO = B.CODIGO_aRTICULO                
+    AND A.CODIGO_ALMACEN = B.CODIGO_ALMACEN                
+    AND A.CODIGO_EMPRESA = B.CODIGO_EMPRESA                
+    AND A.NUMERO_PERIODO = B.NUMERO_PERIODO                
+    AND A.EJERCICIO = B.EJERCICIO    
+    JOIN ARTICULOS  C        
+    ON C.CODIGO_ARTICULO = A.CODIGO_ARTICULO        
+    AND C.CODIGO_EMPRESA = A.CODIGO_EMPRESA   
+    WHERE A.EJERCICIO >= TO_NUMBER(to_char(sysdate,'YYYY')) -2       
+    GROUP BY A.CODIGO_EMPRESA    
+    , A.CODIGO_ALMACEN    
+    , A.CODIGO_ARTICULO    
+    , A.TIPO_SITUACION    
+    , A.EJERCICIO    
+    , A.NUMERO_PERIODO    
+    , A.PRESENTACION    
+    , A.CODIGO_ZONA    
+    , C.CODIGO_FAMILIA||'_'||C.CODIGO_EMPRESA
+    , C.CODIGO_ESTAD2||'_'||C.CODIGO_EMPRESA 
+    , C.CODIGO_ESTAD3||'_'||C.CODIGO_EMPRESA 
+    , C.CODIGO_ESTAD4||'_'||C.CODIGO_EMPRESA 
+    , C.CODIGO_ESTAD5||'_'||C.CODIGO_EMPRESA 
+    , C.CODIGO_ESTAD6||'_'||C.CODIGO_EMPRESA 
+    , C.CODIGO_ESTAD7||'_'||C.CODIGO_EMPRESA 
+    ,C.CODIGO_FAMILIA
+    ,C.CODIGO_ESTAD2
+    , C.CODIGO_ESTAD3
+    ,C.CODIGO_ESTAD4
+    ,C.CODIGO_ESTAD5
+    ,C.CODIGO_ESTAD6
+    ,C.CODIGO_ESTAD7;
 
-
-
-
-SELECT CENTRO_CONTABLE,ALMACEN,D_CENTRO_CONTABLE,D_ALMACEN,ZONA_ALMACEN,D_ZONA_ALMACEN,LOTE_EXT,NUMERO_LOTE_INT_ANTERIOR,TIPO_SITUACION,CLIENTE,D_CLIENTE,D_CLIENTE_MIRROR,CODIGO_PROVEEDOR,D_CODIGO_PROVEEDOR,LOTE,LOTE_AUX,NUMERO_LOTE_INT,NUMERO_LOTE_INT_AUX,DESCRIPCION_ARTICULO_MIRROR,CODIGO_ARTICULO,DESCRIPCION_PARTIDA_MIRROR,UBICACION,SSCC,PALET,MAREA,D_MAREA,BARCO_LOTE,D_BARCO_LOTE,BUQUE,D_BUQUE,CANTIDAD_CON,PRECIO_COSTE,CANTIDAD_SUB,CANTIDAD_SOB,CANTIDAD_DIS,CANTIDAD_EXP,CANTIDAD_ALMACEN1,UNIDAD_CODIGO1,CANTIDAD_ALMACEN2,UNIDAD_CODIGO2,CANTIDAD_ALMACEN12,CANTIDAD_ALMACEN22,DESCARGA_FINALIZADA,CANTIDAD_CON2,CANTIDAD_SUB2,CANTIDAD_SOB2,CANTIDAD_DIS2,CANTIDAD_EXP2,COSTE,D_TIPO_SITUACION,D_NUMERO_LOTE_INT,DESCRIPCION_ARTICULO,CODIGO_ARTICULO_MIRROR,TIPO_PALET,D_TIPO_PALET,FECHA_FIN_FACT_FRIO_CLI_ORIGEN,FECHA_SIGUIENTE_FACT_FRIO,NUMERO_AUTORIZACION_CLIENTE,NUMERO_TRANSPORTE,TARA_CON,TARA_SUB,TARA_SOB,TARA_DIS,TARA_EXP,EMPRESA,CANTIDAD_PEND_RECI,CODIGO_VALOR_INVENT,UNIDAD_VALORACION,CANTIDAD_PRECIO,INCLUIR_GTOS_GENER_INVENT,CLIENTE_FACTURACION_FRIO,D_CLIENTE_FACTURACION_FRIO,CENTRO_CONTABLE_FRIO,D_CENTRO_CONTABLE_FRIO,CODIGO_FAMILIA,D_CODIGO_FAMILIA,CODIGO_ESTAD2,D_CODIGO_ESTAD2,CODIGO_ESTAD3,D_CODIGO_ESTAD3,CODIGO_ESTAD4,D_CODIGO_ESTAD4,CODIGO_ESTAD5,D_CODIGO_ESTAD5,CODIGO_ESTAD6,D_CODIGO_ESTAD6,CODIGO_ESTAD7,D_CODIGO_ESTAD7,CODIGO_ESTAD8,D_CODIGO_ESTAD8,CODIGO_ESTAD9,D_CODIGO_ESTAD9,CODIGO_ESTAD10,D_CODIGO_ESTAD10,CODIGO_ESTAD11,D_CODIGO_ESTAD11,CODIGO_ESTAD12,D_CODIGO_ESTAD12,CODIGO_ESTAD13,D_CODIGO_ESTAD13,CODIGO_ESTAD14,D_CODIGO_ESTAD14,CODIGO_ESTAD15,D_CODIGO_ESTAD15,CODIGO_ESTAD16,D_CODIGO_ESTAD16,CODIGO_ESTAD17,D_CODIGO_ESTAD17,CODIGO_ESTAD18,D_CODIGO_ESTAD18,CODIGO_ESTAD19,D_CODIGO_ESTAD19,CODIGO_ESTAD20,D_CODIGO_ESTAD20,VALOR_ALFA_1,VALOR_ALFA_2,VALOR_ALFA_3,VALOR_ALFA_4,VALOR_ALFA_5,VALOR_ALFA_6,VALOR_ALFA_7,VALOR_ALFA_8,VALOR_ALFA_9,VALOR_ALFA_10,VALOR_NUM_1,VALOR_NUM_2,VALOR_NUM_3,VALOR_NUM_4,VALOR_NUM_5,VALOR_NUM_6,VALOR_NUM_7,VALOR_NUM_8,VALOR_NUM_9,VALOR_NUM_10,VALOR_FECHA_1,VALOR_FECHA_2,VALOR_FECHA_3,D_VALOR_ALFA_1,D_VALOR_ALFA_2,D_VALOR_ALFA_3,D_VALOR_ALFA_4,D_VALOR_ALFA_5,D_VALOR_ALFA_6,D_VALOR_ALFA_7,D_VALOR_ALFA_8,D_VALOR_ALFA_9,D_VALOR_ALFA_10,CODIGO_SUBREFERENCIA,ALFA3_FAO,NOMBRE_CIENTIFICO,PARTIDA_ARANCELARIA,D_PARTIDA_ARANCELARIA,REGISTRO_SANITARIO,D_REGISTRO_SANITARIO,D_LOTE_AUX,FECHA_CADUCIDAD,FECHA_CREACION,TITULO_ALFA_1,TITULO_ALFA_2,TITULO_ALFA_3,TITULO_ALFA_4,TITULO_ALFA_5,TITULO_ALFA_6,TITULO_ALFA_7,TITULO_ALFA_8,TITULO_ALFA_9,TITULO_ALFA_10,TITULO_NUM_1,TITULO_NUM_2,TITULO_NUM_3,TITULO_NUM_4,TITULO_NUM_5,TITULO_NUM_6,TITULO_NUM_7,TITULO_NUM_8,TITULO_NUM_9,TITULO_NUM_10,TITULO_FECHA_1,TITULO_FECHA_2,TITULO_FECHA_3,STOCK_DISPONIBLE,D_ALMACEN_MIRROR,CODIGO_DVD,NUMERO_DIP,FECHA_LIBERACION_DIP,ESTADO_DVD,NUMERO_DVCE,ALMACEN_MIRROR,CLIENTE_MIRROR,NUMERO_LOTE_PRO,RESERVADOA01,RESERVADOA02,RESERVADOA03,RESERVADOA04,RECIPIENTE,TIPO_RECIPIENTE,D_TIPO_RECIPIENTE,OBS_HIST_PALETS,FAO_MAREA,DOCUMENTO_ENTRADA,TIPO_DOC_ENTRADA,D_TIPO_DOC_ENTRADA,ARTICULO_MIRROR,D_ARTICULO_MIRROR,ID_DIGITAL,D_NUMERO_TRANSPORTE,CANTIDAD_NOTAS_PESCA FROM (SELECT DATOS.* ,almacen ALMACEN_MIRROR,codigo_articulo ARTICULO_MIRROR,(SELECT SUM(pl.cantidad_unidad1)
-   FROM articulos ar, barcos ba, lotes lo,mareas ma, nota_pesca pc, nota_pesca_lin pl
-  WHERE pc.empresa = pl.empresa
-    AND pc.codigo = pl.codigo
-    AND pc.marea = pl.marea
-    AND ba.codigo = ma.barco
-    AND ba.empresa = ma.empresa
-and lo.lote = ma.codigo_entrada
-and lo.empresa = ma.empresa
-and lo.descarga_finalizada='N'
-    AND ar.codigo_articulo = pl.articulo
-    AND ar.codigo_empresa = pl.empresa
-    AND ma.empresa = pl.empresa
-    AND ma.codigo = pl.marea
-and pl.articulo = datos.codigo_articulo
-    AND pl.empresa = datos.empresa
-and ma.situacion='1000') CANTIDAD_NOTAS_PESCA,(select sum(PL.UNIDADES_PEDIDAS - PL.UNIDADES_ENTREGADAS)
-FROM PARAM_COMPRAS p, articulos a, pedidos_compras pc, pedidos_compras_lin pl
-         WHERE     PL.CODIGO_EMPRESA = PC.CODIGO_EMPRESA
-               AND PL.ORGANIZACION_COMPRAS = PC.ORGANIZACION_COMPRAS
-               AND PL.SERIE_NUMERACION = PC.SERIE_NUMERACION
-               AND PL.NUMERO_PEDIDO = PC.NUMERO_PEDIDO
-               AND A.CODIGO_EMPRESA = PL.CODIGO_EMPRESA
-               AND A.CODIGO_ARTICULO = PL.CODIGO_ARTICULO
-               and p.CODIGO_EMPRESA = pc.codigo_empresa
-               and p.ORGANIZACION_COMPRAS = PC.ORGANIZACION_COMPRAS
-               AND PL.STATUS_CIERRE = 'E'
-               AND pl.codigo_articulo = DATOS.CODIGO_ARTICULO
-      and (P.ALMACEN_DISTINTO = 'S' or (P.ALMACEN_DISTINTO = 'N' AND PC.CODIGO_ALMACEN = DATOS.ALMACEN))
-     AND PL.UNIDADES_PEDIDAS - nvl(PL.UNIDADES_ENTREGADAS, 0) > 0
- AND pc.codigo_empresa = datos.empresa) CANTIDAD_PEND_RECI,cliente CLIENTE_MIRROR,CODIGO_ARTICULO_AUX CODIGO_ARTICULO_MIRROR,DESCRIPCION_ARTICULO DESCRIPCION_ARTICULO_MIRROR,(SELECT h.descripcion_lote FROM historico_lotes h WHERE h.numero_lote_int = NVL(datos.numero_lote_int_aux, datos.numero_lote_int)AND h.codigo_articulo = datos.codigo_articulo AND h.codigo_empresa = datos.empresa) DESCRIPCION_PARTIDA_MIRROR,(SELECT lval.nombre FROM almacenes lval WHERE lval.almacen = datos.almacen AND lval.codigo_empresa = datos.empresa) D_ALMACEN,datos.almacen D_ALMACEN_MIRROR,DESCRIPCION_ARTICULO D_ARTICULO_MIRROR,(SELECT lvb.nombre FROM barcos lvb WHERE lvb.codigo = datos.barco_lote AND lvb.empresa = datos.empresa ) D_BARCO_LOTE,(Select lvb.nombre from buques lvb where lvb.codigo = datos.buque and lvb.empresa =datos.empresa) D_BUQUE,(SELECT lvcc.nombre FROM caracteres_asiento lvcc WHERE lvcc.codigo = datos.centro_contable AND lvcc.empresa = datos.empresa) D_CENTRO_CONTABLE,(select ca.nombre from caracteres_asiento ca where ca.empresa=datos.empresa and ca.codigo=datos.centro_contable_frio) D_CENTRO_CONTABLE_FRIO,(SELECT c.nombre FROM clientes c WHERE c.codigo_rapido = datos.cliente AND c.codigo_empresa = datos.empresa) D_CLIENTE,(SELECT c.nombre FROM clientes c WHERE c.codigo_rapido = datos.cliente_facturacion_frio AND c.codigo_empresa = datos.empresa) D_CLIENTE_FACTURACION_FRIO,datos.cliente D_CLIENTE_MIRROR,(SELECT prlv.nombre FROM proveedores prlv WHERE prlv.codigo_rapido = datos.codigo_proveedor AND codigo_empresa = datos.empresa) D_CODIGO_PROVEEDOR,(SELECT lvlot.descripcion FROM lotes lvlot WHERE lvlot.lote = datos.lote_aux AND lvlot.empresa = datos.empresa) D_LOTE_AUX,(SELECT lvm.descripcion FROM mareas lvm WHERE lvm.codigo = datos.marea AND lvm.empresa = datos.empresa) D_MAREA,(SELECT lvrs.descripcion FROM registros_sanitarios lvrs where lvrs.numero_registro = datos.registro_sanitario and lvrs.empresa = datos.empresa) D_REGISTRO_SANITARIO,(SELECT lvtpm.descripcion FROM tipos_movimiento lvtpm WHERE lvtpm.codigo = datos.tipo_doc_entrada) D_TIPO_DOC_ENTRADA,(SELECT lvtp.descripcion FROM tipos_palet lvtp WHERE lvtp.codigo = datos.tipo_palet AND lvtp.empresa = datos.empresa) D_TIPO_PALET,(SELECT lvtp.descripcion FROM tipos_palet lvtp WHERE lvtp.codigo = datos.tipo_recipiente AND lvtp.empresa = datos.empresa) D_TIPO_RECIPIENTE,(SELECT lvts.descripcion FROM tipos_situacion lvts WHERE lvts.tipo_situacion = datos.tipo_situacion AND lvts.codigo_empresa = datos.empresa) D_TIPO_SITUACION,(SELECT lvaz.descripcion FROM almacenes_zonas lvaz WHERE lvaz.codigo_zona = datos.zona_almacen AND lvaz.codigo_almacen = datos.almacen AND lvaz.codigo_empresa = datos.empresa) D_ZONA_ALMACEN,(select NVL(id_digital, 0) from lotes l where l.empresa = DATOS.EMPRESA and l.lote = DATOS.LOTE) ID_DIGITAL,DECODE(UNID_VALORACION,  0, 0,  COSTE / UNID_VALORACION) PRECIO_COSTE,recipiente RECIPIENTE_MIRROR,NULL RESERVADOA01,NULL RESERVADOA02,NULL RESERVADOA03,NULL RESERVADOA04 FROM (SELECT m.codigo_almacen almacen,  NULL zona_almacen, m.tipo_situacion ,s.stock_disponible  ,m.numero_lote_int,   h.numero_lote_pro ,m.numero_lote_int numero_lote_int_aux, m.codigo_articulo, m.codigo_articulo codigo_articulo_aux, h.documento_entrada, h.codigo_creacion tipo_doc_entrada,  l.descarga_finalizada descarga_finalizada, ma.codigo marea, l.barco barco_lote, l.buque, ma.zona_fao fao_marea, COALESCE(alm.centro_contable, l.centro_contable_fact_frio, l.centro_contable) centro_contable_frio,  NULL coste,  NULL unid_valoracion,  NULL recipiente, NULL tipo_recipiente, NULL Obs_Hist_Palets, NULL sscc,  m.cantidad_con, m.cantidad_sub, m.cantidad_sob, m.cantidad_dis, m.cantidad_exp, DECODE(s.stock_disponible, 'N', 0, m.cantidad_con -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CON', l.centro_contable,m.tipo_situacion) ) cantidad_con2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_sub -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'SUB', l.centro_contable,m.tipo_situacion) ) cantidad_sub2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_sob -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'SOB', l.centro_contable,m.tipo_situacion) ) cantidad_sob2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_dis -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'DIS', l.centro_contable,m.tipo_situacion) ) cantidad_dis2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_exp -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'EXP', l.centro_contable,m.tipo_situacion) ) cantidad_exp2,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_unidad1 -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CT1', l.centro_contable,m.tipo_situacion) ) cantidad_almacen12,  DECODE(s.stock_disponible, 'N', 0, m.cantidad_unidad2 -  pk_parametros_pesca.calcula_stock_en_pedidos(m.codigo_empresa, m.codigo_cliente, NULL, NULL, NULL, NULL, NULL, m.codigo_articulo, m.numero_lote_int,h.descripcion_lote2, m.codigo_almacen, 'CT2', l.centro_contable,m.tipo_situacion) ) cantidad_almacen22, l.lote_ext, m.cantidad_unidad1 cantidad_almacen1,m.cantidad_unidad2 cantidad_almacen2, m.codigo_empresa empresa,  h.descripcion_lote2 lote,  h.descripcion_lote2 lote_aux, DECODE('V','V',a.descrip_comercial,'T',a.descrip_tecnica,'C',a.descrip_compra,a.descrip_comercial) descripcion_articulo,DECODE('V','V',a.descrip_comercial,'T',a.descrip_tecnica,'C',a.descrip_compra,a.descrip_comercial) descripcion_articulo_aux,  a.unidad_Codigo1,a.unidad_codigo2,a.codigo_valor_invent,a.unidad_valoracion,a.cantidad_precio,a.incluir_gtos_gener_invent,
-       a.codigo_familia,(select descripcion from familias where numero_tabla = '1' AND codigo_familia = a.codigo_familia AND codigo_empresa = '001') d_codigo_familia,
-       a.codigo_estad2,(select descripcion from familias where numero_tabla = '2' AND codigo_familia = a.codigo_estad2 AND codigo_empresa = '001') d_codigo_estad2,
-       a.codigo_estad3,(select descripcion from familias where numero_tabla = '3' AND codigo_familia = a.codigo_estad3 AND codigo_empresa = '001') d_codigo_estad3,
-       a.codigo_estad4,(select descripcion from familias where numero_tabla = '4' AND codigo_familia = a.codigo_estad4 AND codigo_empresa = '001') d_codigo_estad4,
-       a.codigo_estad5,(select descripcion from familias where numero_tabla = '5' AND codigo_familia = a.codigo_estad5 AND codigo_empresa = '001') d_codigo_estad5,
-       a.codigo_estad6,(select descripcion from familias where numero_tabla = '6' AND codigo_familia = a.codigo_estad6 AND codigo_empresa = '001') d_codigo_estad6,
-       a.codigo_estad7,(select descripcion from familias where numero_tabla = '7' AND codigo_familia = a.codigo_estad7 AND codigo_empresa = '001') d_codigo_estad7,
-       a.codigo_estad8,(select descripcion from familias where numero_tabla = '8' AND codigo_familia = a.codigo_estad8 AND codigo_empresa = '001') d_codigo_estad8,
-       a.codigo_estad9,(select descripcion from familias where numero_tabla = '9' AND codigo_familia = a.codigo_estad9 AND codigo_empresa = '001') d_codigo_estad9,
-       a.codigo_estad10,(select descripcion from familias where numero_tabla = '10' AND codigo_familia = a.codigo_estad10 AND codigo_empresa = '001') d_codigo_estad10, 
-       a.codigo_estad11,(select descripcion from familias where numero_tabla = '11' AND codigo_familia = a.codigo_estad11 AND codigo_empresa = '001') d_codigo_estad11, 
-       a.codigo_estad12,(select descripcion from familias where numero_tabla = '12' AND codigo_familia = a.codigo_estad12 AND codigo_empresa = '001') d_codigo_estad12, 
-       a.codigo_estad13,(select descripcion from familias where numero_tabla = '13' AND codigo_familia = a.codigo_estad13 AND codigo_empresa = '001') d_codigo_estad13, 
-       a.codigo_estad14,(select descripcion from familias where numero_tabla = '14' AND codigo_familia = a.codigo_estad14 AND codigo_empresa = '001') d_codigo_estad14, 
-       a.codigo_estad15,(select descripcion from familias where numero_tabla = '15' AND codigo_familia = a.codigo_estad15 AND codigo_empresa = '001') d_codigo_estad15, 
-       a.codigo_estad16,(select descripcion from familias where numero_tabla = '16' AND codigo_familia = a.codigo_estad16 AND codigo_empresa = '001') d_codigo_estad16, 
-       a.codigo_estad17,(select descripcion from familias where numero_tabla = '17' AND codigo_familia = a.codigo_estad17 AND codigo_empresa = '001') d_codigo_estad17, 
-       a.codigo_estad18,(select descripcion from familias where numero_tabla = '18' AND codigo_familia = a.codigo_estad18 AND codigo_empresa = '001') d_codigo_estad18, 
-       a.codigo_estad19,(select descripcion from familias where numero_tabla = '19' AND codigo_familia = a.codigo_estad19 AND codigo_empresa = '001') d_codigo_estad19, 
-       a.codigo_estad20,(select descripcion from familias where numero_tabla = '20' AND codigo_familia = a.codigo_estad20 AND codigo_empresa = '001') d_codigo_estad20, 
-       t.titulo_alfa_1, t.titulo_alfa_2, t.titulo_alfa_3, t.titulo_alfa_4, t.titulo_alfa_5, t.titulo_alfa_6, t.titulo_alfa_7, t.titulo_alfa_8, t.titulo_alfa_9, t.titulo_alfa_10,
-     t.titulo_num_1, t.titulo_num_2, t.titulo_num_3, t.titulo_num_4, t.titulo_num_5, t.titulo_num_6, t.titulo_num_7, t.titulo_num_8, t.titulo_num_9, t.titulo_num_10,
-     t.titulo_fecha_1, t.titulo_fecha_2, t.titulo_fecha_3,
-     c.valor_alfa_1, c.valor_alfa_2, c.valor_alfa_3, c.valor_alfa_4, c.valor_alfa_5, c.valor_alfa_6, c.valor_alfa_7, c.valor_alfa_8, c.valor_alfa_9, c.valor_alfa_10,  (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_1 AND numero=1 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_1, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_2 AND numero=2 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_2, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_3 AND numero=3 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_3, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_4 AND numero=4 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_4, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_5 AND numero=5 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_5, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_6 AND numero=6 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_6, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_7 AND numero=7 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_7, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_8 AND numero=8 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_8, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_9 AND numero=9 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_9, (SELECT descripcion FROM titulos_personaliz_des WHERE valor=c.valor_alfa_10 AND numero=10 AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') d_valor_alfa_10, (SELECT registro_sanitario FROM titulos_personaliz_des WHERE valor=decode(t.valor_alfa_registro,'1',c.valor_alfa_1,'2',c.valor_alfa_2,'3',c.valor_alfa_3,'4',c.valor_alfa_4,
-      '5',c.valor_alfa_5,'6',c.valor_alfa_6,'7',c.valor_alfa_7,'8',c.valor_alfa_8,'9',c.valor_alfa_9,'10',
-      c.valor_alfa_10) AND numero=t.valor_alfa_registro AND codigo_personaliz=a.codigo_personaliz_lotes AND empresa='001') registro_Sanitario,
-     c.valor_num_1, c.valor_num_2, c.valor_num_3, c.valor_num_4, c.valor_num_5, c.valor_num_6, c.valor_num_7, c.valor_num_8, c.valor_num_9, c.valor_num_10,
-     c.valor_fecha_1, c.valor_fecha_2, c.valor_fecha_3,
-       (SELECT numero_autorizacion_cliente FROM DOCUMENTO_VINCULACION_DEPOSITO D 
-       WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_autorizacion_cliente,
-       (SELECT numero_dip FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_dip,
-       (SELECT fecha_liberacion_dip FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) fecha_liberacion_dip,
-    (SELECT numero_dvce FROM DOCUMENTO_VINCULACION_DEPOSITO D WHERE D.CODIGO = h.codigo_dvd AND d.empresa = h.codigo_empresa) numero_dvce,
-     (SELECT e.nombre FROM documento_vinculacion_deposito d, aduanas a, estados e WHERE a.codigo = d.aduana_registro 
-     AND e.codigo = a.estado AND d.codigo = h.codigo_dvd AND d.empresa = h.codigo_empresa) estado_dvd,   
-       h.tara_con, h.tara_sub, h.tara_sob, h.tara_dis, 
-       h.tara_exp,  h.codigo_dvd codigo_dvd, h.codigo_proveedor,h.FECHA_FIN_FACT_FRIO_CLI_ORIGEN,h.cliente_facturacion_frio,h.fecha_siguiente_fact_frio, h.descripcion_lote d_numero_lote_int,h.descripcion_lote d_numero_lote_int_aux, null codigo_subreferencia,  h.fecha_caducidad, h.fecha_creacion, h.numero_lote_int_anterior,  a.alfa3_fao, a.partida_arancelaria partida_arancelaria, (SELECT nc.nombre_cientifico FROM nombres_cientificos nc WHERE nc.codigo = a.alfa3_fao) nombre_cientifico, (SELECT nc.descripcion FROM partidas_arancelarias nc WHERE nc.empresa = m.codigo_empresa AND nc.codigo = a.partida_arancelaria) d_partida_arancelaria,  m.codigo_cliente cliente, NULL palet, null numero_transporte, NULL d_numero_transporte, NULL ubicacion,  l.centro_contable,  NULL tipo_palet  FROM tipos_situacion s, almacenes alm,  caracteristicas_lotes c, titulos_personaliz t,lotes l, articulos a, historico_lotes h,  mareas ma,  stocks_deposito_cli m  WHERE h.numero_lote_int = m.numero_lote_int
-   AND h.codigo_articulo = m.codigo_articulo
-   AND h.codigo_empresa = m.codigo_empresa 
-   AND l.lote(+) = h.descripcion_lote2
-   AND l.empresa(+) = h.codigo_empresa  
-   and ma.codigo(+) = l.marea
-   and ma.empresa(+) = l.empresa 
-   AND a.codigo_articulo = m.codigo_articulo
-   AND a.codigo_empresa = m.codigo_empresa
-   AND s.tipo_situacion = m.tipo_situacion
-   AND s.codigo_empresa = m.codigo_empresa 
-   AND alm.almacen = m.codigo_almacen
-   AND alm.codigo_empresa = m.codigo_empresa  AND t.codigo_personaliz(+) = a.codigo_personaliz_lotes
-     AND t.codigo_empresa(+) = a.codigo_empresa
-     AND c.codigo_articulo(+) = m.codigo_articulo
-     AND c.numero_lote_int(+) = m.numero_lote_int
-     AND c.codigo_empresa(+) = m.codigo_empresa AND m.codigo_empresa = '001' AND m.codigo_almacen = '90' AND h.descripcion_lote2 >= 'PRODUCCION' AND h.descripcion_lote2 <= 'PRODUCCION' AND m.cantidad_CON != 0  ORDER BY cliente, lote, numero_lote_int) datos) d WHERE 1=1;
-
-
-
-
-select * 
-from stocks_detallado
-where numero_lote_int = '023627'
-  and tipo_situacion = 'CALID'
-; 
-
-
-select 
-  DISTINCT sd.CODIGO_ALMACEN,
-  (SELECT alm.nombre FROM ALMACENES alm WHERE alm.ALMACEN = sd.CODIGO_ALMACEN) AS NOMBRE_ALM
-from stocks_detallado sd
-where sd.codigo_articulo = '40000';
-
+select hist.STOCK_PRESENTACION
+from HISTORICO_STOCKS hist
+where codigo_articulo = '40000'
+  and hist.STOCK_PRESENTACION <> 0
+;
 
 
 select *
-from ARTICULOS
+from HISTORICO_STOCKS
+where codigo_articulo = '40000'
+ and ejercicio = 2025
 ;
-
-
-SELECT  articulos.d_codigo_familia,
-        articulos.d_codigo_estad2,
-        v_froxa_stocks_nacional.codigo_almacen,
-        articulos.codigo_familia,
-        articulos.codigo_estad2,
-        v_froxa_stocks_nacional.cliente,
-        v_froxa_stocks_nacional.codigo_articulo,
-        v_froxa_stocks_nacional.descrip_comercial,
-        v_froxa_stocks_nacional.cantidad_dis,
-        v_froxa_stocks_nacional.cantidad_sob,
-        v_froxa_stocks_nacional.cantidad_con,
-        (SELECT 
-    MAX(av.precio_standard)
-FROM 
-    articulos_valoracion av
-WHERE 
-    av.codigo_empresa(+) = V_FROXA_STOCKS_NACIONAL.codigo_empresa
-    AND av.codigo_articulo(+) = V_FROXA_STOCKS_NACIONAL.codigo_articulo    
-    AND av.codigo_almacen(+) = '00'
-    AND av.ejercicio = (
-        SELECT MAX(av2.ejercicio)
-        FROM articulos_valoracion av2
-        WHERE av2.codigo_empresa(+) = V_FROXA_STOCKS_NACIONAL.codigo_empresa
-          AND av2.codigo_articulo(+) = V_FROXA_STOCKS_NACIONAL.codigo_articulo
-          AND av2.codigo_almacen(+) = '00'
-    )
-) precio_standard,
-v_froxa_stocks_nacional.precio_medio_ponderado,
-v_froxa_stocks_nacional.valor_pmp,
-v_froxa_stocks_nacional.ultimo_precio_compra,
-v_froxa_stocks_nacional.valor_upc,
-v_froxa_stocks_nacional.precio_consumo,
-v_froxa_stocks_nacional.margen_pvp,
-v_froxa_stocks_nacional.valor_pvp,
-v_froxa_stocks_nacional.margen_unitario
-FROM V_FROXA_STOCKS_NACIONAL,
-(SELECT ARTICULOS.*,DECODE(articulos.codigo_familia,NULL,NULL,
-(SELECT lvfm.descripcion FROM familias lvfm WHERE lvfm.codigo_familia = articulos.codigo_familia AND lvfm.numero_tabla = 1 AND lvfm.codigo_empresa = articulos.codigo_empresa)) D_CODIGO_FAMILIA,
-DECODE(articulos.codigo_estad2,NULL,NULL,(SELECT lvfm.descripcion FROM familias lvfm WHERE lvfm.codigo_familia = articulos.codigo_estad2 AND lvfm.numero_tabla = 2 AND lvfm.codigo_empresa = articulos.codigo_empresa)) D_CODIGO_ESTAD2 FROM ARTICULOS) ARTICULOS 
-WHERE (V_FROXA_STOCKS_NACIONAL.CODIGO_EMPRESA= '001' 
-and V_FROXA_STOCKS_NACIONAL.CODIGO_EMPRESA=ARTICULOS.CODIGO_EMPRESA 
-and V_FROXA_STOCKS_NACIONAL.CODIGO_ARTICULO=ARTICULOS.CODIGO_ARTICULO) 
-AND (articulos.codigo_empresa = '001') 
-AND v_froxa_stocks_nacional.codigo_almacen IN ('00') 
-AND v_froxa_stocks_nacional.cliente LIKE '999999%' 
-AND articulos.codigo_estad7 IN ('010','030','040') -- TIPO MATERIAL
-AND articulos.codigo_estad8 IN ('10','30');        -- MERCADO
-                                                   -- SITUACION DE STOCK
 
 
 select *
-from V_FROXA_STOCKS_NACIONAL
+from ALBARAN_COMPRAS_C acc
+where numero_doc_ext = '132/4'
+  and acc.NUMERO_DOC_INTERNO = '5346'
 ;
 
--- FINAL (CONTINGENTE)        => valoracion almacen 00
--- DISPG (disponible general) => valoracion 00 almacen
--- DEPA (deposito aduanero)   => valoracion 02 almacen (ejemplo 40176)
-
-select SUM(CANTIDAD_UNIDAD1) stock, codigo_articulo
-from stocks_detallado
-where TIPO_SITUACION in ('DEPA')
- and CANTIDAD_UNIDAD1 <> 0
-GROUP BY codigo_articulo
-
+select *
+from albaran_compras_l
+where NUMERO_DOC_INTERNO = '5610'
 ;
 
--- 40315 FINAL 00
--- 40176 DEPA (02 SANTANDER. DEPA.)
+-- SP001/FRO/2025-1
+-- SP001/FRO/2025-2
 
-/*
+-- factura FA02-0003077 => (2 albaranes 5642 y 5827 Facturados)
 
-DEPC de santander a cartes
-
-Noelia 2LOGISTICA
-Sara   2LOGISTICA
-
-*/
-
-select AUXILIAR_16
-from articulos
+select *
+from facturas_compras_lin
+where num_albaran_int = '5536'
 ;
 
-
-SELECT a.codigo_articulo,
-       a.auxiliar_16,
-       fa.descripcion AS d_auxiliar_16
-FROM   va_articulos a
-       LEFT JOIN froxa_familias_art fa
-         ON fa.codigo_familia = a.auxiliar_16
-        AND fa.numero_tabla   = 16
-        AND fa.codigo_empresa = a.codigo_empresa
-WHERE  a.codigo_empresa = '001'
-  AND  a.codigo_articulo = '41521';
-
-
-
-select vaa.auxiliar_16
-from va_articulos vaa
-where vaa.codigo_articulo = '41497'
+select *
+from facturas_compras_lin
+where numero_factura = '010725/XK'
 ;
 
-select * -- SUM(cantidad_unidad1)          -- DISTINCT tipo_situacion 5520
-from stocks_detallado
-where codigo_articulo = '40283'
+SELECT *
+FROM FACTURAS_COMPRAS_CAB 
+where numero_factura = 'FA02-0003077'
 ;
 
-select * 
-from stocks_deposito_cli
-where NUMERO_LOTE_INT = '011427'
-  and cantidad_unidad1 <> 0
-;
+SELECT * 
+FROM facturas_compras_lin 
+WHERE num_albaran_int = '5536';
 
-select * from almacenes;
-
-SELECT
-  lote,
-  (s.codigo_articulo || ' ' || (SELECT aa.DESCRIP_COMERCIAL from articulos aa WHERE aa.codigo_articulo = s.codigo_articulo)) DESCRIP_COMERCIAL,
-  (s.codigo_almacen || ' ' || (SELECT alm.nombre from almacenes alm WHERE alm.almacen = s.codigo_almacen)) DESCRIP_ALMACE,
-  (SELECT alm.nombre from almacenes alm WHERE alm.almacen = s.codigo_almacen) DESCRIP_ALMACEN,
-  s.tipo_situacion,
-  s.numero_lote_int,
-  s.cantidad_unidad1
-FROM (
-  SELECT
-    s.*,
-    (SELECT MAX(h.descripcion_lote2)
-       FROM historico_lotes h
-      WHERE h.numero_lote_int = s.numero_lote_int
-        AND h.codigo_articulo = s.codigo_articulo
-        AND h.codigo_empresa  = s.codigo_empresa
-    ) AS lote
-  FROM stocks_deposito_cli s
-  WHERE s.codigo_empresa  = '001' AND s.cantidad_con <> 0
-) s
-WHERE s.lote = 'PRODUCCION' AND s.codigo_almacen != '90';
-
-
-SELECT
-  lote codigo_entrada,
-  (s.codigo_articulo || ' ' || (SELECT aa.DESCRIP_COMERCIAL from articulos aa WHERE aa.codigo_articulo = s.codigo_articulo)) articulo,
-  (s.codigo_almacen || ' ' || (SELECT alm.nombre from almacenes alm WHERE alm.almacen = s.codigo_almacen)) almacen,
-  s.tipo_situacion situacion,
-  s.numero_lote_int numero_lote,
-  s.cantidad_unidad1 cantidad_kg
-FROM (
-  SELECT
-    s.*,
-    (SELECT MAX(h.descripcion_lote2)
-       FROM historico_lotes h
-      WHERE h.numero_lote_int = s.numero_lote_int
-        AND h.codigo_articulo = s.codigo_articulo
-        AND h.codigo_empresa  = s.codigo_empresa
-    ) AS lote
-  FROM stocks_deposito_cli s
-  WHERE s.codigo_empresa  = '001' AND s.cantidad_con <> 0
-) s
-WHERE s.lote = 'PRODUCCION' AND s.codigo_almacen != '90';
-
-
+select * from FACTURAS_COMPRAS_CAB;
 
 SELECT c.NUMERO_DOC_EXT,
-                    c.NUMERO_DOC_INTERNO,
-                    TO_CHAR(c.FECHA, 'YYYY-MM-DD') AS FECHA_SUPERVISION,
-                    c.CODIGO_ALMACEN,
-                    (select a.NOMBRE from ALMACENES a WHERE a.ALMACEN = c.CODIGO_ALMACEN) AS D_ALMACEN,
-                    c.TIPO_PEDIDO_COM,
-                    (SELECT t.DESCRIPCION
-                       FROM TIPOS_PEDIDO_COM t
-                      WHERE t.TIPO_PEDIDO = c.TIPO_PEDIDO_COM AND t.ORGANIZACION_COMPRAS = c.ORGANIZACION_COMPRAS) AS D_TIPO_PEDIDO_COM,
-                    CODIGO_PROVEEDOR,
-                    (SELECT prlv.nombre
-                        FROM proveedores prlv
-                        WHERE prlv.codigo_rapido = c.codigo_proveedor AND prlv.codigo_empresa = c.codigo_empresa) AS D_CODIGO_PROVEEDOR
-            FROM ALBARAN_COMPRAS_C c
-            WHERE c.CODIGO_EMPRESA = '001'
-                AND c.ORGANIZACION_COMPRAS = '01'
-                AND c.CENTRO_CONTABLE IN (
-                    SELECT DISTINCT gru.CODIGO_CENTRO
-                    FROM CENTROS_GRUPO_CCONT gru
-                    WHERE gru.EMPRESA = c.CODIGO_EMPRESA AND gru.CODIGO_GRUPO = '01')
-                AND EXISTS (
-                    SELECT 1
-                    FROM ALBARAN_COMPRAS_L li
-                    WHERE li.NUMERO_DOC_INTERNO = c.NUMERO_DOC_INTERNO AND li.CODIGO_EMPRESA = c.CODIGO_EMPRESA)
-                AND c.STATUS_ANULADO = 'N'
-                AND c.CODIGO_ALMACEN = '98'
-                AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') = '2025-09-02'        
-            ORDER BY c.FECHA DESC
+      c.NUMERO_DOC_INTERNO,
+      TO_CHAR(c.FECHA, 'DD/MM/YYYY') AS FECHA,
+      c.CODIGO_ALMACEN,
+      (select a.NOMBRE from ALMACENES a WHERE a.ALMACEN = c.CODIGO_ALMACEN) AS D_ALMACEN,
+      c.TIPO_PEDIDO_COM,
+      (SELECT t.DESCRIPCION
+         FROM TIPOS_PEDIDO_COM t
+        WHERE t.TIPO_PEDIDO = c.TIPO_PEDIDO_COM AND t.ORGANIZACION_COMPRAS = c.ORGANIZACION_COMPRAS) AS D_TIPO_PEDIDO_COM,
+      CODIGO_PROVEEDOR,
+      (SELECT prlv.nombre
+          FROM proveedores prlv
+          WHERE prlv.codigo_rapido = c.codigo_proveedor AND prlv.codigo_empresa = c.codigo_empresa) AS D_CODIGO_PROVEEDOR,
+      (SELECT SUM(acl.IMPORTE_LIN_NETO_DIV) from albaran_compras_l acl where acl.numero_doc_interno = c.NUMERO_DOC_INTERNO) AS IMPORTE_LIN_NETO_DIV,
+      (SELECT MAX(acl.DIVISA) from albaran_compras_l acl where acl.numero_doc_interno = c.NUMERO_DOC_INTERNO) AS DIVISA,
+      (SELECT SUM(acl.IMPORTE_LIN_NETO) from albaran_compras_l acl where acl.numero_doc_interno = c.NUMERO_DOC_INTERNO) AS IMPORTE_LIN_NETO
+FROM ALBARAN_COMPRAS_C c
+WHERE c.CODIGO_EMPRESA = '001'
+    AND c.ORGANIZACION_COMPRAS = '01'
+    AND c.CENTRO_CONTABLE IN (
+        SELECT DISTINCT gru.CODIGO_CENTRO
+        FROM CENTROS_GRUPO_CCONT gru
+        WHERE gru.EMPRESA = c.CODIGO_EMPRESA AND gru.CODIGO_GRUPO = '01')
+    AND EXISTS (
+        SELECT 1
+        FROM ALBARAN_COMPRAS_L li
+        WHERE li.NUMERO_DOC_INTERNO = c.NUMERO_DOC_INTERNO AND li.CODIGO_EMPRESA = c.CODIGO_EMPRESA)
+    AND c.STATUS_ANULADO = 'N'
+    AND c.CODIGO_ALMACEN = '98'
+    -- AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') >= '2025-09-01'
+    -- AND TO_CHAR(c.FECHA, 'YYYY-MM-DD') <= '2025-09-30'    
+
+    and NUMERO_DOC_INTERNO = '5537'
+ORDER BY c.FECHA DESC;
+
+
+-- 1. albaranes 98 facturados !!!
+
+select fecha, numero_doc_interno, numero_doc_ext
+from ALBARAN_COMPRAS_C alc
+where centro_contable = '01'
+  and organizacion_compras = '01'
+  and codigo_empresa = '001'
+  and codigo_almacen = '98'
+
+  and TO_CHAR(alc.FECHA, 'YYYY-MM-DD') >= '2025-08-27'
+  and TO_CHAR(alc.FECHA, 'YYYY-MM-DD') <= '2025-08-29'
+;
+
+-- 2. busco la facturas
+
+
+
+-- 3. vuelvo a ver los albaranes que se añ
+
+
+SELECT GC1 EMPRESA, D_GC1 NOMBRE, GC2 FECHA, GN1 VALOR_CAMBIO
+FROM (
+    SELECT EMPRESA GC1,
+           DECODE(froxa_seguros_cambio.empresa,NULL,NULL,
+                  (SELECT lvemp.nombre 
+                     FROM empresas_conta lvemp 
+                    WHERE lvemp.codigo = froxa_seguros_cambio.empresa)) D_GC1,
+           PERIODO GC2,
+           CAMBIO GN1
+    FROM FROXA_SEGUROS_CAMBIO
+    ORDER BY PERIODO DESC
+)
+WHERE ROWNUM = 1;
+
+
+select CAMBIO CAMBIOMES
+from froxa_seguros_cambio
+where PERIODO = '202508'
+;
+
+select fsc.CAMBIO from froxa_seguros_cambio fsc where fsc.PERIODO = '202508';
