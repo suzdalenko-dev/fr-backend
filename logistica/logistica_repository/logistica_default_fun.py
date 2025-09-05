@@ -304,8 +304,8 @@ def refresh_gema_table():
         if orden['__pedido__id'] not in ORDERS_IN_USE:
             ORDERS_IN_USE += [orden['__pedido__id']]
 
-        lineBelin, created         = OrderListBelinLoads.objects.get_or_create(order_id=orden['__pedido__id'])
-        lineBelin.load_id          = orden['id']
+        lineBelin, created         = OrderListBelinLoads.objects.get_or_create(order_id=orden['__pedido__id'], load_id=orden['id'])
+        # lineBelin.load_id        = orden['id']
         lineBelin.load_date        = orden['__fecha']
         lineBelin.truck_id         = orden['__camion']
         lineBelin.truck_name       = orden['__nombre__camion']
