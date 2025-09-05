@@ -191,4 +191,7 @@ from froxa_seguros_cambio
 where PERIODO = '202508'
 ;
 
-select fsc.CAMBIO from froxa_seguros_cambio fsc where fsc.PERIODO = '202508';
+select * 
+from froxa_seguros_cambio fsc
+order by PERIODO DESC
+;
