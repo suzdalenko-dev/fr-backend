@@ -18,7 +18,7 @@ def aviso_diario_paleta_produccion(request):
         file_url = crear_excel_sin_pandas(palets, '0', 'aviso-palets-prod')
 
         message_info = SMailer.send_email(
-            ['alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' probar en produccion haber si llega el mensaje y haber si encuentro PALETAS EN PRODUCCION !!!
+            ['almacen@froxa.com', 'alexey.suzdalenko@froxa.com'], # 'almacen@froxa.com' probar en produccion haber si llega el mensaje y haber si encuentro PALETAS EN PRODUCCION !!!
             'Aviso Libra - Existen paletas en PRODUCCIÓN sin ubicar ',
             'Aviso Libra - Paletas en producción.',
             file_url[0]
